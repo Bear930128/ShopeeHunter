@@ -311,8 +311,7 @@ function renderChart(){
 function renderAlert(){
 
   let highRisk = items.filter(item=>{
-    let percent = (item.score / items[0].score) * 100;
-    return percent > 80;
+    return item.score > 5000;  // ⭐ 改這裡
   }).length;
 
   let box = document.getElementById("alertBox");
