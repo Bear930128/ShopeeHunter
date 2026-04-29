@@ -310,7 +310,7 @@ async function loadData(){
       sold,
       fans,
       company: f.company?.stringValue||"",
-      id: f.id?.stringValue||"",
+      id: f.taxId?.stringValue || f.id?.stringValue || "",
       checked: f.checked?.booleanValue||false,
       score: parseNum(sold)*0.7 + parseNum(fans)*0.3
     };
