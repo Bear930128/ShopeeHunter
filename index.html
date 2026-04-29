@@ -202,40 +202,38 @@ async function deleteItem(docId){
 }
 
 function exportData(){
-
-  let data = currentPage==="checked"
-    ? items.filter(i=>i.checked)
-    : items.filter(i=>!i.checked);
-
-  const keyword = document.getElementById("searchInput")?.value.toLowerCase() || "";
-
-  if(keyword){
-    data = data.filter(i =>
-      i.title.toLowerCase().includes(keyword) ||
-      i.shop.toLowerCase().includes(keyword)
-    );
-  }
-
+  let data = items.filter(i=>i.checked);
   data = sortByScore(data);
 
-  const header = ["商品名","店名","銷量","粉絲","公司","統編","狀態","商品連結"];
+  const header = ["商品名","店名","銷量","粉絲","公司","統編","商品連結"];
+  const rows = data.map(i=>[i.title,i.shop,i.sold,i.fans,i.company,i.id,i.url]);
 
-  const rows = data.map(i=>[
-    i.title,i.shop,i.sold,i.fans,i.company,i.id,
-    i.checked ? "已標記" : "未標記",
-    i.url
-  ]);
+  const csvContent = "\uFEFF" + [header, ...rows].map(r=>r.join(",")).join("\n");
 
-  const csv = [header, ...rows].map(r=>r.join(",")).join("\n");
-
-  const blob = new Blob([csv], { type: "text/csv" });
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-
-  const d = new Date();
-  a.download = `shopee_${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}.csv`;
-
+  a.download = "蒐證.csv";
   a.click();
+}
+
+/* ⭐⭐⭐ 去重核心 ⭐⭐⭐ */
+function deduplicate(data){
+
+  const map = new Map();
+
+  data.forEach(item=>{
+    if(!map.has(item.url)){
+      map.set(item.url, item);
+    }else{
+      const exist = map.get(item.url);
+      if(item.score > exist.score){
+        map.set(item.url, item);
+      }
+    }
+  });
+
+  return Array.from(map.values());
 }
 
 async function loadData(){
@@ -246,7 +244,7 @@ async function loadData(){
 
   const data = await res.json();
 
-  items = data.documents.map(doc=>{
+  let raw = data.documents.map(doc=>{
     const f = doc.fields;
     const docId = doc.name.split('/').pop();
 
@@ -263,6 +261,9 @@ async function loadData(){
       score: parseNum(f.sold?.stringValue||"0")*0.7 + parseNum(f.fans?.stringValue||"0")*0.3
     };
   });
+
+  // ⭐ 去重在這裡發生
+  items = deduplicate(raw);
 
   document.getElementById("total").innerText = items.length;
   document.getElementById("checkedCount").innerText = items.filter(i=>i.checked).length;
