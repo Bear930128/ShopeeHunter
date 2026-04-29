@@ -1,85 +1,98 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>ShopeeHunter</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #0b1a2a;
-      color: white;
-      display: flex;
-    }
-    .sidebar {
-      width: 200px;
-      background: #0f243a;
-      padding: 20px;
-    }
-    .sidebar button {
-      width: 100%;
-      margin-bottom: 10px;
-      padding: 10px;
-      background: #1c3555;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-    .main {
-      flex: 1;
-      padding: 20px;
-    }
-    .card {
-      background: #162b44;
-      padding: 15px;
-      margin-top: 10px;
-      border-radius: 8px;
-    }
-  </style>
-</head>
+<meta charset="UTF-8">
+<title>ShopeeHunter 排行榜</title>
 
+<style>
+body{
+  background:#0f172a;
+  color:#fff;
+  font-family:sans-serif;
+  padding:20px;
+}
+h1{
+  text-align:center;
+}
+.card{
+  background:#1e293b;
+  padding:15px;
+  margin:10px 0;
+  border-radius:10px;
+}
+.rank{
+  font-size:20px;
+  color:#facc15;
+}
+</style>
+
+</head>
 <body>
 
-<div class="sidebar">
-  <h2>ShopeeHunter</h2>
-  <button onclick="addTestData()">🔥 測試寫入</button>
-</div>
+<h1>🔥 ShopeeHunter 排行榜</h1>
 
-<div class="main">
-  <h1>首頁</h1>
-  <p>點左邊按鈕測試 Firebase</p>
-</div>
+<div id="list">載入中...</div>
 
-<!-- Firebase -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+<script>
+const PROJECT_ID = "shopeehunter-84d05";
+const COLLECTION = "shopee";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDoUbN01D5ds6aSww_8LYvXlcS6nA6rBic",
-    authDomain: "shopeehunter-84d05.firebaseapp.com",
-    projectId: "shopeehunter-84d05",
-    storageBucket: "shopeehunter-84d05.firebasestorage.app",
-    messagingSenderId: "1047005043624",
-    appId: "1:1047005043624:web:9c7e34c2896cd5afdfdb9d"
-  };
+function parseNum(str){
+  if(!str) return 0;
+  str = str.replace(/,/g,"");
+  if(str.includes("萬")){
+    return parseFloat(str) * 10000;
+  }
+  return parseFloat(str) || 0;
+}
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+async function loadData(){
 
-  async function addTestData() {
-    try {
-      await addDoc(collection(db, "test"), {
-        name: "測試資料",
-        time: new Date()
-      });
-      alert("寫入成功！");
-    } catch (e) {
-      alert("錯誤：" + e);
-    }
+  const res = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
+  );
+
+  const data = await res.json();
+
+  if(!data.documents){
+    document.getElementById("list").innerHTML = "沒有資料";
+    return;
   }
 
-  window.addTestData = addTestData;
+  const items = data.documents.map(doc=>{
+    const f = doc.fields;
+
+    return {
+      title: f.title?.stringValue || "",
+      sold: f.sold?.stringValue || "0",
+      shop: f.shop?.stringValue || "",
+      fans: f.fans?.stringValue || "0"
+    };
+  });
+
+  // 🔥 排序（銷量 + 粉絲）
+  items.sort((a,b)=>{
+    return (parseNum(b.sold)+parseNum(b.fans)) - (parseNum(a.sold)+parseNum(a.fans));
+  });
+
+  let html = "";
+
+  items.forEach((item,i)=>{
+    html += `
+    <div class="card">
+      <div class="rank">#${i+1}</div>
+      <div>商品：${item.title}</div>
+      <div>店名：${item.shop}</div>
+      <div>銷量：${item.sold}</div>
+      <div>粉絲：${item.fans}</div>
+    </div>
+    `;
+  });
+
+  document.getElementById("list").innerHTML = html;
+}
+
+loadData();
 </script>
 
 </body>
