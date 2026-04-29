@@ -11,13 +11,8 @@ body{
   font-family:sans-serif;
   padding:20px;
 }
-h1{
-  text-align:center;
-}
-.controls{
-  text-align:center;
-  margin-bottom:20px;
-}
+h1{text-align:center;}
+.controls{text-align:center;margin-bottom:20px;}
 button{
   margin:5px;
   padding:8px 12px;
@@ -25,9 +20,7 @@ button{
   border-radius:6px;
   cursor:pointer;
 }
-.active{
-  background:#facc15;
-}
+.active{background:#facc15;}
 input{
   padding:8px;
   width:60%;
@@ -42,14 +35,11 @@ input{
   margin:10px 0;
   border-radius:10px;
 }
-.rank{
-  font-size:20px;
-  color:#facc15;
-}
-.link-btn{
-  background:#38bdf8;
-  margin-top:10px;
-}
+.rank{font-size:20px;color:#facc15;}
+.link-btn{background:#38bdf8;}
+.delete-btn{background:#ef4444;}
+.check-btn{background:#22c55e;}
+.checked{opacity:0.5;}
 </style>
 
 </head>
@@ -76,10 +66,8 @@ let sortMode = "score";
 function parseNum(str){
   if(!str) return 0;
   str = str.replace(/,/g,"");
-  if(str.includes("萬")){
-    return parseFloat(str) * 10000;
-  }
-  return parseFloat(str) || 0;
+  if(str.includes("萬")) return parseFloat(str)*10000;
+  return parseFloat(str)||0;
 }
 
 function setSort(mode){
@@ -89,6 +77,31 @@ function setSort(mode){
 
 function openLink(url){
   window.open(url, "_blank");
+}
+
+async function deleteItem(name){
+  if(!confirm("確定要刪除？")) return;
+
+  await fetch(`https://firestore.googleapis.com/v1/${name}`,{
+    method:"DELETE"
+  });
+
+  alert("已刪除");
+  loadData();
+}
+
+async function toggleCheck(name,checked){
+  await fetch(`https://firestore.googleapis.com/v1/${name}?updateMask.fieldPaths=checked`,{
+    method:"PATCH",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      fields:{
+        checked:{ booleanValue: !checked }
+      }
+    })
+  });
+
+  loadData();
 }
 
 function render(){
@@ -102,27 +115,19 @@ function render(){
 
   let sorted = [...filtered];
 
-  if(sortMode === "score"){
-    sorted.sort((a,b)=> b.score - a.score);
-  }
+  if(sortMode==="score") sorted.sort((a,b)=>b.score-a.score);
+  if(sortMode==="sold") sorted.sort((a,b)=>parseNum(b.sold)-parseNum(a.sold));
+  if(sortMode==="fans") sorted.sort((a,b)=>parseNum(b.fans)-parseNum(a.fans));
 
-  if(sortMode === "sold"){
-    sorted.sort((a,b)=> parseNum(b.sold) - parseNum(a.sold));
-  }
+  const maxScore = sorted[0]?.score||1;
 
-  if(sortMode === "fans"){
-    sorted.sort((a,b)=> parseNum(b.fans) - parseNum(a.fans));
-  }
-
-  const maxScore = sorted[0]?.score || 1;
-
-  let html = "";
+  let html="";
 
   sorted.forEach((item,i)=>{
-    const percent = ((item.score / maxScore) * 100).toFixed(0);
+    const percent=((item.score/maxScore)*100).toFixed(0);
 
-    html += `
-    <div class="card">
+    html+=`
+    <div class="card ${item.checked ? 'checked':''}">
       <div class="rank">#${i+1}</div>
       <div>商品：${item.title}</div>
       <div>店名：${item.shop}</div>
@@ -130,20 +135,21 @@ function render(){
       <div>粉絲：${item.fans}</div>
       <div>侵權指數：${percent}%</div>
 
-      <button class="link-btn" onclick="openLink('${item.url}')">
-        🔍 查看商品
+      <button class="link-btn" onclick="openLink('${item.url}')">🔍 查看</button>
+      <button class="check-btn" onclick="toggleCheck('${item.name}', ${item.checked})">
+        ${item.checked ? "❌ 取消" : "✔ 標記"}
       </button>
+      <button class="delete-btn" onclick="deleteItem('${item.name}')">🗑 刪除</button>
     </div>
     `;
   });
 
-  document.getElementById("list").innerHTML = html;
+  document.getElementById("list").innerHTML=html;
 
   document.getElementById("btn-score").classList.remove("active");
   document.getElementById("btn-sold").classList.remove("active");
   document.getElementById("btn-fans").classList.remove("active");
-
-  document.getElementById("btn-" + sortMode).classList.add("active");
+  document.getElementById("btn-"+sortMode).classList.add("active");
 }
 
 async function loadData(){
@@ -155,22 +161,24 @@ async function loadData(){
   const data = await res.json();
 
   if(!data.documents){
-    document.getElementById("list").innerHTML = "沒有資料";
+    document.getElementById("list").innerHTML="沒有資料";
     return;
   }
 
   items = data.documents.map(doc=>{
     const f = doc.fields;
 
-    const sold = f.sold?.stringValue || "0";
-    const fans = f.fans?.stringValue || "0";
+    const sold = f.sold?.stringValue||"0";
+    const fans = f.fans?.stringValue||"0";
 
     return {
-      title: f.title?.stringValue || "",
-      shop: f.shop?.stringValue || "",
+      name: doc.name,
+      title: f.title?.stringValue||"",
+      shop: f.shop?.stringValue||"",
       sold,
       fans,
-      url: f.url?.stringValue || "",
+      url: f.url?.stringValue||"",
+      checked: f.checked?.booleanValue||false,
       score: parseNum(sold)*0.7 + parseNum(fans)*0.3
     };
   });
