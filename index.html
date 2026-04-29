@@ -46,6 +46,10 @@ input{
   font-size:20px;
   color:#facc15;
 }
+.link-btn{
+  background:#38bdf8;
+  margin-top:10px;
+}
 </style>
 
 </head>
@@ -81,6 +85,10 @@ function parseNum(str){
 function setSort(mode){
   sortMode = mode;
   render();
+}
+
+function openLink(url){
+  window.open(url, "_blank");
 }
 
 function render(){
@@ -121,6 +129,10 @@ function render(){
       <div>銷量：${item.sold}</div>
       <div>粉絲：${item.fans}</div>
       <div>侵權指數：${percent}%</div>
+
+      <button class="link-btn" onclick="openLink('${item.url}')">
+        🔍 查看商品
+      </button>
     </div>
     `;
   });
@@ -158,6 +170,7 @@ async function loadData(){
       shop: f.shop?.stringValue || "",
       sold,
       fans,
+      url: f.url?.stringValue || "",
       score: parseNum(sold)*0.7 + parseNum(fans)*0.3
     };
   });
