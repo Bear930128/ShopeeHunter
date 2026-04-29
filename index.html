@@ -138,7 +138,7 @@ button{
   <div id="dashboard">
     <h1>Dashboard</h1>
 
-    <div id="alertBox"></div>
+  
 
     <div class="stats">
       <div class="stat">總筆數：<span id="total"></span></div>
@@ -308,25 +308,6 @@ function renderChart(){
 }
 
 /* 警示 */
-function renderAlert(){
-
-  let highRisk = items.filter(item=>{
-    return item.score > 5000;  // ⭐ 改這裡
-  }).length;
-
-  let box = document.getElementById("alertBox");
-
-  if(highRisk >= 3){
-    box.className = "alert red";
-    box.innerText = `⚠ 高風險（${highRisk}筆）`;
-  } else if(highRisk > 0){
-    box.className = "alert yellow";
-    box.innerText = `⚠ 注意（${highRisk}筆）`;
-  } else {
-    box.className = "alert green";
-    box.innerText = "✔ 正常";
-  }
-}
 
 /* 載入資料 */
 async function loadData(){
@@ -368,7 +349,7 @@ async function loadData(){
   document.getElementById("avgScore").innerText = avg.toFixed(0);
 
   renderChart();
-  renderAlert();
+ 
 }
 
 /* 啟動 */
