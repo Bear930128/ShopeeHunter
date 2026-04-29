@@ -14,6 +14,20 @@ body{
 h1{
   text-align:center;
 }
+.controls{
+  text-align:center;
+  margin-bottom:20px;
+}
+button{
+  margin:5px;
+  padding:8px 12px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+.active{
+  background:#facc15;
+}
 .card{
   background:#1e293b;
   padding:15px;
@@ -31,11 +45,20 @@ h1{
 
 <h1>🔥 ShopeeHunter 排行榜</h1>
 
+<div class="controls">
+  <button onclick="setSort('score')" id="btn-score">侵權指數</button>
+  <button onclick="setSort('sold')" id="btn-sold">銷量</button>
+  <button onclick="setSort('fans')" id="btn-fans">粉絲</button>
+</div>
+
 <div id="list">載入中...</div>
 
 <script>
 const PROJECT_ID = "shopeehunter-84d05";
 const COLLECTION = "shopee";
+
+let items = [];
+let sortMode = "score";
 
 function parseNum(str){
   if(!str) return 0;
@@ -48,44 +71,33 @@ function parseNum(str){
   return parseFloat(str) || 0;
 }
 
-async function loadData(){
+function setSort(mode){
+  sortMode = mode;
+  render();
+}
 
-  const res = await fetch(
-    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
-  );
+function render(){
 
-  const data = await res.json();
+  let sorted = [...items];
 
-  if(!data.documents){
-    document.getElementById("list").innerHTML = "沒有資料";
-    return;
+  if(sortMode === "score"){
+    sorted.sort((a,b)=> b.score - a.score);
   }
 
-  const items = data.documents.map(doc=>{
-    const f = doc.fields;
+  if(sortMode === "sold"){
+    sorted.sort((a,b)=> parseNum(b.sold) - parseNum(a.sold));
+  }
 
-    return {
-      title: f.title?.stringValue || "",
-      sold: f.sold?.stringValue || "0",
-      shop: f.shop?.stringValue || "",
-      fans: f.fans?.stringValue || "0"
-    };
-  });
+  if(sortMode === "fans"){
+    sorted.sort((a,b)=> parseNum(b.fans) - parseNum(a.fans));
+  }
 
-  // 計算分數
-  items.forEach(item=>{
-    item.score = parseNum(item.sold)*0.7 + parseNum(item.fans)*0.3;
-  });
-
-  // 排序
-  items.sort((a,b)=> b.score - a.score);
-
-  // 找最高分（當100%）
-  const maxScore = items[0]?.score || 1;
+  // 百分比計算
+  const maxScore = sorted[0]?.score || 1;
 
   let html = "";
 
-  items.forEach((item,i)=>{
+  sorted.forEach((item,i)=>{
 
     const percent = ((item.score / maxScore) * 100).toFixed(0);
 
@@ -102,6 +114,44 @@ async function loadData(){
   });
 
   document.getElementById("list").innerHTML = html;
+
+  // 按鈕高亮
+  document.getElementById("btn-score").classList.remove("active");
+  document.getElementById("btn-sold").classList.remove("active");
+  document.getElementById("btn-fans").classList.remove("active");
+
+  document.getElementById("btn-" + sortMode).classList.add("active");
+}
+
+async function loadData(){
+
+  const res = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
+  );
+
+  const data = await res.json();
+
+  if(!data.documents){
+    document.getElementById("list").innerHTML = "沒有資料";
+    return;
+  }
+
+  items = data.documents.map(doc=>{
+    const f = doc.fields;
+
+    const sold = f.sold?.stringValue || "0";
+    const fans = f.fans?.stringValue || "0";
+
+    return {
+      title: f.title?.stringValue || "",
+      shop: f.shop?.stringValue || "",
+      sold,
+      fans,
+      score: parseNum(sold)*0.7 + parseNum(fans)*0.3
+    };
+  });
+
+  render();
 }
 
 loadData();
