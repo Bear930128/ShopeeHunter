@@ -99,7 +99,6 @@ button{
 .view{background:#3b82f6;color:#fff;}
 .check{background:#22c55e;color:#fff;}
 .delete{background:#ef4444;color:#fff;}
-
 </style>
 </head>
 
@@ -213,7 +212,8 @@ function render(data){
       <div style="margin-top:10px;display:flex;gap:10px;">
         <button class="view" onclick="openUrl('${item.url}')">查看</button>
 
-        <button class="check" onclick="toggleCheck('${item.docId}', ${item.checked})">
+        <!-- ⭐ 修正：不傳 boolean -->
+        <button class="check" onclick="toggleCheck('${item.docId}')">
           ${item.checked ? '取消標記' : '✔標記'}
         </button>
 
@@ -231,8 +231,11 @@ function openUrl(url){
   window.open(url, "_blank");
 }
 
-async function toggleCheck(docId, current){
-  const newValue = !current;
+/* ⭐ 修正核心 */
+async function toggleCheck(docId){
+
+  const item = items.find(i => i.docId === docId);
+  const newValue = !item.checked;
 
   await fetch(
     `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}?updateMask.fieldPaths=checked`,
@@ -292,12 +295,7 @@ function exportData(){
   const header = ["商品名","店名","銷量","粉絲","公司","統編"];
 
   const rows = items.map(i=>[
-    i.title,
-    i.shop,
-    i.sold,
-    i.fans,
-    i.company,
-    i.id
+    i.title,i.shop,i.sold,i.fans,i.company,i.id
   ]);
 
   const csv = [header, ...rows].map(r=>r.join(",")).join("\n");
