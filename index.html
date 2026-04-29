@@ -36,7 +36,6 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
   <button onclick="showPage('dashboard')">🏠 Dashboard</button>
   <button onclick="showPage('list')">📊 排行榜</button>
   <button onclick="showPage('checked')">✔ 已標記</button>
-  <button onclick="showPage('unchecked')">❗ 未標記</button>
 
   <div class="group-title">工具</div>
   <button onclick="exportData()">📤 匯出資料</button>
@@ -82,6 +81,7 @@ function parseNum(str){
 }
 
 function showPage(page){
+
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("listPage").style.display = "none";
 
@@ -93,20 +93,14 @@ function showPage(page){
 
   if(page==="list"){
     document.getElementById("listPage").style.display = "block";
-    title.innerText = "排行榜";
-    render(items);
+    title.innerText = "排行榜（未標記）";
+    render(items.filter(i=>!i.checked));  // ⭐只顯示未標記
   }
 
   if(page==="checked"){
     document.getElementById("listPage").style.display = "block";
     title.innerText = "已標記";
     render(items.filter(i=>i.checked));
-  }
-
-  if(page==="unchecked"){
-    document.getElementById("listPage").style.display = "block";
-    title.innerText = "未標記";
-    render(items.filter(i=>!i.checked));
   }
 }
 
@@ -154,16 +148,10 @@ function openUrl(url){
   window.open(url, "_blank");
 }
 
-/* ⭐ 完整修復版 */
 async function toggleCheck(docId){
 
   try{
     const item = items.find(i => i.docId === docId);
-    if(!item){
-      alert("找不到資料");
-      return;
-    }
-
     const newValue = !item.checked;
 
     const res = await fetch(
@@ -177,20 +165,17 @@ async function toggleCheck(docId){
       }
     );
 
-    const result = await res.json();
-
     if(!res.ok){
-      console.error(result);
-      alert("標記失敗（可能是權限問題）");
+      alert("標記失敗");
       return;
     }
 
-    // ⭐ 立即更新畫面（不用等）
     item.checked = newValue;
-    render(items);
+
+    // ⭐ 重新顯示當前頁（會自動消失）
+    showPage("list");
 
   }catch(e){
-    console.error(e);
     alert("發生錯誤");
   }
 }
