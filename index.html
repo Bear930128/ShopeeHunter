@@ -71,6 +71,18 @@ body{
   border-radius:10px;
 }
 
+/* 警示 */
+.alert{
+  padding:15px;
+  margin-bottom:20px;
+  border-radius:10px;
+  font-weight:bold;
+}
+
+.red{background:#7f1d1d;}
+.yellow{background:#78350f;}
+.green{background:#14532d;}
+
 /* 圖表 */
 .chart-box{
   background:#1e293b;
@@ -116,6 +128,9 @@ body{
   <!-- Dashboard -->
   <div id="dashboard">
     <h1>Dashboard</h1>
+
+    <!-- ⭐ 系統狀態 -->
+    <div id="alertBox"></div>
 
     <div class="stats">
       <div class="stat">總筆數：<span id="total"></span></div>
@@ -223,11 +238,33 @@ function renderChart(){
       }]
     },
     options:{
-      plugins:{
-        legend:{display:false}
-      }
+      plugins:{legend:{display:false}}
     }
   });
+}
+
+/* ⭐ 高風險判斷 */
+function renderAlert(){
+
+  let highRisk = items.filter(item=>{
+    let percent = (item.score / items[0].score) * 100;
+    return percent > 80;
+  }).length;
+
+  let box = document.getElementById("alertBox");
+
+  if(highRisk >= 3){
+    box.className = "alert red";
+    box.innerText = `⚠ 系統狀態：🔴 高風險（${highRisk}筆高侵權商品）`;
+  }
+  else if(highRisk > 0){
+    box.className = "alert yellow";
+    box.innerText = `⚠ 系統狀態：🟡 注意（${highRisk}筆高侵權商品）`;
+  }
+  else{
+    box.className = "alert green";
+    box.innerText = "✔ 系統狀態：🟢 正常";
+  }
 }
 
 async function loadData(){
@@ -264,6 +301,7 @@ async function loadData(){
   document.getElementById("avgScore").innerText = avg.toFixed(0);
 
   renderChart();
+  renderAlert();
 }
 
 loadData();
