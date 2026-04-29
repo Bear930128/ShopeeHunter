@@ -2,74 +2,125 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>ShopeeHunter 排行榜</title>
+<title>ShopeeHunter 後台</title>
 
 <style>
 body{
+  margin:0;
+  font-family:sans-serif;
   background:#0f172a;
   color:#fff;
-  font-family:sans-serif;
+  display:flex;
+}
+
+/* 左側導覽列 */
+.sidebar{
+  width:220px;
+  background:#020617;
+  height:100vh;
   padding:20px;
 }
-h1{text-align:center;}
-.controls{text-align:center;margin-bottom:20px;}
-button{
-  margin:5px;
-  padding:8px 12px;
+
+.sidebar h2{
+  margin-bottom:20px;
+}
+
+.sidebar button{
+  width:100%;
+  margin:5px 0;
+  padding:10px;
+  background:#1e293b;
   border:none;
-  border-radius:6px;
+  color:#fff;
   cursor:pointer;
-}
-.active{background:#facc15;}
-input{
-  padding:8px;
-  width:60%;
-  max-width:300px;
+  text-align:left;
   border-radius:6px;
-  border:none;
-  margin-bottom:10px;
 }
+
+/* 主畫面 */
+.main{
+  flex:1;
+  padding:20px;
+}
+
+/* 統計卡片 */
+.stats{
+  display:flex;
+  gap:20px;
+  margin-bottom:20px;
+}
+
+.stat{
+  background:#1e293b;
+  padding:20px;
+  flex:1;
+  border-radius:10px;
+}
+
+/* 卡片 */
 .card{
   background:#1e293b;
   padding:15px;
   margin:10px 0;
   border-radius:10px;
   border:2px solid transparent;
-  transition:0.3s;
 }
-.rank{font-size:20px;color:#facc15;}
 
-.link-btn{background:#38bdf8;}
-.delete-btn{background:#ef4444;}
-.check-btn{background:#22c55e;}
-
-/* ⭐ 重點：標記效果 */
 .checked{
   border:2px solid #22c55e;
   box-shadow:0 0 10px #22c55e;
 }
+
+.rank{
+  color:#facc15;
+}
+
+button{
+  margin:5px;
+}
 </style>
 
 </head>
+
 <body>
 
-<h1>🔥 ShopeeHunter 排行榜</h1>
-
-<div class="controls">
-  <input type="text" id="search" placeholder="搜尋商品或店名..." oninput="render()"><br>
-  <button onclick="setSort('score')" id="btn-score">侵權指數</button>
-  <button onclick="setSort('sold')" id="btn-sold">銷量</button>
-  <button onclick="setSort('fans')" id="btn-fans">粉絲</button>
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>🔥 ShopeeHunter</h2>
+  <button onclick="showPage('dashboard')">🏠 Dashboard</button>
+  <button onclick="showPage('list')">📊 排行榜</button>
+  <button onclick="showPage('checked')">✔ 已標記</button>
+  <button onclick="showPage('unchecked')">❗ 未標記</button>
 </div>
 
-<div id="list">載入中...</div>
+<!-- 主畫面 -->
+<div class="main">
+
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <h1>Dashboard</h1>
+
+    <div class="stats">
+      <div class="stat">總筆數：<span id="total"></span></div>
+      <div class="stat">已標記：<span id="checkedCount"></span></div>
+      <div class="stat">未標記：<span id="uncheckedCount"></span></div>
+      <div class="stat">平均指數：<span id="avgScore"></span></div>
+    </div>
+  </div>
+
+  <!-- 排行榜 -->
+  <div id="listPage" style="display:none;">
+    <h1>排行榜</h1>
+    <div id="list"></div>
+  </div>
+
+</div>
 
 <script>
 const PROJECT_ID = "shopeehunter-84d05";
 const COLLECTION = "shopee";
 
 let items = [];
-let sortMode = "score";
 
 function parseNum(str){
   if(!str) return 0;
@@ -78,86 +129,53 @@ function parseNum(str){
   return parseFloat(str)||0;
 }
 
-function setSort(mode){
-  sortMode = mode;
-  render();
+function showPage(page){
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("listPage").style.display = "none";
+
+  if(page==="dashboard"){
+    document.getElementById("dashboard").style.display = "block";
+  }
+
+  if(page==="list"){
+    document.getElementById("listPage").style.display = "block";
+    render(items);
+  }
+
+  if(page==="checked"){
+    document.getElementById("listPage").style.display = "block";
+    render(items.filter(i=>i.checked));
+  }
+
+  if(page==="unchecked"){
+    document.getElementById("listPage").style.display = "block";
+    render(items.filter(i=>!i.checked));
+  }
 }
 
-function openLink(url){
-  window.open(url, "_blank");
-}
+function render(data){
 
-async function deleteItem(name){
-  if(!confirm("確定要刪除？")) return;
+  let html = "";
 
-  await fetch(`https://firestore.googleapis.com/v1/${name}`,{
-    method:"DELETE"
-  });
+  const maxScore = data[0]?.score || 1;
 
-  alert("已刪除");
-  loadData();
-}
+  data.forEach((item,i)=>{
 
-async function toggleCheck(name,checked){
-  await fetch(`https://firestore.googleapis.com/v1/${name}?updateMask.fieldPaths=checked`,{
-    method:"PATCH",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      fields:{
-        checked:{ booleanValue: !checked }
-      }
-    })
-  });
+    const percent = ((item.score/maxScore)*100).toFixed(0);
 
-  loadData();
-}
-
-function render(){
-
-  let keyword = document.getElementById("search").value.toLowerCase();
-
-  let filtered = items.filter(item=>{
-    return item.title.toLowerCase().includes(keyword) ||
-           item.shop.toLowerCase().includes(keyword);
-  });
-
-  let sorted = [...filtered];
-
-  if(sortMode==="score") sorted.sort((a,b)=>b.score-a.score);
-  if(sortMode==="sold") sorted.sort((a,b)=>parseNum(b.sold)-parseNum(a.sold));
-  if(sortMode==="fans") sorted.sort((a,b)=>parseNum(b.fans)-parseNum(a.fans));
-
-  const maxScore = sorted[0]?.score||1;
-
-  let html="";
-
-  sorted.forEach((item,i)=>{
-    const percent=((item.score/maxScore)*100).toFixed(0);
-
-    html+=`
+    html += `
     <div class="card ${item.checked ? 'checked':''}">
       <div class="rank">#${i+1}</div>
-      <div>商品：${item.title}</div>
-      <div>店名：${item.shop}</div>
+      <div>${item.title}</div>
+      <div>${item.shop}</div>
       <div>銷量：${item.sold}</div>
       <div>粉絲：${item.fans}</div>
       <div>侵權指數：${percent}%</div>
-
-      <button class="link-btn" onclick="openLink('${item.url}')">🔍 查看</button>
-      <button class="check-btn" onclick="toggleCheck('${item.name}', ${item.checked})">
-        ${item.checked ? "❌ 取消" : "✔ 標記"}
-      </button>
-      <button class="delete-btn" onclick="deleteItem('${item.name}')">🗑 刪除</button>
     </div>
     `;
   });
 
-  document.getElementById("list").innerHTML=html;
-
-  document.getElementById("btn-score").classList.remove("active");
-  document.getElementById("btn-sold").classList.remove("active");
-  document.getElementById("btn-fans").classList.remove("active");
-  document.getElementById("btn-"+sortMode).classList.add("active");
+  document.getElementById("list").innerHTML = html;
 }
 
 async function loadData(){
@@ -168,11 +186,6 @@ async function loadData(){
 
   const data = await res.json();
 
-  if(!data.documents){
-    document.getElementById("list").innerHTML="沒有資料";
-    return;
-  }
-
   items = data.documents.map(doc=>{
     const f = doc.fields;
 
@@ -180,18 +193,26 @@ async function loadData(){
     const fans = f.fans?.stringValue||"0";
 
     return {
-      name: doc.name,
       title: f.title?.stringValue||"",
       shop: f.shop?.stringValue||"",
       sold,
       fans,
-      url: f.url?.stringValue||"",
       checked: f.checked?.booleanValue||false,
       score: parseNum(sold)*0.7 + parseNum(fans)*0.3
     };
   });
 
-  render();
+  // 排序
+  items.sort((a,b)=>b.score-a.score);
+
+  // 統計
+  document.getElementById("total").innerText = items.length;
+  document.getElementById("checkedCount").innerText = items.filter(i=>i.checked).length;
+  document.getElementById("uncheckedCount").innerText = items.filter(i=>!i.checked).length;
+
+  const avg = items.reduce((a,b)=>a+b.score,0)/items.length;
+  document.getElementById("avgScore").innerText = avg.toFixed(0);
+
 }
 
 loadData();
