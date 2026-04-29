@@ -34,12 +34,20 @@ input{
   padding:15px;
   margin:10px 0;
   border-radius:10px;
+  border:2px solid transparent;
+  transition:0.3s;
 }
 .rank{font-size:20px;color:#facc15;}
+
 .link-btn{background:#38bdf8;}
 .delete-btn{background:#ef4444;}
 .check-btn{background:#22c55e;}
-.checked{opacity:0.5;}
+
+/* ⭐ 重點：標記效果 */
+.checked{
+  border:2px solid #22c55e;
+  box-shadow:0 0 10px #22c55e;
+}
 </style>
 
 </head>
