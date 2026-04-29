@@ -93,12 +93,25 @@ body{
 /* 卡片 */
 .card{
   background:#1e293b;
-  padding:15px;
-  margin:10px 0;
-  border-radius:10px;
+  padding:20px;
+  margin:12px 0;
+  border-radius:12px;
+  line-height:1.6;
 }
 
-.rank{color:#facc15;}
+.rank{
+  color:#facc15;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+
+.label{
+  color:#94a3b8;
+}
+
+.value{
+  color:#fff;
+}
 </style>
 
 </head>
@@ -129,7 +142,6 @@ body{
   <div id="dashboard">
     <h1>Dashboard</h1>
 
-    <!-- ⭐ 系統狀態 -->
     <div id="alertBox"></div>
 
     <div class="stats">
@@ -190,20 +202,34 @@ function showPage(page){
   }
 }
 
+/* ⭐ 排行榜卡片（完整版） */
 function render(data){
 
   let html = "";
   const maxScore = data[0]?.score || 1;
 
   data.forEach((item,i)=>{
+
     const percent = ((item.score/maxScore)*100).toFixed(0);
 
     html += `
     <div class="card">
+
       <div class="rank">#${i+1}</div>
-      <div>${item.title}</div>
-      <div>${item.shop}</div>
-      <div>侵權指數：${percent}%</div>
+
+      <div><span class="label">商品名：</span><span class="value">${item.title || "無"}</span></div>
+      <div><span class="label">店名：</span><span class="value">${item.shop || "無"}</span></div>
+
+      <div><span class="label">銷量：</span><span class="value">${item.sold || "0"}</span></div>
+      <div><span class="label">粉絲數：</span><span class="value">${item.fans || "0"}</span></div>
+
+      <div><span class="label">登記公司：</span><span class="value">${item.company || "無"}</span></div>
+      <div><span class="label">統一編號：</span><span class="value">${item.id || "無"}</span></div>
+
+      <div style="margin-top:10px;">
+        <b>侵權指數：${percent}%</b>
+      </div>
+
     </div>
     `;
   });
@@ -211,7 +237,7 @@ function render(data){
   document.getElementById("list").innerHTML = html;
 }
 
-/* ⭐ 分級長條圖 */
+/* 分級圖 */
 function renderChart(){
 
   const ranges = [0,0,0,0,0];
@@ -236,14 +262,11 @@ function renderChart(){
         label:'侵權風險分布',
         data:ranges,
       }]
-    },
-    options:{
-      plugins:{legend:{display:false}}
     }
   });
 }
 
-/* ⭐ 高風險判斷 */
+/* 警示 */
 function renderAlert(){
 
   let highRisk = items.filter(item=>{
@@ -255,11 +278,11 @@ function renderAlert(){
 
   if(highRisk >= 3){
     box.className = "alert red";
-    box.innerText = `⚠ 系統狀態：🔴 高風險（${highRisk}筆高侵權商品）`;
+    box.innerText = `⚠ 系統狀態：🔴 高風險（${highRisk}筆）`;
   }
   else if(highRisk > 0){
     box.className = "alert yellow";
-    box.innerText = `⚠ 系統狀態：🟡 注意（${highRisk}筆高侵權商品）`;
+    box.innerText = `⚠ 系統狀態：🟡 注意（${highRisk}筆）`;
   }
   else{
     box.className = "alert green";
@@ -286,6 +309,8 @@ async function loadData(){
       shop: f.shop?.stringValue||"",
       sold,
       fans,
+      company: f.company?.stringValue||"",
+      id: f.id?.stringValue||"",
       checked: f.checked?.booleanValue||false,
       score: parseNum(sold)*0.7 + parseNum(fans)*0.3
     };
