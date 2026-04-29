@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <title>ShopeeHunter 後台</title>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <style>
 body{
   margin:0;
@@ -25,7 +27,6 @@ body{
   margin-bottom:20px;
 }
 
-/* 分區標題 */
 .group-title{
   margin-top:20px;
   margin-bottom:8px;
@@ -33,7 +34,6 @@ body{
   color:#64748b;
 }
 
-/* 按鈕 */
 .sidebar button{
   width:100%;
   margin:6px 0;
@@ -44,10 +44,8 @@ body{
   cursor:pointer;
   text-align:left;
   border-radius:8px;
-  transition:0.2s;
 }
 
-/* hover */
 .sidebar button:hover{
   background:#1e293b;
   color:#fff;
@@ -59,7 +57,7 @@ body{
   padding:20px;
 }
 
-/* 統計卡 */
+/* 統計 */
 .stats{
   display:flex;
   gap:20px;
@@ -73,6 +71,13 @@ body{
   border-radius:10px;
 }
 
+/* 圖表區 */
+.chart-box{
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
+}
+
 /* 卡片 */
 .card{
   background:#1e293b;
@@ -81,16 +86,13 @@ body{
   border-radius:10px;
 }
 
-.rank{
-  color:#facc15;
-}
+.rank{color:#facc15;}
 </style>
 
 </head>
 
 <body>
 
-<!-- Sidebar -->
 <div class="sidebar">
 
   <h2>🔥 ShopeeHunter</h2>
@@ -109,7 +111,6 @@ body{
 
 </div>
 
-<!-- 主畫面 -->
 <div class="main">
 
   <!-- Dashboard -->
@@ -122,6 +123,12 @@ body{
       <div class="stat">未標記：<span id="uncheckedCount"></span></div>
       <div class="stat">平均指數：<span id="avgScore"></span></div>
     </div>
+
+    <!-- 圖表 -->
+    <div class="chart-box">
+      <canvas id="chart"></canvas>
+    </div>
+
   </div>
 
   <!-- 排行榜 -->
@@ -137,6 +144,7 @@ const PROJECT_ID = "shopeehunter-84d05";
 const COLLECTION = "shopee";
 
 let items = [];
+let chart;
 
 function parseNum(str){
   if(!str) return 0;
@@ -172,11 +180,9 @@ function showPage(page){
 function render(data){
 
   let html = "";
-
   const maxScore = data[0]?.score || 1;
 
   data.forEach((item,i)=>{
-
     const percent = ((item.score/maxScore)*100).toFixed(0);
 
     html += `
@@ -184,14 +190,33 @@ function render(data){
       <div class="rank">#${i+1}</div>
       <div>${item.title}</div>
       <div>${item.shop}</div>
-      <div>銷量：${item.sold}</div>
-      <div>粉絲：${item.fans}</div>
       <div>侵權指數：${percent}%</div>
     </div>
     `;
   });
 
   document.getElementById("list").innerHTML = html;
+}
+
+function renderChart(){
+
+  const top = items.slice(0,10);
+
+  const labels = top.map(i=>i.title.slice(0,10));
+  const data = top.map(i=>i.score);
+
+  if(chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("chart"),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'侵權指數',
+        data,
+      }]
+    }
+  });
 }
 
 async function loadData(){
@@ -227,6 +252,7 @@ async function loadData(){
   const avg = items.reduce((a,b)=>a+b.score,0)/items.length;
   document.getElementById("avgScore").innerText = avg.toFixed(0);
 
+  renderChart();
 }
 
 loadData();
