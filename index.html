@@ -40,9 +40,11 @@ const COLLECTION = "shopee";
 function parseNum(str){
   if(!str) return 0;
   str = str.replace(/,/g,"");
+
   if(str.includes("萬")){
     return parseFloat(str) * 10000;
   }
+
   return parseFloat(str) || 0;
 }
 
@@ -70,14 +72,19 @@ async function loadData(){
     };
   });
 
-  // 🔥 排序（銷量 + 粉絲）
+  // 🔥 侵權指數排序（銷量70% + 粉絲30%）
   items.sort((a,b)=>{
-    return (parseNum(b.sold)+parseNum(b.fans)) - (parseNum(a.sold)+parseNum(a.fans));
+    const scoreA = parseNum(a.sold)*0.7 + parseNum(a.fans)*0.3;
+    const scoreB = parseNum(b.sold)*0.7 + parseNum(b.fans)*0.3;
+    return scoreB - scoreA;
   });
 
   let html = "";
 
   items.forEach((item,i)=>{
+
+    const score = (parseNum(item.sold)*0.7 + parseNum(item.fans)*0.3).toFixed(0);
+
     html += `
     <div class="card">
       <div class="rank">#${i+1}</div>
@@ -85,6 +92,7 @@ async function loadData(){
       <div>店名：${item.shop}</div>
       <div>銷量：${item.sold}</div>
       <div>粉絲：${item.fans}</div>
+      <div>侵權指數：${score}</div>
     </div>
     `;
   });
