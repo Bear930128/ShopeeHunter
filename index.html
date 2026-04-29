@@ -80,6 +80,11 @@ function parseNum(str){
   return parseFloat(str)||0;
 }
 
+/* ⭐ 排序核心已加 */
+function sortByScore(arr){
+  return arr.sort((a,b)=>b.score - a.score);
+}
+
 function showPage(page){
 
   document.getElementById("dashboard").style.display = "none";
@@ -94,24 +99,27 @@ function showPage(page){
   if(page==="list"){
     document.getElementById("listPage").style.display = "block";
     title.innerText = "排行榜（未標記）";
-    render(items.filter(i=>!i.checked));  // ⭐只顯示未標記
+
+    const data = sortByScore(items.filter(i=>!i.checked));
+    render(data);
   }
 
   if(page==="checked"){
     document.getElementById("listPage").style.display = "block";
     title.innerText = "已標記";
-    render(items.filter(i=>i.checked));
+
+    const data = sortByScore(items.filter(i=>i.checked));
+    render(data);
   }
 }
 
 function render(data){
 
   let html = "";
-  const maxScore = data[0]?.score || 1;
 
   data.forEach((item,i)=>{
 
-    const percent = ((item.score/maxScore)*100).toFixed(0);
+    const percent = ((item.score/(data[0]?.score||1))*100).toFixed(0);
 
     html += `
     <div class="card ${item.checked ? 'checked-card' : ''}">
@@ -172,7 +180,6 @@ async function toggleCheck(docId){
 
     item.checked = newValue;
 
-    // ⭐ 重新顯示當前頁（會自動消失）
     showPage("list");
 
   }catch(e){
@@ -264,8 +271,6 @@ async function loadData(){
       score: parseNum(sold)*0.7 + parseNum(fans)*0.3
     };
   });
-
-  items.sort((a,b)=>b.score-a.score);
 
   document.getElementById("total").innerText = items.length;
   document.getElementById("checkedCount").innerText = items.filter(i=>i.checked).length;
