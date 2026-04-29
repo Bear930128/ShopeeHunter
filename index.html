@@ -15,7 +15,6 @@ body{
   display:flex;
 }
 
-/* Sidebar */
 .sidebar{
   width:240px;
   background:#020617;
@@ -49,13 +48,11 @@ body{
   color:#fff;
 }
 
-/* 主畫面 */
 .main{
   flex:1;
   padding:20px;
 }
 
-/* 統計 */
 .stats{
   display:flex;
   gap:20px;
@@ -69,26 +66,12 @@ body{
   border-radius:10px;
 }
 
-/* 警示 */
-.alert{
-  padding:15px;
-  margin-bottom:20px;
-  border-radius:10px;
-  font-weight:bold;
-}
-
-.red{background:#7f1d1d;}
-.yellow{background:#78350f;}
-.green{background:#14532d;}
-
-/* 圖表 */
 .chart-box{
   background:#1e293b;
   padding:20px;
   border-radius:10px;
 }
 
-/* 卡片 */
 .card{
   background:#1e293b;
   padding:20px;
@@ -130,15 +113,15 @@ button{
   <button onclick="showPage('list')">📊 排行榜</button>
   <button onclick="showPage('checked')">✔ 已標記</button>
   <button onclick="showPage('unchecked')">❗ 未標記</button>
+
+  <div class="group-title">工具</div>
+  <button onclick="exportData()">📤 匯出資料</button>
 </div>
 
 <div class="main">
 
-  <!-- Dashboard -->
   <div id="dashboard">
     <h1>Dashboard</h1>
-
-  
 
     <div class="stats">
       <div class="stat">總筆數：<span id="total"></span></div>
@@ -152,7 +135,6 @@ button{
     </div>
   </div>
 
-  <!-- 排行榜 -->
   <div id="listPage" style="display:none;">
     <h1>排行榜</h1>
     <div id="list"></div>
@@ -175,10 +157,12 @@ function parseNum(str){
   return parseFloat(str)||0;
 }
 
-/* 切頁 */
 function showPage(page){
+
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("listPage").style.display = "none";
+
+  const title = document.querySelector("#listPage h1");
 
   if(page==="dashboard"){
     document.getElementById("dashboard").style.display = "block";
@@ -186,21 +170,23 @@ function showPage(page){
 
   if(page==="list"){
     document.getElementById("listPage").style.display = "block";
+    title.innerText = "排行榜";
     render(items);
   }
 
   if(page==="checked"){
     document.getElementById("listPage").style.display = "block";
+    title.innerText = "已標記";
     render(items.filter(i=>i.checked));
   }
 
   if(page==="unchecked"){
     document.getElementById("listPage").style.display = "block";
+    title.innerText = "未標記";
     render(items.filter(i=>!i.checked));
   }
 }
 
-/* ⭐ 排行榜卡片 */
 function render(data){
 
   let html = "";
@@ -241,14 +227,11 @@ function render(data){
   document.getElementById("list").innerHTML = html;
 }
 
-/* 查看 */
 function openUrl(url){
   window.open(url, "_blank");
 }
 
-/* 標記 */
 async function toggleCheck(docId, current){
-
   const newValue = !current;
 
   await fetch(
@@ -265,9 +248,7 @@ async function toggleCheck(docId, current){
   loadData();
 }
 
-/* 刪除 */
 async function deleteItem(docId){
-
   if(!confirm("確定刪除？")) return;
 
   await fetch(
@@ -278,7 +259,6 @@ async function deleteItem(docId){
   loadData();
 }
 
-/* 圖表 */
 function renderChart(){
 
   const ranges = [0,0,0,0,0];
@@ -307,9 +287,28 @@ function renderChart(){
   });
 }
 
-/* 警示 */
+function exportData(){
 
-/* 載入資料 */
+  const header = ["商品名","店名","銷量","粉絲","公司","統編"];
+
+  const rows = items.map(i=>[
+    i.title,
+    i.shop,
+    i.sold,
+    i.fans,
+    i.company,
+    i.id
+  ]);
+
+  const csv = [header, ...rows].map(r=>r.join(",")).join("\n");
+
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "shopee_data.csv";
+  a.click();
+}
+
 async function loadData(){
 
   const res = await fetch(
@@ -349,10 +348,8 @@ async function loadData(){
   document.getElementById("avgScore").innerText = avg.toFixed(0);
 
   renderChart();
- 
 }
 
-/* 啟動 */
 loadData();
 
 </script>
