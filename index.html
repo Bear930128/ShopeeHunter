@@ -72,18 +72,22 @@ async function loadData(){
     };
   });
 
-  // 🔥 侵權指數排序（銷量70% + 粉絲30%）
-  items.sort((a,b)=>{
-    const scoreA = parseNum(a.sold)*0.7 + parseNum(a.fans)*0.3;
-    const scoreB = parseNum(b.sold)*0.7 + parseNum(b.fans)*0.3;
-    return scoreB - scoreA;
+  // 計算分數
+  items.forEach(item=>{
+    item.score = parseNum(item.sold)*0.7 + parseNum(item.fans)*0.3;
   });
+
+  // 排序
+  items.sort((a,b)=> b.score - a.score);
+
+  // 找最高分（當100%）
+  const maxScore = items[0]?.score || 1;
 
   let html = "";
 
   items.forEach((item,i)=>{
 
-    const score = (parseNum(item.sold)*0.7 + parseNum(item.fans)*0.3).toFixed(0);
+    const percent = ((item.score / maxScore) * 100).toFixed(0);
 
     html += `
     <div class="card">
@@ -92,7 +96,7 @@ async function loadData(){
       <div>店名：${item.shop}</div>
       <div>銷量：${item.sold}</div>
       <div>粉絲：${item.fans}</div>
-      <div>侵權指數：${score}</div>
+      <div>侵權指數：${percent}%</div>
     </div>
     `;
   });
