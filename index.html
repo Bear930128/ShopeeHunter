@@ -24,6 +24,13 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 .view{background:#3b82f6;color:#fff;}
 .check{background:#22c55e;color:#fff;}
 .delete{background:#ef4444;color:#fff;}
+.search-box{margin-bottom:15px;}
+.search-box input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
 </style>
 </head>
 
@@ -60,6 +67,12 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 
   <div id="listPage" style="display:none;">
     <h1>排行榜</h1>
+
+    <!-- ⭐ 搜尋欄 -->
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜尋商品名 / 店名..." oninput="applySearch()">
+    </div>
+
     <div id="list"></div>
   </div>
 
@@ -72,6 +85,7 @@ const COLLECTION = "shopee";
 
 let items = [];
 let chart;
+let currentPage = "list";
 
 function parseNum(str){
   if(!str) return 0;
@@ -80,12 +94,13 @@ function parseNum(str){
   return parseFloat(str)||0;
 }
 
-/* ⭐ 排序核心已加 */
 function sortByScore(arr){
   return arr.sort((a,b)=>b.score - a.score);
 }
 
 function showPage(page){
+
+  currentPage = page;
 
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("listPage").style.display = "none";
@@ -99,18 +114,35 @@ function showPage(page){
   if(page==="list"){
     document.getElementById("listPage").style.display = "block";
     title.innerText = "排行榜（未標記）";
-
-    const data = sortByScore(items.filter(i=>!i.checked));
-    render(data);
+    applySearch();
   }
 
   if(page==="checked"){
     document.getElementById("listPage").style.display = "block";
     title.innerText = "已標記";
-
-    const data = sortByScore(items.filter(i=>i.checked));
-    render(data);
+    applySearch();
   }
+}
+
+/* ⭐ 搜尋核心 */
+function applySearch(){
+
+  let keyword = document.getElementById("searchInput").value.toLowerCase();
+
+  let base = [];
+
+  if(currentPage==="list"){
+    base = items.filter(i=>!i.checked);
+  }else if(currentPage==="checked"){
+    base = items.filter(i=>i.checked);
+  }
+
+  const filtered = base.filter(i =>
+    i.title.toLowerCase().includes(keyword) ||
+    i.shop.toLowerCase().includes(keyword)
+  );
+
+  render(sortByScore(filtered));
 }
 
 function render(data){
@@ -158,36 +190,26 @@ function openUrl(url){
 
 async function toggleCheck(docId){
 
-  try{
-    const item = items.find(i => i.docId === docId);
-    const newValue = !item.checked;
+  const item = items.find(i => i.docId === docId);
+  const newValue = !item.checked;
 
-    const res = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}?updateMask.fieldPaths=checked`,
-      {
-        method:"PATCH",
-        headers:{"Content-Type":"application/json"},
-        body: JSON.stringify({
-          fields:{ checked:{ booleanValue:newValue } }
-        })
-      }
-    );
-
-    if(!res.ok){
-      alert("標記失敗");
-      return;
+  await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}?updateMask.fieldPaths=checked`,
+    {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        fields:{ checked:{ booleanValue:newValue } }
+      })
     }
+  );
 
-    item.checked = newValue;
-
-    showPage("list");
-
-  }catch(e){
-    alert("發生錯誤");
-  }
+  item.checked = newValue;
+  applySearch();
 }
 
 async function deleteItem(docId){
+
   if(!confirm("確定刪除？")) return;
 
   await fetch(
