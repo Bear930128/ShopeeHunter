@@ -1,65 +1,150 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>ShopeeHunter 測試</title>
-  <style>
-    body {
-      background: #0f172a;
-      color: white;
-      font-family: Arial;
-      padding: 20px;
-    }
+<meta charset="UTF-8">
+<title>ShopeeHunter</title>
 
-    h1 {
-      color: #38bdf8;
-    }
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    .card {
-      background: #1e293b;
-      padding: 15px;
-      margin-top: 10px;
-      border-radius: 10px;
-    }
-  </style>
+<style>
+body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;}
+.main{padding:20px;}
+
+.stats{
+  display:flex;
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.card{
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
+  flex:1;
+}
+
+.chart-box{
+  background:#1e293b;
+  padding:20px;
+  border-radius:10px;
+}
+</style>
 </head>
 
 <body>
 
-<h1>🔥 ShopeeHunter 已啟動</h1>
-<p>如果你看到這個畫面，代表網站正常！</p>
+<div class="main">
 
-<div id="data"></div>
+  <h1>Dashboard</h1>
+
+  <!-- 統計 -->
+  <div class="stats">
+    <div class="card">總筆數：<span id="total"></span></div>
+    <div class="card">已標記：<span id="checked"></span></div>
+    <div class="card">未標記：<span id="unchecked"></span></div>
+    <div class="card">平均指數：<span id="avg"></span></div>
+  </div>
+
+  <!-- 圖表 -->
+  <div class="chart-box">
+    <canvas id="chart"></canvas>
+  </div>
+
+</div>
 
 <script>
-console.log("網站正常運作");
 
-// 測試資料（之後會換成 Firebase）
-const testData = [
-  {
-    title: "測試商品A",
-    sold: "100",
-    shop: "測試店家A"
-  },
-  {
-    title: "測試商品B",
-    sold: "250",
-    shop: "測試店家B"
-  }
-];
+const PROJECT_ID = "shopeehunter-84d05";
+const COLLECTION = "shopee";
 
-const container = document.getElementById("data");
+let items = [];
+let chart;
 
-testData.forEach(item => {
-  const div = document.createElement("div");
-  div.className = "card";
-  div.innerHTML = `
-    <b>商品：</b>${item.title}<br>
-    <b>銷量：</b>${item.sold}<br>
-    <b>店家：</b>${item.shop}
-  `;
-  container.appendChild(div);
-});
+/* ⭐ 數字處理 */
+function parseNum(str){
+  if(!str) return 0;
+  str = str.replace(/,/g,"");
+  if(str.includes("萬")) return parseFloat(str)*10000;
+  return parseFloat(str)||0;
+}
+
+/* ⭐ 載入資料 */
+async function loadData(){
+
+  const res = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
+  );
+
+  const data = await res.json();
+
+  if(!data.documents) return;
+
+  items = data.documents.map(doc=>{
+    const f = doc.fields;
+
+    const sold = f.sold?.stringValue||"0";
+    const fans = f.fans?.stringValue||"0";
+
+    return {
+      checked: f.checked?.booleanValue||false,
+      sold,
+      fans,
+      score: parseNum(sold)*0.7 + parseNum(fans)*0.3
+    };
+  });
+
+  renderStats();
+  renderChart();
+}
+
+/* ⭐ 統計 */
+function renderStats(){
+
+  const total = items.length;
+  const checked = items.filter(i=>i.checked).length;
+  const unchecked = total - checked;
+
+  const avg = total
+    ? items.reduce((a,b)=>a+b.score,0)/total
+    : 0;
+
+  document.getElementById("total").innerText = total;
+  document.getElementById("checked").innerText = checked;
+  document.getElementById("unchecked").innerText = unchecked;
+  document.getElementById("avg").innerText = avg.toFixed(0);
+}
+
+/* ⭐ 圖表 */
+function renderChart(){
+
+  const ranges = [0,0,0,0,0];
+
+  items.forEach(i=>{
+    let p = i.score;
+
+    if(p<=20) ranges[0]++;
+    else if(p<=40) ranges[1]++;
+    else if(p<=60) ranges[2]++;
+    else if(p<=80) ranges[3]++;
+    else ranges[4]++;
+  });
+
+  if(chart) chart.destroy();
+
+  chart = new Chart(document.getElementById("chart"),{
+    type:'bar',
+    data:{
+      labels:["0-20","20-40","40-60","60-80","80-100"],
+      datasets:[{
+        label:"侵權分布",
+        data:ranges
+      }]
+    }
+  });
+}
+
+loadData();
+
 </script>
 
 </body>
