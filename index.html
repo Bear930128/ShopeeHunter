@@ -1,1 +1,66 @@
-<!-- test -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>ShopeeHunter 測試</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: Arial;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #38bdf8;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🔥 ShopeeHunter 已啟動</h1>
+<p>如果你看到這個畫面，代表網站正常！</p>
+
+<div id="data"></div>
+
+<script>
+console.log("網站正常運作");
+
+// 測試資料（之後會換成 Firebase）
+const testData = [
+  {
+    title: "測試商品A",
+    sold: "100",
+    shop: "測試店家A"
+  },
+  {
+    title: "測試商品B",
+    sold: "250",
+    shop: "測試店家B"
+  }
+];
+
+const container = document.getElementById("data");
+
+testData.forEach(item => {
+  const div = document.createElement("div");
+  div.className = "card";
+  div.innerHTML = `
+    <b>商品：</b>${item.title}<br>
+    <b>銷量：</b>${item.sold}<br>
+    <b>店家：</b>${item.shop}
+  `;
+  container.appendChild(div);
+});
+</script>
+
+</body>
+</html>
