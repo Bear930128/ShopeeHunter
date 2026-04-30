@@ -17,19 +17,34 @@ body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;
 .stat,.chart-box,.card{background:#1e293b;border-radius:10px;}
 .stat{padding:20px;flex:1;}
 .chart-box{padding:20px;}
-.card{padding:20px;margin:12px 0;border:2px solid transparent;}
+.card{padding:20px;margin:12px 0;border:2px solid transparent;line-height:1.6;}
 .checked-card{border-color:#22c55e;}
 .rank{color:#facc15;font-weight:bold;}
 .search-box{margin-bottom:15px;}
 .search-box input{width:100%;padding:10px;border-radius:8px;border:none;}
+
 button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 .view{background:#3b82f6;color:white;}
 .check{background:#22c55e;color:white;}
 .delete{background:#ef4444;color:white;}
+
+/* ⭐ 通知 */
+.toast{
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#22c55e;
+  padding:12px 20px;
+  border-radius:8px;
+  display:none;
+  z-index:999;
+}
 </style>
 </head>
 
 <body>
+
+<div class="toast" id="toast"></div>
 
 <div class="sidebar">
   <h2>🔥 ShopeeHunter</h2>
@@ -57,79 +72,128 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 
 <div id="listPage" style="display:none;">
   <h1 id="listTitle">排行榜</h1>
+
   <div class="search-box">
-    <input id="searchInput" placeholder="搜尋..." oninput="applySearch()">
+    <input id="searchInput" placeholder="搜尋商品名 / 店名..." oninput="applySearch()">
   </div>
+
+  <!-- ⭐ 下拉選單 -->
+  <select id="sheetSelect">
+    <option>鞋托架</option>
+    <option>置物架</option>
+    <option>手機架</option>
+    <option>文件盒</option>
+    <option>鏡櫃盒</option>
+    <option>翻蓋盒</option>
+  </select>
+
   <div id="list"></div>
 </div>
 
 </div>
 
 <script>
-const PROJECT_ID="shopeehunter-84d05";
-const COLLECTION="shopee";
+const PROJECT_ID = "shopeehunter-84d05";
+const COLLECTION = "shopee";
 const SCRIPT_URL="https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec";
-
-const SHEETS=["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"];
 
 let items=[];
 let chart=null;
 let currentPage="dashboard";
 
+function showToast(text){
+  const t=document.getElementById("toast");
+  t.innerText=text;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",2000);
+}
+
 function parseNum(str){
-  if(!str)return 0;
+  if(!str) return 0;
   str=String(str).replace(/,/g,"").trim();
-  if(str.includes("萬")) return parseFloat(str)*10000;
+  if(str.includes("萬")) return parseFloat(str)*10000||0;
   return parseFloat(str)||0;
 }
 
-function showPage(p){
-  currentPage=p;
+function sortByScore(arr){
+  return [...arr].sort((a,b)=>b.score-a.score);
+}
+
+function deduplicate(data){
+  const map=new Map();
+  data.forEach(item=>{
+    const key=item.url||item.title+"_"+item.shop;
+    if(!map.has(key)){
+      map.set(key,item);
+      return;
+    }
+    const old=map.get(key);
+    if(item.checked&&!old.checked){
+      map.set(key,item);
+    }else if(item.checked===old.checked&&item.score>old.score){
+      map.set(key,item);
+    }
+  });
+  return Array.from(map.values());
+}
+
+function showPage(page){
+  currentPage=page;
   dashboard.style.display="none";
   listPage.style.display="none";
 
-  if(p==="dashboard"){
+  if(page==="dashboard"){
     dashboard.style.display="block";
     return;
   }
 
   listPage.style.display="block";
-  listTitle.innerText=p==="list"?"排行榜（未標記）":"已標記";
+  listTitle.innerText=page==="list"?"排行榜（未標記）":"已標記";
   applySearch();
 }
 
 function applySearch(){
-  let kw=searchInput.value.toLowerCase();
+  const keyword=searchInput.value.toLowerCase();
+
   let data=currentPage==="checked"
     ?items.filter(i=>i.checked)
     :items.filter(i=>!i.checked);
 
-  data=data.filter(i=>i.title.toLowerCase().includes(kw)||i.shop.toLowerCase().includes(kw));
-  data.sort((a,b)=>b.score-a.score);
+  if(keyword){
+    data=data.filter(i=>
+      i.title.toLowerCase().includes(keyword)||
+      i.shop.toLowerCase().includes(keyword)
+    );
+  }
 
-  renderList(data);
+  renderList(sortByScore(data));
 }
 
 function renderList(data){
   let html="";
+  const max=data[0]?.score||1;
+
   data.forEach((item,i)=>{
+    const percent=((item.score/max)*100).toFixed(0);
+
     html+=`
     <div class="card ${item.checked?'checked-card':''}">
       <div class="rank">#${i+1}</div>
-      <div>${item.title}</div>
+      <div>商品名：${item.title}</div>
       <div>店名：${item.shop}</div>
       <div>銷量：${item.sold}</div>
-      <div>粉絲：${item.fans}</div>
+      <div>粉絲數：${item.fans}</div>
       <div>公司：${item.company}</div>
       <div>統編：${item.taxId}</div>
+      <div><b>${percent}%</b></div>
 
       <button class="view" onclick="window.open('${item.url}')">查看</button>
       <button class="check" onclick="toggleCheck('${item.docId}')">
         ${item.checked?"取消":"✔標記"}
       </button>
-      <button class="delete" onclick="deleteItem('${item.docId}')">刪除</button>
     </div>`;
   });
+
   list.innerHTML=html;
 }
 
@@ -146,26 +210,16 @@ async function toggleCheck(id){
   item.checked=newValue;
 
   if(newValue){
-    const sheet=prompt("選擇分頁:\n"+SHEETS.join("\n"),SHEETS[0]);
-    if(!sheet) return;
+    const sheet=document.getElementById("sheetSelect").value;
 
     fetch(SCRIPT_URL,{
       method:"POST",
       body:JSON.stringify({...item,sheet})
     })
-    .then(()=>alert("✅ 已寫入 "+sheet))
-    .catch(()=>alert("❌ 失敗"));
+    .then(()=>showToast("✅ 已寫入 "+sheet))
+    .catch(()=>showToast("❌ 寫入失敗"));
   }
 
-  renderDashboard();
-  applySearch();
-}
-
-async function deleteItem(id){
-  if(!confirm("確定刪除？"))return;
-
-  await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${id}`,{method:"DELETE"});
-  items=items.filter(i=>i.docId!==id);
   renderDashboard();
   applySearch();
 }
@@ -175,16 +229,6 @@ function renderDashboard(){
   checkedCount.innerText=items.filter(i=>i.checked).length;
   uncheckedCount.innerText=items.filter(i=>!i.checked).length;
   avg.innerText=Math.round(items.reduce((a,b)=>a+b.score,0)/items.length||0);
-
-  renderChart();
-}
-
-function renderChart(){
-  if(chart)chart.destroy();
-  chart=new Chart(chartCanvas,{
-    type:"bar",
-    data:{labels:["低","中","高"],datasets:[{data:[1,2,3]}]}
-  });
 }
 
 async function loadData(){
@@ -207,6 +251,7 @@ async function loadData(){
     };
   });
 
+  items=deduplicate(items);
   renderDashboard();
 }
 
