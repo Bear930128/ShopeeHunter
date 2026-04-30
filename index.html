@@ -3,72 +3,56 @@
 <head>
 <meta charset="UTF-8">
 <title>ShopeeHunter</title>
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
-.sidebar{
-  width:220px;
-  background:#020617;
-  height:100vh;
-  padding:20px;
-}
+.sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
 .sidebar h2{margin-bottom:20px;}
-.sidebar button{
-  width:100%;
-  margin:6px 0;
-  padding:12px;
-  background:#0f172a;
-  border:none;
-  color:#94a3b8;
-  border-radius:8px;
-  cursor:pointer;
-}
-.sidebar button:hover{
-  background:#1e293b;
-  color:#fff;
-}
-
+.group-title{margin-top:20px;margin-bottom:8px;font-size:12px;color:#64748b;}
+.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
+.sidebar button:hover{background:#1e293b;color:#fff;}
 .main{flex:1;padding:20px;}
-
 .stats{display:flex;gap:15px;margin-bottom:20px;}
-.card{background:#1e293b;padding:20px;border-radius:10px;flex:1;}
-.chart-box{background:#1e293b;padding:20px;border-radius:10px;}
-
-.item{
-  background:#1e293b;
-  padding:15px;
-  margin:10px 0;
-  border-radius:10px;
-}
-.checked{border:2px solid #22c55e;}
+.stat,.chart-box,.card{background:#1e293b;border-radius:10px;}
+.stat{padding:20px;flex:1;}
+.chart-box{padding:20px;}
+.card{padding:20px;margin:12px 0;border:2px solid transparent;line-height:1.6;}
+.checked-card{border-color:#22c55e;}
+.rank{color:#facc15;font-weight:bold;}
+.search-box{margin-bottom:15px;}
+.search-box input{width:100%;padding:10px;border-radius:8px;border:none;}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+.view{background:#3b82f6;color:white;}
+.check{background:#22c55e;color:white;}
+.delete{background:#ef4444;color:white;}
 </style>
 </head>
 
 <body>
 
-<!-- ⭐ Sidebar -->
 <div class="sidebar">
   <h2>🔥 ShopeeHunter</h2>
 
+  <div class="group-title">主功能</div>
   <button onclick="showPage('dashboard')">🏠 Dashboard</button>
   <button onclick="showPage('list')">📊 排行榜</button>
   <button onclick="showPage('checked')">✔ 已標記</button>
+
+  <div class="group-title">工具</div>
+  <button onclick="exportData()">📤 匯出已標記</button>
 </div>
 
-<!-- ⭐ 主畫面 -->
 <div class="main">
 
-  <!-- Dashboard -->
   <div id="dashboard">
     <h1>Dashboard</h1>
 
     <div class="stats">
-      <div class="card">總筆數：<span id="total"></span></div>
-      <div class="card">已標記：<span id="checkedCount"></span></div>
-      <div class="card">未標記：<span id="uncheckedCount"></span></div>
-      <div class="card">平均指數：<span id="avg"></span></div>
+      <div class="stat">總筆數：<span id="total">0</span></div>
+      <div class="stat">已標記：<span id="checkedCount">0</span></div>
+      <div class="stat">未標記：<span id="uncheckedCount">0</span></div>
+      <div class="stat">平均指數：<span id="avg">0</span></div>
     </div>
 
     <div class="chart-box">
@@ -76,92 +60,196 @@ body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;
     </div>
   </div>
 
-  <!-- 列表頁 -->
   <div id="listPage" style="display:none;">
-    <h1 id="listTitle"></h1>
+    <h1 id="listTitle">排行榜</h1>
+
+    <div class="search-box">
+      <input id="searchInput" placeholder="搜尋商品名 / 店名..." oninput="applySearch()">
+    </div>
+
     <div id="list"></div>
   </div>
 
 </div>
 
 <script>
-
 const PROJECT_ID = "shopeehunter-84d05";
 const COLLECTION = "shopee";
 
 let items = [];
-let chart;
+let chart = null;
+let currentPage = "dashboard";
 
-/* ⭐ 切頁 */
-function showPage(page){
-
-  document.getElementById("dashboard").style.display="none";
-  document.getElementById("listPage").style.display="none";
-
-  if(page==="dashboard"){
-    document.getElementById("dashboard").style.display="block";
-  }
-
-  if(page==="list"){
-    document.getElementById("listPage").style.display="block";
-    document.getElementById("listTitle").innerText="排行榜（未標記）";
-    renderList(items.filter(i=>!i.checked));
-  }
-
-  if(page==="checked"){
-    document.getElementById("listPage").style.display="block";
-    document.getElementById("listTitle").innerText="已標記";
-    renderList(items.filter(i=>i.checked));
-  }
-}
-
-/* ⭐ 數字 */
 function parseNum(str){
   if(!str) return 0;
-  str = str.replace(/,/g,"");
-  if(str.includes("萬")) return parseFloat(str)*10000;
-  return parseFloat(str)||0;
+  str = String(str).replace(/,/g,"").trim();
+  if(str.includes("萬")) return parseFloat(str) * 10000 || 0;
+  return parseFloat(str) || 0;
 }
 
-/* ⭐ 載入資料 */
-async function loadData(){
+function sortByScore(arr){
+  return [...arr].sort((a,b)=>b.score-a.score);
+}
 
-  const res = await fetch(
-    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
-  );
+function deduplicate(data){
+  const map = new Map();
 
-  const data = await res.json();
+  data.forEach(item=>{
+    const key = item.url || item.title + "_" + item.shop;
 
-  if(!data.documents) return;
+    if(!map.has(key)){
+      map.set(key,item);
+      return;
+    }
 
-  items = data.documents.map(doc=>{
-    const f = doc.fields;
+    const old = map.get(key);
 
-    const sold = f.sold?.stringValue||"0";
-    const fans = f.fans?.stringValue||"0";
-
-    return {
-      title:f.title?.stringValue||"",
-      checked:f.checked?.booleanValue||false,
-      sold,
-      fans,
-      score: parseNum(sold)*0.7 + parseNum(fans)*0.3
-    };
+    if(item.checked && !old.checked){
+      map.set(key,item);
+    }else if(item.checked === old.checked && item.score > old.score){
+      map.set(key,item);
+    }
   });
 
-  renderDashboard();
+  return Array.from(map.values());
 }
 
-/* ⭐ Dashboard */
-function renderDashboard(){
+function showPage(page){
+  currentPage = page;
 
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("listPage").style.display = "none";
+
+  if(page === "dashboard"){
+    document.getElementById("dashboard").style.display = "block";
+    return;
+  }
+
+  document.getElementById("listPage").style.display = "block";
+
+  if(page === "list"){
+    document.getElementById("listTitle").innerText = "排行榜（未標記）";
+  }
+
+  if(page === "checked"){
+    document.getElementById("listTitle").innerText = "已標記";
+  }
+
+  applySearch();
+}
+
+function applySearch(){
+  const input = document.getElementById("searchInput");
+  const keyword = input ? input.value.toLowerCase().trim() : "";
+
+  let data = currentPage === "checked"
+    ? items.filter(i=>i.checked)
+    : items.filter(i=>!i.checked);
+
+  if(keyword){
+    data = data.filter(i =>
+      i.title.toLowerCase().includes(keyword) ||
+      i.shop.toLowerCase().includes(keyword)
+    );
+  }
+
+  renderList(sortByScore(data));
+}
+
+function renderList(data){
+  let html = "";
+
+  if(data.length === 0){
+    document.getElementById("list").innerHTML = "<div class='card'>目前沒有資料</div>";
+    return;
+  }
+
+  const maxScore = data[0]?.score || 1;
+
+  data.forEach((item,i)=>{
+    const percent = ((item.score / maxScore) * 100).toFixed(0);
+
+    html += `
+      <div class="card ${item.checked ? 'checked-card' : ''}">
+        <div class="rank">#${i+1}</div>
+        <div>商品名：${item.title || "無"}</div>
+        <div>店名：${item.shop || "無"}</div>
+        <div>銷量：${item.sold || "0"}</div>
+        <div>粉絲數：${item.fans || "0"}</div>
+        <div>登記公司：${item.company || "無"}</div>
+        <div>統編：${item.taxId || "無"}</div>
+        <div><b>侵權指數：${percent}%</b></div>
+
+        <div style="margin-top:10px;display:flex;gap:10px;">
+          <button class="view" onclick="openItem('${item.docId}')">查看</button>
+          <button class="check" onclick="toggleCheck('${item.docId}')">
+            ${item.checked ? "取消標記" : "✔標記"}
+          </button>
+          <button class="delete" onclick="deleteItem('${item.docId}')">刪除</button>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById("list").innerHTML = html;
+}
+
+function openItem(docId){
+  const item = items.find(i=>i.docId===docId);
+  if(item?.url) window.open(item.url,"_blank");
+  else alert("這筆資料沒有商品連結");
+}
+
+async function toggleCheck(docId){
+  const item = items.find(i=>i.docId===docId);
+  if(!item) return alert("找不到這筆資料");
+
+  const newValue = !item.checked;
+
+  const res = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}?updateMask.fieldPaths=checked`,
+    {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        fields:{checked:{booleanValue:newValue}}
+      })
+    }
+  );
+
+  if(!res.ok){
+    alert("標記失敗，請檢查 Firebase 權限");
+    return;
+  }
+
+  item.checked = newValue;
+  renderDashboard();
+  applySearch();
+}
+
+async function deleteItem(docId){
+  if(!confirm("確定刪除？")) return;
+
+  const res = await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}`,
+    {method:"DELETE"}
+  );
+
+  if(!res.ok){
+    alert("刪除失敗，請檢查 Firebase 權限");
+    return;
+  }
+
+  items = items.filter(i=>i.docId!==docId);
+  renderDashboard();
+  applySearch();
+}
+
+function renderDashboard(){
   const total = items.length;
   const checked = items.filter(i=>i.checked).length;
   const unchecked = total - checked;
-
-  const avg = total
-    ? items.reduce((a,b)=>a+b.score,0)/total
-    : 0;
+  const avg = total ? items.reduce((a,b)=>a+b.score,0)/total : 0;
 
   document.getElementById("total").innerText = total;
   document.getElementById("checkedCount").innerText = checked;
@@ -171,26 +259,26 @@ function renderDashboard(){
   renderChart();
 }
 
-/* ⭐ 圖表 */
 function renderChart(){
+  const ranges = [0,0,0,0,0];
+  const maxScore = Math.max(...items.map(i=>i.score),1);
 
-  const ranges=[0,0,0,0,0];
+  items.forEach(item=>{
+    const p = (item.score / maxScore) * 100;
 
-  items.forEach(i=>{
-    let p=i.score;
-    if(p<=20)ranges[0]++;
-    else if(p<=40)ranges[1]++;
-    else if(p<=60)ranges[2]++;
-    else if(p<=80)ranges[3]++;
+    if(p<=20) ranges[0]++;
+    else if(p<=40) ranges[1]++;
+    else if(p<=60) ranges[2]++;
+    else if(p<=80) ranges[3]++;
     else ranges[4]++;
   });
 
   if(chart) chart.destroy();
 
   chart = new Chart(document.getElementById("chart"),{
-    type:'bar',
+    type:"bar",
     data:{
-      labels:["0-20","20-40","40-60","60-80","80-100"],
+      labels:["0-20%","20-40%","40-60%","60-80%","80-100%"],
       datasets:[{
         label:"侵權分布",
         data:ranges
@@ -199,28 +287,88 @@ function renderChart(){
   });
 }
 
-/* ⭐ 列表 */
-function renderList(data){
+function csvCell(value){
+  const text = String(value ?? "").replace(/"/g,'""');
+  return `"${text}"`;
+}
 
-  let html="";
+function exportData(){
+  let data = sortByScore(items.filter(i=>i.checked));
 
-  data.sort((a,b)=>b.score-a.score);
+  if(data.length === 0){
+    alert("目前沒有已標記資料可匯出");
+    return;
+  }
 
-  data.forEach((i,idx)=>{
-    html += `
-      <div class="item ${i.checked?'checked':''}">
-        <div>#${idx+1}</div>
-        <div>${i.title}</div>
-        <div>指數：${i.score.toFixed(0)}</div>
-      </div>
-    `;
-  });
+  const header = ["商品名","店名","銷量","粉絲","登記公司","統編","商品連結"];
+  const rows = data.map(i=>[
+    i.title,
+    i.shop,
+    i.sold,
+    i.fans,
+    i.company,
+    i.taxId,
+    i.url
+  ]);
 
-  document.getElementById("list").innerHTML = html;
+  const csv = "\uFEFF" + [header,...rows]
+    .map(row=>row.map(csvCell).join(","))
+    .join("\n");
+
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const a = document.createElement("a");
+  const d = new Date();
+
+  a.href = URL.createObjectURL(blob);
+  a.download = `蒐證_${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}.csv`;
+  a.click();
+}
+
+async function loadData(){
+  try{
+    const res = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
+    );
+
+    const data = await res.json();
+
+    if(!data.documents){
+      items = [];
+      renderDashboard();
+      return;
+    }
+
+    const raw = data.documents.map(doc=>{
+      const f = doc.fields;
+      const docId = doc.name.split("/").pop();
+
+      const sold = f.sold?.stringValue || "0";
+      const fans = f.fans?.stringValue || "0";
+
+      return {
+        docId,
+        title:f.title?.stringValue || "",
+        shop:f.shop?.stringValue || "",
+        sold,
+        fans,
+        company:f.company?.stringValue || "",
+        taxId:f.taxId?.stringValue || "",
+        url:f.url?.stringValue || "",
+        checked:f.checked?.booleanValue || false,
+        score:parseNum(sold)*0.7 + parseNum(fans)*0.3
+      };
+    });
+
+    items = deduplicate(raw);
+    renderDashboard();
+
+  }catch(e){
+    console.error(e);
+    alert("資料載入失敗");
+  }
 }
 
 loadData();
-
 </script>
 
 </body>
