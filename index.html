@@ -1,168 +1,69 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<title>ShopeeHunter</title>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<style>
-body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
-.sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
-.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;}
-.sidebar button:hover{background:#1e293b;color:#fff;}
-.main{flex:1;padding:20px;}
-.card{background:#1e293b;padding:20px;margin:10px;border-radius:10px;}
-.checked-card{border:2px solid #22c55e;}
-</style>
-</head>
-
-<body>
-
-<div class="sidebar">
-  <h2>🔥 ShopeeHunter</h2>
-  <button onclick="showPage('list')">排行榜</button>
-  <button onclick="showPage('checked')">已標記</button>
-</div>
-
-<div class="main">
-  <h1 id="title">排行榜</h1>
-  <input id="searchInput" placeholder="搜尋..." oninput="renderPage()">
-  <div id="list"></div>
-</div>
-
-<script>
-
-const PROJECT_ID = "shopeehunter-84d05";
-const COLLECTION = "shopee";
-
-let items = [];
-let currentPage = "list";
-let currentUser = "";
-
-/* ⭐ 強制輸入使用者 */
-function askUser(){
-  currentUser = prompt("請輸入你的名稱");
-  if(!currentUser) currentUser="未命名";
+function parseNum(str){
+  if(!str) return 0;
+  str = str.replace(/,/g,"");
+  if(str.includes("萬")) return parseFloat(str)*10000;
+  return parseFloat(str)||0;
 }
 
-/* ⭐ 頁面切換 */
-function showPage(p){
-  currentPage = p;
-  document.getElementById("title").innerText = p==="list"?"排行榜":"已標記";
-  renderPage();
-}
-
-/* ⭐ 搜尋+分類 */
-function renderPage(){
-  let keyword = document.getElementById("searchInput").value.toLowerCase();
-
-  let data = currentPage==="checked"
-    ? items.filter(i=>i.checked)
-    : items.filter(i=>!i.checked);
-
-  data = data.filter(i =>
-    i.title.toLowerCase().includes(keyword) ||
-    i.shop.toLowerCase().includes(keyword)
-  );
-
-  data.sort((a,b)=>b.score-a.score);
-
-  render(data);
-}
-
-/* ⭐ 卡片 */
-function render(data){
-
-  let html = "";
-
-  data.forEach((item,i)=>{
-
-    html += `
-    <div class="card ${item.checked?'checked-card':''}">
-      <div>#${i+1}</div>
-      <div>${item.title}</div>
-      <div>店名：${item.shop}</div>
-      <div>👤 ${item.checkedBy||"未標記"}</div>
-
-      <button onclick="toggleCheck('${item.docId}')">
-        ${item.checked?"取消":"✔標記"}
-      </button>
-    </div>
-    `;
-  });
-
-  document.getElementById("list").innerHTML = html;
-}
-
-/* ⭐ 標記 */
-async function toggleCheck(docId){
-
-  const item = items.find(i=>i.docId===docId);
-  const newValue = !item.checked;
-
-  await fetch(
-    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}?updateMask.fieldPaths=checked&updateMask.fieldPaths=checkedBy`,
-    {
-      method:"PATCH",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        fields:{
-          checked:{booleanValue:newValue},
-          checkedBy:{stringValue:currentUser}
-        }
-      })
-    }
-  );
-
-  item.checked = newValue;
-  item.checkedBy = currentUser;
-
-  renderPage();
-}
-
-/* ⭐ 去重 */
+/* ⭐ 強化去重（保留最高分） */
 function dedup(data){
-  const map=new Map();
+  const map = new Map();
+
   data.forEach(i=>{
-    if(!map.has(i.url)) map.set(i.url,i);
+    if(!map.has(i.url)){
+      map.set(i.url,i);
+    }else{
+      const exist = map.get(i.url);
+      if(i.score > exist.score){
+        map.set(i.url,i);
+      }
+    }
   });
+
   return Array.from(map.values());
 }
 
-/* ⭐ 載入資料 */
+/* ⭐ 載入資料（穩定版） */
 async function loadData(){
 
-  const res = await fetch(
-    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
-  );
+  try{
 
-  const data = await res.json();
+    const res = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
+    );
 
-  let raw = data.documents.map(doc=>{
-    const f = doc.fields;
-    const docId = doc.name.split('/').pop();
+    const data = await res.json();
 
-    return {
-      docId,
-      title:f.title?.stringValue||"",
-      shop:f.shop?.stringValue||"",
-      url:f.url?.stringValue||"",
-      checked:f.checked?.booleanValue||false,
-      checkedBy:f.checkedBy?.stringValue||"",
-      score:Math.random()*100
-    };
-  });
+    if(!data.documents){
+      console.log("沒有資料");
+      return;
+    }
 
-  items = dedup(raw);
-  renderPage();
+    let raw = data.documents.map(doc=>{
+      const f = doc.fields;
+      const docId = doc.name.split('/').pop();
+
+      const sold = f.sold?.stringValue||"0";
+      const fans = f.fans?.stringValue||"0";
+
+      return {
+        docId,
+        title:f.title?.stringValue||"",
+        shop:f.shop?.stringValue||"",
+        url:f.url?.stringValue||"",
+        checked:f.checked?.booleanValue||false,
+        checkedBy:f.checkedBy?.stringValue||"",
+        sold,
+        fans,
+        score: parseNum(sold)*0.7 + parseNum(fans)*0.3
+      };
+    });
+
+    items = dedup(raw);
+
+    renderPage();
+
+  }catch(e){
+    console.error("資料載入失敗", e);
+  }
 }
-
-/* ⭐ 啟動 */
-askUser();
-loadData();
-
-</script>
-
-</body>
-</html>
