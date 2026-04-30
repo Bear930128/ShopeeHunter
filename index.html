@@ -111,6 +111,7 @@ function deduplicate(data){
 
 function showPage(page){
   currentPage = page;
+
   document.getElementById("dashboard").style.display="none";
   document.getElementById("listPage").style.display="none";
 
@@ -209,9 +210,8 @@ async function toggleCheck(docId){
 
   item.checked=newValue;
 
-  /* ⭐ 寫入試算表 */
   if(newValue){
-    fetch("https://script.google.com/macros/s/AKfycbxIV9RaYgISphgSNgNWfTN73c1HwyBu-bDHUFH1IFH9kaalgfAa08EBamoBqtQzrP_0/exec",{
+    fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
       method:"POST",
       body:JSON.stringify({
         title:item.title,
@@ -222,7 +222,9 @@ async function toggleCheck(docId){
         taxId:item.taxId,
         sold:item.sold
       })
-    });
+    })
+    .then(()=>alert("✅ 已寫入試算表"))
+    .catch(()=>alert("❌ 寫入失敗"));
   }
 
   renderDashboard();
