@@ -34,6 +34,14 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 <div class="sidebar">
   <h2>🔥 ShopeeHunter</h2>
 
+  <!-- ✅ 使用者系統 -->
+  <div style="margin-bottom:15px;">
+    <div id="currentUser" style="font-size:14px;color:#94a3b8;margin-bottom:6px;">
+      目前使用者：未設定
+    </div>
+    <button onclick="changeUser()">🔄 切換使用者</button>
+  </div>
+
   <div class="group-title">主功能</div>
   <button onclick="showPage('dashboard')">🏠 Dashboard</button>
   <button onclick="showPage('list')">📊 排行榜</button>
@@ -79,6 +87,48 @@ const COLLECTION = "shopee";
 let items = [];
 let chart = null;
 let currentPage = "dashboard";
+
+/* ===== 使用者系統 ===== */
+let currentUser = "";
+
+function initUser(){
+  const saved = localStorage.getItem("shopee_user");
+
+  if(saved){
+    currentUser = saved;
+  }else{
+    askUser();
+  }
+
+  renderUser();
+}
+
+function askUser(){
+  let name = prompt("請輸入你的名稱：");
+  if(!name || name.trim()===""){
+    name = "未命名使用者";
+  }
+  currentUser = name;
+  localStorage.setItem("shopee_user", name);
+}
+
+function renderUser(){
+  const el = document.getElementById("currentUser");
+  if(el){
+    el.innerText = "目前使用者：" + currentUser;
+  }
+}
+
+function changeUser(){
+  let name = prompt("請輸入新的名稱：");
+  if(!name || name.trim()==="") return;
+
+  currentUser = name;
+  localStorage.setItem("shopee_user", name);
+  renderUser();
+}
+
+/* ===== 原本功能 ===== */
 
 function parseNum(str){
   if(!str) return 0;
@@ -220,11 +270,10 @@ async function toggleCheck(docId){
         fans:item.fans,
         company:item.company,
         taxId:item.taxId,
-        sold:item.sold
+        sold:item.sold,
+        user: currentUser   // ⭐ 已加入
       })
-    })
-    .then(()=>alert("✅ 已寫入試算表"))
-    .catch(()=>alert("❌ 寫入失敗"));
+    });
   }
 
   renderDashboard();
@@ -308,102 +357,11 @@ async function loadData(){
   renderDashboard();
 }
 
+/* ===== 啟動 ===== */
+initUser();
 loadData();
+
 </script>
 
 </body>
 </html>
-
-<!-- ⭐ 新增功能（不要動原本任何東西） -->
-<script>
-
-/* ===== 通知 ===== */
-function showToast(msg){
-  let t = document.getElementById("toast_box");
-
-  if(!t){
-    t = document.createElement("div");
-    t.id = "toast_box";
-    t.style.position = "fixed";
-    t.style.top = "20px";
-    t.style.right = "20px";
-    t.style.background = "#22c55e";
-    t.style.padding = "12px 20px";
-    t.style.borderRadius = "8px";
-    t.style.zIndex = "9999";
-    t.style.display = "none";
-    document.body.appendChild(t);
-  }
-
-  t.innerText = msg;
-  t.style.display = "block";
-
-  setTimeout(()=>{
-    t.style.display = "none";
-  },2000);
-}
-
-
-/* ===== 下拉選單（自動加） ===== */
-function injectSelector(){
-
-  const box = document.querySelector(".search-box");
-  if(!box || document.getElementById("sheetSelect")) return;
-
-  const select = document.createElement("select");
-  select.id = "sheetSelect";
-  select.style.marginTop = "10px";
-  select.style.padding = "8px";
-  select.style.borderRadius = "6px";
-
-  const list = ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"];
-
-  list.forEach(name=>{
-    const opt = document.createElement("option");
-    opt.textContent = name;
-    select.appendChild(opt);
-  });
-
-  box.appendChild(select);
-}
-
-
-/* ===== 改寫 toggleCheck（不動原本） ===== */
-const _oldToggle = toggleCheck;
-
-toggleCheck = async function(docId){
-
-  const item = items.find(i=>i.docId===docId);
-  const newValue = !item.checked;
-
-  // 👉 先跑原本的
-  await _oldToggle(docId);
-
-  // 👉 只在「標記時」新增功能
-  if(newValue){
-
-    const sheet = document.getElementById("sheetSelect")?.value || "鞋托架";
-
-    fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
-      method:"POST",
-      body:JSON.stringify({
-        sheet: sheet,
-        title:item.title,
-        url:item.url,
-        shop:item.shop,
-        fans:item.fans,
-        company:item.company,
-        taxId:item.taxId,
-        sold:item.sold
-      })
-    })
-    .then(()=>showToast("✅ 已寫入 "+sheet))
-    .catch(()=>showToast("❌ 寫入失敗"));
-  }
-};
-
-
-/* ===== 啟動 ===== */
-setTimeout(injectSelector,500);
-
-</script>
