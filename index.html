@@ -409,7 +409,7 @@ setTimeout(injectSelector,500);
 </script>
 <script>
 
-/* ===== UI 強制修正（完全不動原本） ===== */
+/* ===== UI修正（只補位，不動任何原本邏輯） ===== */
 setTimeout(() => {
 
   const sidebar = document.querySelector(".sidebar");
@@ -417,14 +417,10 @@ setTimeout(() => {
 
   if(!sidebar || !main) return;
 
-  // 取得 sidebar 寬度
   const width = sidebar.offsetWidth;
 
-  // 強制 main 往右推
+  // ✅ 只推位置（關鍵）
   main.style.marginLeft = width + "px";
-
-  // 防止內容被壓縮
-  main.style.width = "calc(100% - " + width + "px)";
 
 }, 300);
 
