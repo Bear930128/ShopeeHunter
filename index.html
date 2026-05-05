@@ -14,7 +14,7 @@ body{
   display:flex;
 }
 
-/* ✅ FIX：sidebar固定 */
+/* ✅ 只改這裡：sidebar固定 */
 .sidebar{
   width:240px;
   background:#020617;
@@ -46,11 +46,11 @@ body{
   color:#fff;
 }
 
-/* ✅ FIX：主畫面往右移 */
+/* ✅ 只改這裡：主畫面讓位 */
 .main{
-  margin-left:240px;
   flex:1;
   padding:20px;
+  margin-left:240px;
 }
 
 .stats{display:flex;gap:15px;margin-bottom:20px;}
@@ -197,7 +197,7 @@ function showPage(page){
 function applySearch(){
   const keyword=document.getElementById("searchInput").value.toLowerCase();
 
-  let data=currentPage==="checked"
+  let data=currentPage==="checked
     ?items.filter(i=>i.checked)
     :items.filter(i=>!i.checked);
 
@@ -258,14 +258,118 @@ async function toggleCheck(docId){
 
   const newValue=!item.checked;
 
+  await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}?updateMask.fieldPaths=checked`,
+    {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        fields:{checked:{booleanValue:newValue}}
+      })
+    }
+  );
+
   item.checked=newValue;
+
+  if(newValue){
+    fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
+      method:"POST",
+      body:JSON.stringify({
+        title:item.title,
+        url:item.url,
+        shop:item.shop,
+        fans:item.fans,
+        company:item.company,
+        taxId:item.taxId,
+        sold:item.sold
+      })
+    })
+    .then(()=>alert("✅ 已寫入試算表"))
+    .catch(()=>alert("❌ 寫入失敗"));
+  }
 
   renderDashboard();
   applySearch();
 }
 
-function renderDashboard(){}
+async function deleteItem(docId){
+  if(!confirm("確定刪除？")) return;
 
+  await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}`,
+    {method:"DELETE"}
+  );
+
+  items=items.filter(i=>i.docId!==docId);
+  renderDashboard();
+  applySearch();
+}
+
+function renderDashboard(){
+  const total=items.length;
+  const checked=items.filter(i=>i.checked).length;
+  const unchecked=total-checked;
+  const avg=total?items.reduce((a,b)=>a+b.score,0)/total:0;
+
+  document.getElementById("total").innerText=total;
+  document.getElementById("checkedCount").innerText=checked;
+  document.getElementById("uncheckedCount").innerText=unchecked;
+  document.getElementById("avg").innerText=avg.toFixed(0);
+
+  renderChart();
+}
+
+function renderChart(){
+  const ranges=[0,0,0,0,0];
+  const maxScore=Math.max(...items.map(i=>i.score),1);
+
+  items.forEach(item=>{
+    const p=(item.score/maxScore)*100;
+    if(p<=20)ranges[0]++;
+    else if(p<=40)ranges[1]++;
+    else if(p<=60)ranges[2]++;
+    else if(p<=80)ranges[3]++;
+    else ranges[4]++;
+  });
+
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("chart"),{
+    type:"bar",
+    data:{
+      labels:["0-20","20-40","40-60","60-80","80-100"],
+      datasets:[{label:"侵權分布",data:ranges}]
+    }
+  });
+}
+
+async function loadData(){
+  const res=await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`);
+  const data=await res.json();
+
+  const raw=data.documents.map(doc=>{
+    const f=doc.fields;
+    const sold=f.sold?.stringValue||"0";
+    const fans=f.fans?.stringValue||"0";
+
+    return {
+      docId:doc.name.split("/").pop(),
+      title:f.title?.stringValue||"",
+      shop:f.shop?.stringValue||"",
+      sold,fans,
+      company:f.company?.stringValue||"",
+      taxId:f.taxId?.stringValue||"",
+      url:f.url?.stringValue||"",
+      checked:f.checked?.booleanValue||false,
+      score:parseNum(sold)*0.7+parseNum(fans)*0.3
+    };
+  });
+
+  items=deduplicate(raw);
+  renderDashboard();
+}
+
+loadData();
 </script>
 
 </body>
