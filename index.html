@@ -6,84 +6,23 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{
-  margin:0;
-  font-family:sans-serif;
-  background:#0f172a;
-  color:#fff;
-  display:flex;
-}
-
-/* ✅ 只改這裡：sidebar固定 */
-.sidebar{
-  width:240px;
-  background:#020617;
-  height:100vh;
-  padding:20px;
-
-  position:fixed;
-  left:0;
-  top:0;
-}
-
+body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
+.sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
 .sidebar h2{margin-bottom:20px;}
 .group-title{margin-top:20px;margin-bottom:8px;font-size:12px;color:#64748b;}
-
-.sidebar button{
-  width:100%;
-  margin:6px 0;
-  padding:12px;
-  background:#0f172a;
-  border:none;
-  color:#94a3b8;
-  border-radius:8px;
-  cursor:pointer;
-  text-align:left;
-}
-
-.sidebar button:hover{
-  background:#1e293b;
-  color:#fff;
-}
-
-/* ✅ 只改這裡：主畫面讓位 */
-.main{
-  flex:1;
-  padding:20px;
-  margin-left:240px;
-}
-
+.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
+.sidebar button:hover{background:#1e293b;color:#fff;}
+.main{flex:1;padding:20px;}
 .stats{display:flex;gap:15px;margin-bottom:20px;}
 .stat,.chart-box,.card{background:#1e293b;border-radius:10px;}
 .stat{padding:20px;flex:1;}
 .chart-box{padding:20px;}
-
-.card{
-  padding:20px;
-  margin:12px 0;
-  border:2px solid transparent;
-  line-height:1.6;
-}
-
+.card{padding:20px;margin:12px 0;border:2px solid transparent;line-height:1.6;}
 .checked-card{border-color:#22c55e;}
 .rank{color:#facc15;font-weight:bold;}
-
 .search-box{margin-bottom:15px;}
-
-.search-box input{
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:none;
-}
-
-button{
-  padding:6px 10px;
-  border:none;
-  border-radius:6px;
-  cursor:pointer;
-}
-
+.search-box input{width:100%;padding:10px;border-radius:8px;border:none;}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 .view{background:#3b82f6;color:white;}
 .check{background:#22c55e;color:white;}
 .delete{background:#ef4444;color:white;}
@@ -197,7 +136,7 @@ function showPage(page){
 function applySearch(){
   const keyword=document.getElementById("searchInput").value.toLowerCase();
 
-  let data=currentPage==="checked
+  let data=currentPage==="checked"
     ?items.filter(i=>i.checked)
     :items.filter(i=>!i.checked);
 
@@ -374,3 +313,97 @@ loadData();
 
 </body>
 </html>
+
+<!-- ⭐ 新增功能（不要動原本任何東西） -->
+<script>
+
+/* ===== 通知 ===== */
+function showToast(msg){
+  let t = document.getElementById("toast_box");
+
+  if(!t){
+    t = document.createElement("div");
+    t.id = "toast_box";
+    t.style.position = "fixed";
+    t.style.top = "20px";
+    t.style.right = "20px";
+    t.style.background = "#22c55e";
+    t.style.padding = "12px 20px";
+    t.style.borderRadius = "8px";
+    t.style.zIndex = "9999";
+    t.style.display = "none";
+    document.body.appendChild(t);
+  }
+
+  t.innerText = msg;
+  t.style.display = "block";
+
+  setTimeout(()=>{
+    t.style.display = "none";
+  },2000);
+}
+
+
+/* ===== 下拉選單（自動加） ===== */
+function injectSelector(){
+
+  const box = document.querySelector(".search-box");
+  if(!box || document.getElementById("sheetSelect")) return;
+
+  const select = document.createElement("select");
+  select.id = "sheetSelect";
+  select.style.marginTop = "10px";
+  select.style.padding = "8px";
+  select.style.borderRadius = "6px";
+
+  const list = ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"];
+
+  list.forEach(name=>{
+    const opt = document.createElement("option");
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+
+  box.appendChild(select);
+}
+
+
+/* ===== 改寫 toggleCheck（不動原本） ===== */
+const _oldToggle = toggleCheck;
+
+toggleCheck = async function(docId){
+
+  const item = items.find(i=>i.docId===docId);
+  const newValue = !item.checked;
+
+  // 👉 先跑原本的
+  await _oldToggle(docId);
+
+  // 👉 只在「標記時」新增功能
+  if(newValue){
+
+    const sheet = document.getElementById("sheetSelect")?.value || "鞋托架";
+
+    fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
+      method:"POST",
+      body:JSON.stringify({
+        sheet: sheet,
+        title:item.title,
+        url:item.url,
+        shop:item.shop,
+        fans:item.fans,
+        company:item.company,
+        taxId:item.taxId,
+        sold:item.sold
+      })
+    })
+    .then(()=>showToast("✅ 已寫入 "+sheet))
+    .catch(()=>showToast("❌ 寫入失敗"));
+  }
+};
+
+
+/* ===== 啟動 ===== */
+setTimeout(injectSelector,500);
+
+</script>
