@@ -44,6 +44,7 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 </div>
 
 <div class="main">
+
   <div id="dashboard">
     <h1>Dashboard</h1>
 
@@ -68,72 +69,94 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 
     <div id="list"></div>
   </div>
+
 </div>
 
-<!-- 🔴 主JS（你原本的） -->
+<!-- ===== 你的原本主JS（完全保留） ===== -->
 <script>
-/* 這裡貼你原本完整 JS（不要改） */
+/* ⚠️ 這裡請貼你原本完整 JS（不要動） */
 </script>
 
-<!-- 🔴 新增功能（移到 body 內） -->
+<!-- ===== 新增功能（只改這段） ===== -->
 <script>
 
-/* toast */
-function showToast(msg){
-  let t=document.getElementById("toast_box");
-  if(!t){
-    t=document.createElement("div");
-    t.id="toast_box";
-    t.style.position="fixed";
-    t.style.top="20px";
-    t.style.right="20px";
-    t.style.background="#22c55e";
-    t.style.padding="12px 20px";
-    t.style.borderRadius="8px";
-    t.style.zIndex="9999";
-    document.body.appendChild(t);
+window.addEventListener("load", () => {
+
+  /* ===== 通知 ===== */
+  function showToast(msg){
+    let t = document.getElementById("toast_box");
+
+    if(!t){
+      t = document.createElement("div");
+      t.id = "toast_box";
+      t.style.position = "fixed";
+      t.style.top = "20px";
+      t.style.right = "20px";
+      t.style.background = "#22c55e";
+      t.style.padding = "12px 20px";
+      t.style.borderRadius = "8px";
+      t.style.zIndex = "9999";
+      document.body.appendChild(t);
+    }
+
+    t.innerText = msg;
+    t.style.display = "block";
+
+    setTimeout(()=>t.style.display="none",2000);
   }
-  t.innerText=msg;
-  t.style.display="block";
-  setTimeout(()=>t.style.display="none",2000);
-}
 
-/* selector */
-function injectSelector(){
-  const box=document.querySelector(".search-box");
-  if(!box||document.getElementById("sheetSelect")) return;
+  /* ===== selector ===== */
+  function injectSelector(){
+    const box = document.querySelector(".search-box");
+    if(!box || document.getElementById("sheetSelect")) return;
 
-  const select=document.createElement("select");
-  select.id="sheetSelect";
+    const select = document.createElement("select");
+    select.id = "sheetSelect";
 
-  ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"]
-  .forEach(name=>{
-    const opt=document.createElement("option");
-    opt.textContent=name;
-    select.appendChild(opt);
-  });
+    ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"]
+    .forEach(name=>{
+      const opt = document.createElement("option");
+      opt.textContent = name;
+      select.appendChild(opt);
+    });
 
-  box.appendChild(select);
-}
-
-/* override */
-const _oldToggle = toggleCheck;
-toggleCheck = async function(docId){
-  const item = items.find(i=>i.docId===docId);
-  const newValue=!item.checked;
-
-  await _oldToggle(docId);
-
-  if(newValue){
-    const sheet=document.getElementById("sheetSelect")?.value||"鞋托架";
-    fetch("你的GAS",{
-      method:"POST",
-      body:JSON.stringify({...item,sheet})
-    }).then(()=>showToast("寫入成功"));
+    box.appendChild(select);
   }
-};
 
-setTimeout(injectSelector,500);
+  injectSelector();
+
+  /* ===== override ===== */
+  const _oldToggle = toggleCheck;
+
+  toggleCheck = async function(docId){
+
+    const item = items.find(i=>i.docId===docId);
+    const newValue = !item.checked;
+
+    await _oldToggle(docId);
+
+    if(newValue){
+      const sheet = document.getElementById("sheetSelect")?.value || "鞋托架";
+
+      fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
+        method:"POST",
+        body:JSON.stringify({
+          sheet,
+          title:item.title,
+          url:item.url,
+          shop:item.shop,
+          fans:item.fans,
+          company:item.company,
+          taxId:item.taxId,
+          sold:item.sold
+        })
+      })
+      .then(()=>showToast("✅ 已寫入 "+sheet))
+      .catch(()=>showToast("❌ 寫入失敗"));
+    }
+  };
+
+});
 
 </script>
 
