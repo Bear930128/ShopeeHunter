@@ -6,12 +6,18 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
+body{
+  margin:0;
+  font-family:sans-serif;
+  background:#0f172a;
+  color:#fff;
+  display:flex;
+}
 
-/* ⭐ 唯一修改 */
+/* ⭐ 修正1：防止 sidebar 被壓縮 */
 .sidebar{
   width:240px;
-  min-width:240px;
+  flex-shrink:0;
   background:#020617;
   height:100vh;
   padding:20px;
@@ -22,18 +28,44 @@ body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;
 .sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
 .sidebar button:hover{background:#1e293b;color:#fff;}
 
-.main{flex:1;padding:20px;}
+/* ⭐ 修正2：防止內容撐爆 */
+.main{
+  flex:1;
+  min-width:0;
+  padding:20px;
+}
 
 .stats{display:flex;gap:15px;margin-bottom:20px;}
 .stat,.chart-box,.card{background:#1e293b;border-radius:10px;}
 .stat{padding:20px;flex:1;}
 .chart-box{padding:20px;}
-.card{padding:20px;margin:12px 0;border:2px solid transparent;line-height:1.6;}
+
+.card{
+  padding:20px;
+  margin:12px 0;
+  border:2px solid transparent;
+  line-height:1.6;
+}
+
 .checked-card{border-color:#22c55e;}
 .rank{color:#facc15;font-weight:bold;}
+
 .search-box{margin-bottom:15px;}
-.search-box input{width:100%;padding:10px;border-radius:8px;border:none;}
-button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+
+.search-box input{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:none;
+}
+
+button{
+  padding:6px 10px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
 .view{background:#3b82f6;color:white;}
 .check{background:#22c55e;color:white;}
 .delete{background:#ef4444;color:white;}
@@ -83,15 +115,13 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 
 </div>
 
-<!-- ⚠️ 這裡開始全部保留你原本 JS（完整貼回） -->
-
 <script>
-/* 你的原本 JS（不要改） */
+/* 🔴 這裡以下全部請貼你原本的 JS（完全不動） */
 </script>
 
-<!-- ⭐ 新增功能（不要動） -->
+<!-- ⭐ 新增功能（你原本的） -->
 <script>
-/* 你原本的 toast / selector / toggle override */
+/* toast / selector / toggle override（照你原本貼） */
 </script>
 
 </body>
