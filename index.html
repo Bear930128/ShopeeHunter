@@ -73,7 +73,187 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 </div>
 
 <script>
-/* 👉 把你「原本正常版本」那整段 JS 原封不動貼進來 */
+const PROJECT_ID = "shopeehunter-84d05";
+const COLLECTION = "shopee";
+
+let items = [];
+let chart = null;
+let currentPage = "dashboard";
+
+function parseNum(str){
+  if(!str) return 0;
+  str = String(str).replace(/,/g,"").trim();
+  if(str.includes("萬")) return parseFloat(str) * 10000 || 0;
+  return parseFloat(str) || 0;
+}
+
+function sortByScore(arr){
+  return [...arr].sort((a,b)=>b.score-a.score);
+}
+
+function deduplicate(data){
+  const map = new Map();
+  data.forEach(item=>{
+    const key = item.url || item.title + "_" + item.shop;
+    if(!map.has(key)){
+      map.set(key,item);
+      return;
+    }
+    const old = map.get(key);
+    if(item.checked && !old.checked){
+      map.set(key,item);
+    }else if(item.checked === old.checked && item.score > old.score){
+      map.set(key,item);
+    }
+  });
+  return Array.from(map.values());
+}
+
+function showPage(page){
+  currentPage = page;
+
+  document.getElementById("dashboard").style.display="none";
+  document.getElementById("listPage").style.display="none";
+
+  if(page==="dashboard"){
+    document.getElementById("dashboard").style.display="block";
+    return;
+  }
+
+  document.getElementById("listPage").style.display="block";
+
+  if(page==="list"){
+    document.getElementById("listTitle").innerText="排行榜（未標記）";
+  }
+
+  if(page==="checked"){
+    document.getElementById("listTitle").innerText="已標記";
+  }
+
+  applySearch();
+}
+
+function applySearch(){
+  const keyword=document.getElementById("searchInput").value.toLowerCase();
+
+  let data=currentPage==="checked
+    ?items.filter(i=>i.checked)
+    :items.filter(i=>!i.checked);
+
+  if(keyword){
+    data=data.filter(i=>
+      i.title.toLowerCase().includes(keyword) ||
+      i.shop.toLowerCase().includes(keyword)
+    );
+  }
+
+  renderList(sortByScore(data));
+}
+
+function renderList(data){
+  let html="";
+  if(data.length===0){
+    document.getElementById("list").innerHTML="<div class='card'>目前沒有資料</div>";
+    return;
+  }
+
+  const maxScore=data[0]?.score||1;
+
+  data.forEach((item,i)=>{
+    const percent=((item.score/maxScore)*100).toFixed(0);
+
+    html+=`
+    <div class="card ${item.checked?'checked-card':''}">
+      <div class="rank">#${i+1}</div>
+      <div>商品名：${item.title}</div>
+      <div>店名：${item.shop}</div>
+      <div>銷量：${item.sold}</div>
+      <div>粉絲數：${item.fans}</div>
+      <div>登記公司：${item.company}</div>
+      <div>統編：${item.taxId}</div>
+      <div><b>侵權指數：${percent}%</b></div>
+
+      <div style="margin-top:10px;display:flex;gap:10px;">
+        <button class="view" onclick="openItem('${item.docId}')">查看</button>
+        <button class="check" onclick="toggleCheck('${item.docId}')">
+          ${item.checked?'取消標記':'✔標記'}
+        </button>
+        <button class="delete" onclick="deleteItem('${item.docId}')">刪除</button>
+      </div>
+    </div>`;
+  });
+
+  document.getElementById("list").innerHTML=html;
+}
+
+function openItem(docId){
+  const item=items.find(i=>i.docId===docId);
+  if(item?.url) window.open(item.url,"_blank");
+}
+
+async function toggleCheck(docId){
+  const item=items.find(i=>i.docId===docId);
+  if(!item) return;
+
+  const newValue=!item.checked;
+
+  await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}?updateMask.fieldPaths=checked`,
+    {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        fields:{checked:{booleanValue:newValue}}
+      })
+    }
+  );
+
+  item.checked=newValue;
+
+  renderDashboard();
+  applySearch();
+}
+
+function renderDashboard(){
+  const total=items.length;
+  const checked=items.filter(i=>i.checked).length;
+  const unchecked=total-checked;
+  const avg=total?items.reduce((a,b)=>a+b.score,0)/total:0;
+
+  document.getElementById("total").innerText=total;
+  document.getElementById("checkedCount").innerText=checked;
+  document.getElementById("uncheckedCount").innerText=unchecked;
+  document.getElementById("avg").innerText=avg.toFixed(0);
+
+  renderChart();
+}
+
+async function loadData(){
+  const res=await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`);
+  const data=await res.json();
+
+  const raw=data.documents.map(doc=>{
+    const f=doc.fields;
+
+    return {
+      docId:doc.name.split("/").pop(),
+      title:f.title?.stringValue||"",
+      shop:f.shop?.stringValue||"",
+      sold:f.sold?.stringValue||"0",
+      fans:f.fans?.stringValue||"0",
+      company:f.company?.stringValue||"",
+      taxId:f.taxId?.stringValue||"",
+      url:f.url?.stringValue||"",
+      checked:f.checked?.booleanValue||false,
+      score:parseNum(f.sold?.stringValue||"0")*0.7+parseNum(f.fans?.stringValue||"0")*0.3
+    };
+  });
+
+  items=deduplicate(raw);
+  renderDashboard();
+}
+
+loadData();
 </script>
 
 </body>
