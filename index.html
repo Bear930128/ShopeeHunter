@@ -44,7 +44,6 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 </div>
 
 <div class="main">
-
   <div id="dashboard">
     <h1>Dashboard</h1>
 
@@ -69,97 +68,68 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
 
     <div id="list"></div>
   </div>
-
 </div>
 
-<!-- ===== 原本主JS（完全保留） ===== -->
+<!-- 🔴 主JS（你原本的） -->
 <script>
-/* 🔴 你原本整段 JS 그대로貼（不要改） */
+/* 這裡貼你原本完整 JS（不要改） */
 </script>
 
-<!-- ===== 新增功能（完全保留） ===== -->
+<!-- 🔴 新增功能（移到 body 內） -->
 <script>
 
-/* ===== 通知 ===== */
+/* toast */
 function showToast(msg){
-  let t = document.getElementById("toast_box");
-
+  let t=document.getElementById("toast_box");
   if(!t){
-    t = document.createElement("div");
-    t.id = "toast_box";
-    t.style.position = "fixed";
-    t.style.top = "20px";
-    t.style.right = "20px";
-    t.style.background = "#22c55e";
-    t.style.padding = "12px 20px";
-    t.style.borderRadius = "8px";
-    t.style.zIndex = "9999";
-    t.style.display = "none";
+    t=document.createElement("div");
+    t.id="toast_box";
+    t.style.position="fixed";
+    t.style.top="20px";
+    t.style.right="20px";
+    t.style.background="#22c55e";
+    t.style.padding="12px 20px";
+    t.style.borderRadius="8px";
+    t.style.zIndex="9999";
     document.body.appendChild(t);
   }
-
-  t.innerText = msg;
-  t.style.display = "block";
-
-  setTimeout(()=>{
-    t.style.display = "none";
-  },2000);
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",2000);
 }
 
-
-/* ===== 下拉選單 ===== */
+/* selector */
 function injectSelector(){
+  const box=document.querySelector(".search-box");
+  if(!box||document.getElementById("sheetSelect")) return;
 
-  const box = document.querySelector(".search-box");
-  if(!box || document.getElementById("sheetSelect")) return;
+  const select=document.createElement("select");
+  select.id="sheetSelect";
 
-  const select = document.createElement("select");
-  select.id = "sheetSelect";
-  select.style.marginTop = "10px";
-  select.style.padding = "8px";
-  select.style.borderRadius = "6px";
-
-  const list = ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"];
-
-  list.forEach(name=>{
-    const opt = document.createElement("option");
-    opt.textContent = name;
+  ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"]
+  .forEach(name=>{
+    const opt=document.createElement("option");
+    opt.textContent=name;
     select.appendChild(opt);
   });
 
   box.appendChild(select);
 }
 
-
-/* ===== 改寫 toggleCheck ===== */
+/* override */
 const _oldToggle = toggleCheck;
-
 toggleCheck = async function(docId){
-
   const item = items.find(i=>i.docId===docId);
-  const newValue = !item.checked;
+  const newValue=!item.checked;
 
   await _oldToggle(docId);
 
   if(newValue){
-
-    const sheet = document.getElementById("sheetSelect")?.value || "鞋托架";
-
-    fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
+    const sheet=document.getElementById("sheetSelect")?.value||"鞋托架";
+    fetch("你的GAS",{
       method:"POST",
-      body:JSON.stringify({
-        sheet: sheet,
-        title:item.title,
-        url:item.url,
-        shop:item.shop,
-        fans:item.fans,
-        company:item.company,
-        taxId:item.taxId,
-        sold:item.sold
-      })
-    })
-    .then(()=>showToast("✅ 已寫入 "+sheet))
-    .catch(()=>showToast("❌ 寫入失敗"));
+      body:JSON.stringify({...item,sheet})
+    }).then(()=>showToast("寫入成功"));
   }
 };
 
