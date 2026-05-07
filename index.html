@@ -7,29 +7,44 @@
 <style>
 body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
 .sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
+.sidebar h2{margin-bottom:20px;}
 .sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
+.sidebar button:hover{background:#1e293b;color:#fff;}
 .main{flex:1;padding:20px;}
-.card{background:#1e293b;border-radius:10px;padding:20px;margin:10px 0;}
+.stats{display:flex;gap:15px;margin-bottom:20px;}
+.stat,.card{background:#1e293b;border-radius:10px;padding:20px;}
+.card{margin:10px 0;}
+.rank{color:#facc15;font-weight:bold;}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+.view{background:#3b82f6;color:white;}
+.check{background:#22c55e;color:white;}
 </style>
 </head>
 
 <body>
 
 <div class="sidebar">
+  <h2>🔥 ShopeeHunter</h2>
   <button onclick="showPage('dashboard')">Dashboard</button>
   <button onclick="showPage('list')">排行榜</button>
 </div>
 
 <div class="main">
+
   <div id="dashboard">
     <h1>Dashboard</h1>
-    <div id="status">初始化中...</div>
+    <div class="stats">
+      <div class="stat">總筆數：<span id="total">0</span></div>
+      <div class="stat">已標記：<span id="checked">0</span></div>
+    </div>
+    <div id="status">載入中...</div>
   </div>
 
   <div id="listPage" style="display:none;">
     <h1>排行榜</h1>
     <div id="list"></div>
   </div>
+
 </div>
 
 <script>
@@ -37,8 +52,21 @@ const PROJECT_ID = "shopeehunter-84d05";
 const COLLECTION = "shopee";
 
 let items = [];
+let currentPage = "dashboard";
 
+/* 🔥 Firestore 安全解析 */
+function getVal(obj){
+  if(!obj) return "";
+  if(obj.stringValue !== undefined) return obj.stringValue;
+  if(obj.integerValue !== undefined) return Number(obj.integerValue);
+  if(obj.doubleValue !== undefined) return obj.doubleValue;
+  if(obj.booleanValue !== undefined) return obj.booleanValue;
+  return "";
+}
+
+/* 頁面切換 */
 function showPage(p){
+  currentPage = p;
   document.getElementById("dashboard").style.display="none";
   document.getElementById("listPage").style.display="none";
 
@@ -50,60 +78,98 @@ function showPage(p){
   }
 }
 
+/* 渲染列表 */
 function renderList(){
   let html="";
-
   if(items.length===0){
     html="<div class='card'>沒有資料</div>";
   }
 
-  items.forEach(item=>{
+  items.forEach((item,i)=>{
     html+=`
     <div class="card">
-      <div>${item.title}</div>
-      <div>${item.shop}</div>
+      <div class="rank">#${i+1}</div>
+      <div>商品：${item.title}</div>
+      <div>店家：${item.shop}</div>
+      <div>銷量：${item.sold}</div>
+      <div>粉絲：${item.fans}</div>
+
+      <button class="view" onclick="window.open('${item.url}')">查看</button>
+      <button class="check" onclick="toggleCheck('${item.docId}')">
+        ${item.checked ? "取消" : "標記"}
+      </button>
     </div>`;
   });
 
   document.getElementById("list").innerHTML=html;
 }
 
+/* 切換標記 */
+async function toggleCheck(id){
+  const item = items.find(i=>i.docId===id);
+  if(!item) return;
+
+  const newVal = !item.checked;
+
+  await fetch(
+    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${id}?updateMask.fieldPaths=checked`,
+    {
+      method:"PATCH",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        fields:{checked:{booleanValue:newVal}}
+      })
+    }
+  );
+
+  item.checked = newVal;
+  renderDashboard();
+  renderList();
+}
+
+/* Dashboard */
+function renderDashboard(){
+  const total = items.length;
+  const checked = items.filter(i=>i.checked).length;
+
+  document.getElementById("total").innerText = total;
+  document.getElementById("checked").innerText = checked;
+}
+
+/* 載入資料（防炸版） */
 async function loadData(){
   try{
-
-    document.getElementById("status").innerText = "載入中...";
-
     const res = await fetch(
       `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
     );
 
     const data = await res.json();
+    console.log(data);
 
-    console.log("Firestore回傳：", data);
-
-    // ⭐ 防炸判斷（關鍵）
     if(!data.documents){
-      document.getElementById("status").innerText =
-        "❌ 沒有 documents（可能API失敗或權限問題）";
+      document.getElementById("status").innerText="❌ 沒抓到資料（權限或API問題）";
       return;
     }
 
     items = data.documents.map(doc=>{
       const f = doc.fields || {};
-
       return {
-        title: f.title?.stringValue || "無標題",
-        shop: f.shop?.stringValue || ""
+        docId: doc.name.split("/").pop(),
+        title: getVal(f.title),
+        shop: getVal(f.shop),
+        sold: getVal(f.sold),
+        fans: getVal(f.fans),
+        url: getVal(f.url),
+        checked: getVal(f.checked) || false
       };
     });
 
-    document.getElementById("status").innerText =
-      "✅ 載入成功：" + items.length;
+    document.getElementById("status").innerText="✅ 載入成功";
+    renderDashboard();
 
-  }catch(err){
-    console.error(err);
-    document.getElementById("status").innerText =
-      "❌ JS錯誤：" + err.message;
+  }catch(e){
+    document.getElementById("status").innerText="❌ JS錯誤："+e.message;
+    console.error(e);
   }
 }
 
