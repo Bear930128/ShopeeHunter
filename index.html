@@ -1,73 +1,114 @@
-<!-- ⭐ 新增功能（安全版，放在 </body> 前） -->
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>ShopeeHunter</title>
+
+<style>
+body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
+.sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
+.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
+.main{flex:1;padding:20px;}
+.card{background:#1e293b;border-radius:10px;padding:20px;margin:10px 0;}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+  <button onclick="showPage('dashboard')">Dashboard</button>
+  <button onclick="showPage('list')">排行榜</button>
+</div>
+
+<div class="main">
+  <div id="dashboard">
+    <h1>Dashboard</h1>
+    <div id="status">初始化中...</div>
+  </div>
+
+  <div id="listPage" style="display:none;">
+    <h1>排行榜</h1>
+    <div id="list"></div>
+  </div>
+</div>
+
 <script>
+const PROJECT_ID = "shopeehunter-84d05";
+const COLLECTION = "shopee";
 
-window.addEventListener("load", () => {
+let items = [];
 
-/* ===== 通知 ===== */
-function showToast(msg){
-  let t = document.getElementById("toast_box");
+function showPage(p){
+  document.getElementById("dashboard").style.display="none";
+  document.getElementById("listPage").style.display="none";
 
-  if(!t){
-    t = document.createElement("div");
-    t.id = "toast_box";
-    t.style.position = "fixed";
-    t.style.top = "20px";
-    t.style.right = "20px";
-    t.style.background = "#22c55e";
-    t.style.padding = "12px 20px";
-    t.style.borderRadius = "8px";
-    t.style.zIndex = "9999";
-    document.body.appendChild(t);
+  if(p==="dashboard"){
+    document.getElementById("dashboard").style.display="block";
+  }else{
+    document.getElementById("listPage").style.display="block";
+    renderList();
+  }
+}
+
+function renderList(){
+  let html="";
+
+  if(items.length===0){
+    html="<div class='card'>沒有資料</div>";
   }
 
-  t.innerText = msg;
-  t.style.display = "block";
-  setTimeout(()=>t.style.display="none",2000);
-}
-
-/* ===== 下拉選單 ===== */
-function injectSelector(){
-  const box = document.querySelector(".search-box");
-  if(!box || document.getElementById("sheetSelect")) return;
-
-  const select = document.createElement("select");
-  select.id = "sheetSelect";
-
-  ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"]
-  .forEach(name=>{
-    const opt = document.createElement("option");
-    opt.textContent = name;
-    select.appendChild(opt);
+  items.forEach(item=>{
+    html+=`
+    <div class="card">
+      <div>${item.title}</div>
+      <div>${item.shop}</div>
+    </div>`;
   });
 
-  box.appendChild(select);
+  document.getElementById("list").innerHTML=html;
 }
 
-/* ===== 安全 override ===== */
-if(typeof toggleCheck === "function"){
-  const _oldToggle = toggleCheck;
+async function loadData(){
+  try{
 
-  toggleCheck = async function(docId){
+    document.getElementById("status").innerText = "載入中...";
 
-    const item = items.find(i=>i.docId===docId);
-    const newValue = !item.checked;
+    const res = await fetch(
+      `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
+    );
 
-    await _oldToggle(docId);
+    const data = await res.json();
 
-    if(newValue){
-      const sheet = document.getElementById("sheetSelect")?.value || "鞋托架";
+    console.log("Firestore回傳：", data);
 
-      fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
-        method:"POST",
-        body:JSON.stringify({...item, sheet})
-      })
-      .then(()=>showToast("✅ 已寫入 "+sheet))
-      .catch(()=>showToast("❌ 寫入失敗"));
+    // ⭐ 防炸判斷（關鍵）
+    if(!data.documents){
+      document.getElementById("status").innerText =
+        "❌ 沒有 documents（可能API失敗或權限問題）";
+      return;
     }
-  };
+
+    items = data.documents.map(doc=>{
+      const f = doc.fields || {};
+
+      return {
+        title: f.title?.stringValue || "無標題",
+        shop: f.shop?.stringValue || ""
+      };
+    });
+
+    document.getElementById("status").innerText =
+      "✅ 載入成功：" + items.length;
+
+  }catch(err){
+    console.error(err);
+    document.getElementById("status").innerText =
+      "❌ JS錯誤：" + err.message;
+  }
 }
 
-injectSelector();
-
-});
+loadData();
 </script>
+
+</body>
+</html>
