@@ -1,42 +1,73 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<title>ShopeeHunter</title>
-
-<style>
-body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
-.sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
-.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
-.main{flex:1;padding:20px;}
-.card{background:#1e293b;border-radius:10px;padding:20px;margin:10px 0;}
-</style>
-</head>
-
-<body>
-
-<div class="sidebar">
-  <button onclick="showPage('dashboard')">Dashboard</button>
-  <button onclick="showPage('list')">排行榜</button>
-</div>
-
-<div class="main">
-  <div id="dashboard">首頁正常</div>
-  <div id="listPage" style="display:none;">列表頁</div>
-</div>
-
+<!-- ⭐ 新增功能（安全版，放在 </body> 前） -->
 <script>
-function showPage(p){
-  document.getElementById("dashboard").style.display="none";
-  document.getElementById("listPage").style.display="none";
 
-  if(p==="dashboard"){
-    document.getElementById("dashboard").style.display="block";
-  }else{
-    document.getElementById("listPage").style.display="block";
+window.addEventListener("load", () => {
+
+/* ===== 通知 ===== */
+function showToast(msg){
+  let t = document.getElementById("toast_box");
+
+  if(!t){
+    t = document.createElement("div");
+    t.id = "toast_box";
+    t.style.position = "fixed";
+    t.style.top = "20px";
+    t.style.right = "20px";
+    t.style.background = "#22c55e";
+    t.style.padding = "12px 20px";
+    t.style.borderRadius = "8px";
+    t.style.zIndex = "9999";
+    document.body.appendChild(t);
   }
-}
-</script>
 
-</body>
-</html>
+  t.innerText = msg;
+  t.style.display = "block";
+  setTimeout(()=>t.style.display="none",2000);
+}
+
+/* ===== 下拉選單 ===== */
+function injectSelector(){
+  const box = document.querySelector(".search-box");
+  if(!box || document.getElementById("sheetSelect")) return;
+
+  const select = document.createElement("select");
+  select.id = "sheetSelect";
+
+  ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"]
+  .forEach(name=>{
+    const opt = document.createElement("option");
+    opt.textContent = name;
+    select.appendChild(opt);
+  });
+
+  box.appendChild(select);
+}
+
+/* ===== 安全 override ===== */
+if(typeof toggleCheck === "function"){
+  const _oldToggle = toggleCheck;
+
+  toggleCheck = async function(docId){
+
+    const item = items.find(i=>i.docId===docId);
+    const newValue = !item.checked;
+
+    await _oldToggle(docId);
+
+    if(newValue){
+      const sheet = document.getElementById("sheetSelect")?.value || "鞋托架";
+
+      fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
+        method:"POST",
+        body:JSON.stringify({...item, sheet})
+      })
+      .then(()=>showToast("✅ 已寫入 "+sheet))
+      .catch(()=>showToast("❌ 寫入失敗"));
+    }
+  };
+}
+
+injectSelector();
+
+});
+</script>
