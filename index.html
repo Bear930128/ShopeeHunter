@@ -91,24 +91,6 @@ function sortByScore(arr){
   return [...arr].sort((a,b)=>b.score-a.score);
 }
 
-function deduplicate(data){
-  const map = new Map();
-  data.forEach(item=>{
-    const key = item.url || item.title + "_" + item.shop;
-    if(!map.has(key)){
-      map.set(key,item);
-      return;
-    }
-    const old = map.get(key);
-    if(item.checked && !old.checked){
-      map.set(key,item);
-    }else if(item.checked === old.checked && item.score > old.score){
-      map.set(key,item);
-    }
-  });
-  return Array.from(map.values());
-}
-
 function showPage(page){
   currentPage = page;
 
@@ -191,46 +173,6 @@ function openItem(docId){
   if(item?.url) window.open(item.url,"_blank");
 }
 
-async function toggleCheck(docId){
-  const item=items.find(i=>i.docId===docId);
-  if(!item) return;
-
-  const newValue=!item.checked;
-
-  await fetch(
-    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${docId}?updateMask.fieldPaths=checked`,
-    {
-      method:"PATCH",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        fields:{checked:{booleanValue:newValue}}
-      })
-    }
-  );
-
-  item.checked=newValue;
-
-  if(newValue){
-    fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
-      method:"POST",
-      body:JSON.stringify({
-        title:item.title,
-        url:item.url,
-        shop:item.shop,
-        fans:item.fans,
-        company:item.company,
-        taxId:item.taxId,
-        sold:item.sold
-      })
-    })
-    .then(()=>alert("✅ 已寫入試算表"))
-    .catch(()=>alert("❌ 寫入失敗"));
-  }
-
-  renderDashboard();
-  applySearch();
-}
-
 async function deleteItem(docId){
   if(!confirm("確定刪除？")) return;
 
@@ -304,7 +246,27 @@ async function loadData(){
     };
   });
 
-  items=deduplicate(raw);
+  // ⭐⭐⭐ 最終去重（不可能出現兩筆）⭐⭐⭐
+  const map = new Map();
+
+  raw.forEach(item=>{
+    const key = item.url;
+
+    if(!map.has(key)){
+      map.set(key,item);
+    }else{
+      const old = map.get(key);
+
+      if(item.checked && !old.checked){
+        map.set(key,item);
+      }else if(item.checked === old.checked && item.score > old.score){
+        map.set(key,item);
+      }
+    }
+  });
+
+  items = Array.from(map.values());
+
   renderDashboard();
 }
 
@@ -313,97 +275,3 @@ loadData();
 
 </body>
 </html>
-
-<!-- ⭐ 新增功能（不要動原本任何東西） -->
-<script>
-
-/* ===== 通知 ===== */
-function showToast(msg){
-  let t = document.getElementById("toast_box");
-
-  if(!t){
-    t = document.createElement("div");
-    t.id = "toast_box";
-    t.style.position = "fixed";
-    t.style.top = "20px";
-    t.style.right = "20px";
-    t.style.background = "#22c55e";
-    t.style.padding = "12px 20px";
-    t.style.borderRadius = "8px";
-    t.style.zIndex = "9999";
-    t.style.display = "none";
-    document.body.appendChild(t);
-  }
-
-  t.innerText = msg;
-  t.style.display = "block";
-
-  setTimeout(()=>{
-    t.style.display = "none";
-  },2000);
-}
-
-
-/* ===== 下拉選單（自動加） ===== */
-function injectSelector(){
-
-  const box = document.querySelector(".search-box");
-  if(!box || document.getElementById("sheetSelect")) return;
-
-  const select = document.createElement("select");
-  select.id = "sheetSelect";
-  select.style.marginTop = "10px";
-  select.style.padding = "8px";
-  select.style.borderRadius = "6px";
-
-  const list = ["鞋托架","置物架","手機架","文件盒","鏡櫃盒","翻蓋盒"];
-
-  list.forEach(name=>{
-    const opt = document.createElement("option");
-    opt.textContent = name;
-    select.appendChild(opt);
-  });
-
-  box.appendChild(select);
-}
-
-
-/* ===== 改寫 toggleCheck（不動原本） ===== */
-const _oldToggle = toggleCheck;
-
-toggleCheck = async function(docId){
-
-  const item = items.find(i=>i.docId===docId);
-  const newValue = !item.checked;
-
-  // 👉 先跑原本的
-  await _oldToggle(docId);
-
-  // 👉 只在「標記時」新增功能
-  if(newValue){
-
-    const sheet = document.getElementById("sheetSelect")?.value || "鞋托架";
-
-    fetch("https://script.google.com/macros/s/AKfycbzVsVpAH-ZMJhq8CamtNhIcRlguUM6WjyH2BLS7Y1TmP_JWj3bOlN7T19ddhlIaSzaq/exec",{
-      method:"POST",
-      body:JSON.stringify({
-        sheet: sheet,
-        title:item.title,
-        url:item.url,
-        shop:item.shop,
-        fans:item.fans,
-        company:item.company,
-        taxId:item.taxId,
-        sold:item.sold
-      })
-    })
-    .then(()=>showToast("✅ 已寫入 "+sheet))
-    .catch(()=>showToast("❌ 寫入失敗"));
-  }
-};
-
-
-/* ===== 啟動 ===== */
-setTimeout(injectSelector,500);
-
-</script>
