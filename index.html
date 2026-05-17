@@ -1,180 +1,68 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-<meta charset="UTF-8">
-<title>ShopeeHunter</title>
-
-<style>
-body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
-.sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
-.sidebar h2{margin-bottom:20px;}
-.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
-.sidebar button:hover{background:#1e293b;color:#fff;}
-.main{flex:1;padding:20px;}
-.stats{display:flex;gap:15px;margin-bottom:20px;}
-.stat,.card{background:#1e293b;border-radius:10px;padding:20px;}
-.card{margin:10px 0;}
-.rank{color:#facc15;font-weight:bold;}
-button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
-.view{background:#3b82f6;color:white;}
-.check{background:#22c55e;color:white;}
-</style>
-</head>
-
-<body>
-
-<div class="sidebar">
-  <h2>🔥 ShopeeHunter</h2>
-  <button onclick="showPage('dashboard')">Dashboard</button>
-  <button onclick="showPage('list')">排行榜</button>
-</div>
-
-<div class="main">
-
-  <div id="dashboard">
-    <h1>Dashboard</h1>
-    <div class="stats">
-      <div class="stat">總筆數：<span id="total">0</span></div>
-      <div class="stat">已標記：<span id="checked">0</span></div>
-    </div>
-    <div id="status">載入中...</div>
-  </div>
-
-  <div id="listPage" style="display:none;">
-    <h1>排行榜</h1>
-    <div id="list"></div>
-  </div>
-
-</div>
-
-<script>
-const PROJECT_ID = "shopeehunter-84d05";
-const COLLECTION = "shopee";
-
-let items = [];
-let currentPage = "dashboard";
-
-/* 🔥 Firestore 安全解析 */
-function getVal(obj){
-  if(!obj) return "";
-  if(obj.stringValue !== undefined) return obj.stringValue;
-  if(obj.integerValue !== undefined) return Number(obj.integerValue);
-  if(obj.doubleValue !== undefined) return obj.doubleValue;
-  if(obj.booleanValue !== undefined) return obj.booleanValue;
-  return "";
+function getPageType() {
+  const url = window.location.href;
+  // 商品頁：含有 i.數字.數字（蝦皮商品ID格式）
+  if (url.match(/i\.\d+\.\d+/)) return 'product';
+  // 商品頁：路徑層數多（店名/商品名）
+  const path = url.replace(/https?:\/\/[^/]+/, '').split('?')[0];
+  const parts = path.split('/').filter(Boolean);
+  if (parts.length >= 2) return 'product';
+  // 賣場頁：含 /shop/ 或路徑只有一段
+  if (url.includes('/shop/') || parts.length <= 1) return 'shop';
+  return 'unknown';
 }
 
-/* 頁面切換 */
-function showPage(p){
-  currentPage = p;
-  document.getElementById("dashboard").style.display="none";
-  document.getElementById("listPage").style.display="none";
+function parseSalesNum(str) {
+  if (!str) return 0;
+  const s = str.replace(/,/g, '');
+  if (/萬/.test(s)) return Math.round(parseFloat(s) * 10000);
+  if (/k/i.test(s)) return Math.round(parseFloat(s) * 1000);
+  return parseInt(s) || 0;
+}
 
-  if(p==="dashboard"){
-    document.getElementById("dashboard").style.display="block";
-  }else{
-    document.getElementById("listPage").style.display="block";
-    renderList();
+function scrapeProduct() {
+  const result = { type: 'product', url: window.location.href, product: '', sales: 0 };
+  const nameEls = document.querySelectorAll('h1');
+  for (const el of nameEls) {
+    const t = el.textContent.trim();
+    if (t.length > 2) { result.product = t; break; }
   }
-}
-
-/* 渲染列表 */
-function renderList(){
-  let html="";
-  if(items.length===0){
-    html="<div class='card'>沒有資料</div>";
+  const allEls = Array.from(document.querySelectorAll('*'));
+  for (const el of allEls) {
+    if (el.children.length > 0) continue;
+    const t = el.textContent.trim();
+    const m = t.match(/^([\d,\.]+[萬k]?)\s*(已售出|sold)/i);
+    if (m) { result.sales = parseSalesNum(m[1]); break; }
   }
-
-  items.forEach((item,i)=>{
-    html+=`
-    <div class="card">
-      <div class="rank">#${i+1}</div>
-      <div>商品：${item.title}</div>
-      <div>店家：${item.shop}</div>
-      <div>銷量：${item.sold}</div>
-      <div>粉絲：${item.fans}</div>
-
-      <button class="view" onclick="window.open('${item.url}')">查看</button>
-      <button class="check" onclick="toggleCheck('${item.docId}')">
-        ${item.checked ? "取消" : "標記"}
-      </button>
-    </div>`;
-  });
-
-  document.getElementById("list").innerHTML=html;
+  return result;
 }
 
-/* 切換標記 */
-async function toggleCheck(id){
-  const item = items.find(i=>i.docId===id);
-  if(!item) return;
-
-  const newVal = !item.checked;
-
-  await fetch(
-    `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}/${id}?updateMask.fieldPaths=checked`,
-    {
-      method:"PATCH",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        fields:{checked:{booleanValue:newVal}}
-      })
+function scrapeShop() {
+  const result = { type: 'shop', shopName: '', fans: 0, company: '無', taxId: '無' };
+  const h1 = document.querySelector('h1');
+  if (h1) result.shopName = h1.textContent.trim();
+  const bodyText = document.body.innerText;
+  const allEls = Array.from(document.querySelectorAll('*'));
+  for (const el of allEls) {
+    if (el.children.length > 0) continue;
+    const t = el.textContent.trim();
+    if (/粉絲|follower/i.test(t)) {
+      const parent = el.closest('[class]') || el.parentElement;
+      if (parent) {
+        const nums = parent.textContent.match(/[\d,\.]+[萬k]?/g);
+        if (nums) { result.fans = parseSalesNum(nums[0]); break; }
+      }
     }
-  );
-
-  item.checked = newVal;
-  renderDashboard();
-  renderList();
-}
-
-/* Dashboard */
-function renderDashboard(){
-  const total = items.length;
-  const checked = items.filter(i=>i.checked).length;
-
-  document.getElementById("total").innerText = total;
-  document.getElementById("checked").innerText = checked;
-}
-
-/* 載入資料（防炸版） */
-async function loadData(){
-  try{
-    const res = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`
-    );
-
-    const data = await res.json();
-    console.log(data);
-
-    if(!data.documents){
-      document.getElementById("status").innerText="❌ 沒抓到資料（權限或API問題）";
-      return;
-    }
-
-    items = data.documents.map(doc=>{
-      const f = doc.fields || {};
-      return {
-        docId: doc.name.split("/").pop(),
-        title: getVal(f.title),
-        shop: getVal(f.shop),
-        sold: getVal(f.sold),
-        fans: getVal(f.fans),
-        url: getVal(f.url),
-        checked: getVal(f.checked) || false
-      };
-    });
-
-    document.getElementById("status").innerText="✅ 載入成功";
-    renderDashboard();
-
-  }catch(e){
-    document.getElementById("status").innerText="❌ JS錯誤："+e.message;
-    console.error(e);
   }
+  const taxM = bodyText.match(/統[一]?編[號]?[：:]\s*(\d{8})|(\d{8})/);
+  if (taxM) result.taxId = taxM[1] || taxM[2];
+  const compM = bodyText.match(/([^\n\r]{2,20}(?:股份)?有限公司|[^\n\r]{2,10}企業社|[^\n\r]{2,10}工作室)/);
+  if (compM && compM[1].length <= 30) result.company = compM[1].trim();
+  return result;
 }
 
-loadData();
-</script>
-
-</body>
-</html>
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg.action === 'getPageType') sendResponse({ pageType: getPageType() });
+  if (msg.action === 'scrapeProduct') sendResponse(scrapeProduct());
+  if (msg.action === 'scrapeShop') sendResponse(scrapeShop());
+  return true;
+});
