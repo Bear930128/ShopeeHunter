@@ -1,11 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>ShopeeHunter</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
+.sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
+.sidebar h2{margin-bottom:20px;}
+.group-title{margin-top:20px;margin-bottom:8px;font-size:12px;color:#64748b;}
+.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
+.sidebar button:hover{background:#1e293b;color:#fff;}
+.main{flex:1;padding:20px;}
+.stats{display:flex;gap:15px;margin-bottom:20px;}
+.stat,.chart-box,.card{background:#1e293b;border-radius:10px;}
+.stat{padding:20px;flex:1;}
+.chart-box{padding:20px;}
+.card{padding:20px;margin:12px 0;border:2px solid transparent;}
+.checked-card{border-color:#22c55e;}
+.rank{color:#facc15;font-weight:bold;}
+.search-box{margin-bottom:15px;}
+.search-box input{width:100%;padding:10px;border-radius:8px;border:none;}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+.view{background:#3b82f6;color:white;}
+.check{background:#22c55e;color:white;}
+.delete{background:#ef4444;color:white;}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+  <h2>🔥 ShopeeHunter</h2>
+  <div class="group-title">主功能</div>
+  <button onclick="showPage('dashboard')">🏠 Dashboard</button>
+  <button onclick="showPage('list')">📊 排行榜</button>
+  <button onclick="showPage('checked')">✔ 已標記</button>
+</div>
+
+<div class="main">
+
+  <div id="dashboard">
+    <h1>Dashboard</h1>
+
+    <div class="stats">
+      <div class="stat">總筆數：<span id="total">0</span></div>
+      <div class="stat">已標記：<span id="checkedCount">0</span></div>
+      <div class="stat">未標記：<span id="uncheckedCount">0</span></div>
+      <div class="stat">平均指數：<span id="avg">0</span></div>
+    </div>
+
+    <div class="chart-box">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <div id="listPage" style="display:none;">
+    <h1 id="listTitle">排行榜</h1>
+    <div class="search-box">
+      <input id="searchInput" placeholder="搜尋..." oninput="applySearch()">
+    </div>
+    <div id="list"></div>
+  </div>
+
+</div>
+
+<script>
+const PROJECT_ID = "shopeehunter-84d05";
+const COLLECTION = "shopee";
+
+let items = [];
+let currentPage = "dashboard";
+let chart = null;
+
+function parseNum(str){
+  if(!str) return 0;
+  str = String(str).replace(/,/g,"");
+  if(str.includes("萬")) return parseFloat(str)*10000;
+  return parseFloat(str)||0;
+}
+
+function showPage(p){
+  currentPage = p;
+  dashboard.style.display = p==="dashboard"?"block":"none";
+  listPage.style.display = p!=="dashboard"?"block":"none";
+  applySearch();
+}
+
+function applySearch(){
+  let data = currentPage==="checked"
+    ?items.filter(i=>i.checked)
+    :items.filter(i=>!i.checked);
+
+  renderList(data);
+}
+
+function renderList(data){
+  let html="";
+  data.forEach((item,i)=>{
+    html+=`
+    <div class="card ${item.checked?'checked-card':''}">
+      <div class="rank">#${i+1}</div>
+      <div>${item.title}</div>
+      <div>${item.shop}</div>
+      <div>${item.sold}</div>
+    </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function renderDashboard(){
+  total.innerText = items.length;
+  checkedCount.innerText = items.filter(i=>i.checked).length;
+  uncheckedCount.innerText = items.filter(i=>!i.checked).length;
+}
+
+/* ⭐⭐⭐ 核心：強制去重 ⭐⭐⭐ */
+function deduplicate(data){
+  const map = new Map();
+
+  data.forEach(item=>{
+    if(!item.url) return;
+
+    const key = item.url.trim();
+
+    if(!map.has(key)){
+      map.set(key,item);
+    }else{
+      const old = map.get(key);
+
+      // 保留最新時間
+      if((item.time||"") > (old.time||"")){
+        map.set(key,item);
+      }
+    }
+  });
+
+  return Array.from(map.values());
+}
+
 async function loadData(){
 
   try{
-
     const res = await fetch(`https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/${COLLECTION}`);
     const data = await res.json();
 
-    // ⭐ 防呆（這行很重要）
     if(!data || !data.documents){
       items = [];
       renderDashboard();
@@ -14,66 +154,34 @@ async function loadData(){
 
     const raw = data.documents.map(doc=>{
       const f = doc.fields || {};
-
-      const sold = f.sold?.stringValue || "0";
-      const fans = f.fans?.stringValue || "0";
-
       return {
         docId: doc.name.split("/").pop(),
         title: f.title?.stringValue || "",
         shop: f.shop?.stringValue || "",
-        sold,
-        fans,
-        company: f.company?.stringValue || "",
-        taxId: f.taxId?.stringValue || "",
+        sold: f.sold?.stringValue || "0",
+        fans: f.fans?.stringValue || "0",
         url: f.url?.stringValue || "",
-        checked: f.checked?.booleanValue || false,
         time: f.time?.stringValue || "",
-        score: parseNum(sold)*0.7 + parseNum(fans)*0.3
+        checked: f.checked?.booleanValue || false,
+        score: parseNum(f.sold?.stringValue)*0.7 + parseNum(f.fans?.stringValue)*0.3
       };
     });
 
-    // ⭐⭐⭐ 去重（最穩版本）⭐⭐⭐
-    const map = new Map();
-
-    raw.forEach(item => {
-
-      if(!item.url) return;
-
-      const key = item.url.trim();
-
-      if(!map.has(key)){
-        map.set(key, item);
-      }else{
-        const old = map.get(key);
-
-        // ⭐ 優先保留已標記
-        if(item.checked && !old.checked){
-          map.set(key, item);
-          return;
-        }
-
-        // ⭐ 用時間判斷（一定要）
-        if((item.time || "") > (old.time || "")){
-          map.set(key, item);
-        }
-      }
-
-    });
-
-    items = Array.from(map.values());
-
-    items.sort((a,b)=>b.score - a.score);
+    // ⭐⭐⭐ 去重執行 ⭐⭐⭐
+    items = deduplicate(raw);
 
     renderDashboard();
-
-    if(currentPage !== "dashboard"){
-      applySearch();
-    }
+    applySearch();
 
   }catch(e){
-    console.log("❌ loadData錯誤", e);
-    items = [];
+    console.log("錯誤",e);
+    items=[];
     renderDashboard();
   }
 }
+
+loadData();
+</script>
+
+</body>
+</html>
