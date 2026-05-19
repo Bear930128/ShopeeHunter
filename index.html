@@ -579,6 +579,13 @@
       return String(value || "").trim();
     }
 
+    function cleanKey(value) {
+      return String(value || "")
+        .replace(/\uFEFF/g, "")
+        .replace(/\u00A0/g, " ")
+        .trim();
+    }
+
     function numberValue(value) {
       let text = String(value || "").trim();
       if (!text) return 0;
@@ -620,12 +627,12 @@
     function getField(row, names) {
       const normalizedRow = {};
 
-      Object.keys(row).forEach(key => {
-        normalizedRow[String(key).trim()] = row[key];
+      Object.keys(row || {}).forEach(key => {
+        normalizedRow[cleanKey(key)] = row[key];
       });
 
       for (const name of names) {
-        const cleanName = String(name).trim();
+        const cleanName = cleanKey(name);
 
         if (
           normalizedRow[cleanName] !== undefined &&
@@ -721,8 +728,7 @@
       setStatus("資料同步中");
 
       try {
-        const url = OPENSHEET_URL + "?t=" + Date.now();
-        const res = await fetch(url, { cache: "no-store" });
+        const res = await fetch(OPENSHEET_URL + "?t=" + Date.now(), { cache: "no-store" });
 
         if (!res.ok) {
           throw new Error("OpenSheet HTTP " + res.status);
@@ -731,15 +737,15 @@
         const rows = await res.json();
 
         if (!Array.isArray(rows)) {
-          throw new Error("OpenSheet 回傳格式錯誤");
+          throw new Error(rows && rows.error ? rows.error : "OpenSheet 回傳格式不是陣列");
         }
 
-        allItems = dedupeItems(
-          rows
-            .map(normalizeRow)
-            .filter(item => item.id && item.product)
-            .filter(item => !deletedIds.has(item.id))
-        );
+        const normalizedItems = rows
+          .map(normalizeRow)
+          .filter(item => item.id && item.product)
+          .filter(item => !deletedIds.has(item.id));
+
+        allItems = dedupeItems(normalizedItems);
 
         renderAll();
         setStatus("資料已同步", "ok");
@@ -751,7 +757,9 @@
 
         const message = `
           <div class="empty">
-            資料讀取失敗。請確認 Google 試算表已公開、分頁名稱正確，且第一列欄位包含 ID、URL、商品、店名、粉絲、公司、統編、銷量。
+            資料讀取失敗：${escapeHtml(error.message)}
+            <br><br>
+            請確認 OpenSheet 網址可直接開啟，且第一列欄位包含 ID、URL、商品、店名、粉絲、公司、統編、銷量。
             <br><br>
             <a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a>
           </div>
