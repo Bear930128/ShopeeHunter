@@ -493,7 +493,7 @@
       <header class="topbar">
         <div class="page-title">
           <h2 id="pageTitle">首頁</h2>
-          <p id="pageSubtitle">總覽目前試算表同步資料、排行榜與風險指標。</p>
+          <p id="pageSubtitle">總覽目前試算表同步資料、排行榜與風險區間分布。</p>
         </div>
         <div id="status" class="status">等待登入</div>
       </header>
@@ -585,8 +585,41 @@
     }
 
     function numberValue(value) {
-      const n = Number(String(value || "").replace(/[^\d.-]/g, ""));
-      return Number.isFinite(n) ? n : 0;
+      let text = String(value || "").trim();
+
+      if (!text) return 0;
+
+      text = text
+        .replaceAll(",", "")
+        .replaceAll("+", "")
+        .replaceAll("＋", "")
+        .replace(/\s/g, "");
+
+      let multiplier = 1;
+
+      if (text.includes("萬")) {
+        multiplier = 10000;
+        text = text.replace("萬", "");
+      }
+
+      if (text.toLowerCase().includes("k")) {
+        multiplier = 1000;
+        text = text.toLowerCase().replace("k", "");
+      }
+
+      const n = Number(text.replace(/[^\d.-]/g, ""));
+      return Number.isFinite(n) ? Math.round(n * multiplier) : 0;
+    }
+
+    function formatNumber(value) {
+      const n = Number(value) || 0;
+
+      if (n >= 10000) {
+        const v = n / 10000;
+        return Number.isInteger(v) ? `${v}萬` : `${v.toFixed(1)}萬`;
+      }
+
+      return n.toLocaleString();
     }
 
     function getField(row, names) {
@@ -599,7 +632,9 @@
     }
 
     function calcIndex(sales, fans) {
-      return Math.round(Math.min(100, sales / 100 + fans / 1000));
+      const salesScore = Math.min(sales / 100, 70);
+      const fanScore = Math.min(fans / 1000, 30);
+      return Math.round(Math.min(100, salesScore + fanScore));
     }
 
     function normalizeRow(row) {
@@ -685,7 +720,7 @@
 
         const message = `
           <div class="empty">
-            資料讀取失敗。請確認 Google 試算表已公開、分頁名稱是 Sheet1，且第一列欄位包含 ID、URL、商品、店名、粉絲、銷量。
+            資料讀取失敗。請確認 Google 試算表已公開、分頁名稱正確，且第一列欄位包含 ID、URL、商品、店名、粉絲、銷量。
             <br><br>
             <a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a>
           </div>
@@ -768,14 +803,32 @@
 
       totalCountEl.textContent = total.toLocaleString();
       avgIndexEl.textContent = avg.toLocaleString();
-      maxSalesEl.textContent = maxSales.toLocaleString();
+      maxSalesEl.textContent = formatNumber(maxSales);
       markedCountEl.textContent = getMarkedItems().length.toLocaleString();
     }
 
+    function getIndexBuckets(items) {
+      const buckets = [
+        { label: "0-20", min: 0, max: 20, count: 0, sales: 0 },
+        { label: "21-40", min: 21, max: 40, count: 0, sales: 0 },
+        { label: "41-60", min: 41, max: 60, count: 0, sales: 0 },
+        { label: "61-80", min: 61, max: 80, count: 0, sales: 0 },
+        { label: "81-100", min: 81, max: 100, count: 0, sales: 0 }
+      ];
+
+      for (const item of items) {
+        const bucket = buckets.find(group => item.index >= group.min && item.index <= group.max);
+        if (bucket) {
+          bucket.count += 1;
+          bucket.sales += item.sales;
+        }
+      }
+
+      return buckets;
+    }
+
     function renderChart() {
-      const topItems = [...allItems]
-        .sort((a, b) => b.index - a.index || b.sales - a.sales)
-        .slice(0, 8);
+      const buckets = getIndexBuckets(allItems);
 
       if (chart) {
         chart.destroy();
@@ -784,19 +837,19 @@
       chart = new Chart(document.getElementById("mainChart"), {
         type: "bar",
         data: {
-          labels: topItems.map(item => item.product.length > 12 ? item.product.slice(0, 12) + "..." : item.product),
+          labels: buckets.map(bucket => bucket.label),
           datasets: [
             {
-              label: "侵權指數",
-              data: topItems.map(item => item.index),
+              label: "商品數",
+              data: buckets.map(bucket => bucket.count),
               backgroundColor: "rgba(47, 140, 255, 0.68)",
               borderColor: "#58d7ff",
               borderWidth: 1,
               yAxisID: "y"
             },
             {
-              label: "銷量",
-              data: topItems.map(item => item.sales),
+              label: "總銷量",
+              data: buckets.map(bucket => bucket.sales),
               type: "line",
               borderColor: "#38d996",
               backgroundColor: "rgba(56, 217, 150, 0.12)",
@@ -808,26 +861,66 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false
+          },
           plugins: {
             legend: {
               labels: { color: "#eef6ff" }
+            },
+            tooltip: {
+              callbacks: {
+                title(items) {
+                  return `侵權指數區間：${items[0].label}`;
+                },
+                label(context) {
+                  if (context.dataset.label === "總銷量") {
+                    return `總銷量：${formatNumber(context.raw)}`;
+                  }
+
+                  return `商品數：${context.raw}`;
+                }
+              }
             }
           },
           scales: {
             x: {
+              title: {
+                display: true,
+                text: "侵權指數區間",
+                color: "#8db4de"
+              },
               ticks: { color: "#8db4de" },
               grid: { color: "rgba(141, 180, 222, 0.12)" }
             },
             y: {
               beginAtZero: true,
-              max: 100,
-              ticks: { color: "#8db4de" },
+              title: {
+                display: true,
+                text: "商品數",
+                color: "#8db4de"
+              },
+              ticks: {
+                color: "#8db4de",
+                precision: 0
+              },
               grid: { color: "rgba(141, 180, 222, 0.12)" }
             },
             y1: {
               beginAtZero: true,
               position: "right",
-              ticks: { color: "#8db4de" },
+              title: {
+                display: true,
+                text: "總銷量",
+                color: "#8db4de"
+              },
+              ticks: {
+                color: "#8db4de",
+                callback(value) {
+                  return formatNumber(value);
+                }
+              },
               grid: { drawOnChartArea: false }
             }
           }
@@ -862,11 +955,11 @@
             <div class="data-row">
               <div class="data">
                 <span>銷量</span>
-                <strong>${item.sales.toLocaleString()}</strong>
+                <strong>${formatNumber(item.sales)}</strong>
               </div>
               <div class="data">
                 <span>粉絲</span>
-                <strong>${item.fans.toLocaleString()}</strong>
+                <strong>${formatNumber(item.fans)}</strong>
               </div>
               <div class="data">
                 <span>侵權指數</span>
@@ -965,7 +1058,7 @@
 
       if (page === "dashboard") {
         pageTitle.textContent = "首頁";
-        pageSubtitle.textContent = "總覽目前試算表同步資料、排行榜與風險指標。";
+        pageSubtitle.textContent = "總覽目前試算表同步資料、排行榜與風險區間分布。";
       }
 
       if (page === "ranking") {
