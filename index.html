@@ -1,231 +1,678 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
-<meta charset="UTF-8">
-<title>ShopeeHunter</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ShopeeHunter Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: #0c1b2f;
+      --panel-2: #10243d;
+      --blue: #2f8cff;
+      --cyan: #30d5ff;
+      --text: #e8f2ff;
+      --muted: #8fa8c5;
+      --danger: #ff4d6d;
+      --success: #39d98a;
+      --border: rgba(80, 150, 255, 0.22);
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+    }
 
-<style>
-body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
-.sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
-.sidebar h2{margin-bottom:20px;}
-.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
-.sidebar button:hover{background:#1e293b;color:#fff;}
-.main{flex:1;padding:20px;}
-.stats{display:flex;gap:15px;margin-bottom:20px;}
-.stat,.chart-box,.card{background:#1e293b;border-radius:10px;}
-.stat{padding:20px;flex:1;}
-.chart-box{padding:20px;}
-.card{padding:20px;margin:12px 0;border-radius:10px;}
-.rank{color:#facc15;font-weight:bold;}
-.search-box{margin-bottom:15px;}
-.search-box input{width:100%;padding:10px;border-radius:8px;border:none;}
-button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
-.delete{background:#ef4444;color:white;}
-.view{background:#3b82f6;color:white;}
-</style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Noto Sans TC", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(47, 140, 255, 0.22), transparent 34%),
+        linear-gradient(135deg, #06101f 0%, #08182b 52%, #06101f 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0;
+      color: #ffffff;
+    }
+
+    .brand p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status {
+      min-width: 160px;
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(12, 27, 47, 0.78);
+      color: var(--muted);
+      text-align: right;
+      font-size: 13px;
+    }
+
+    .status.ok {
+      color: var(--success);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      background: linear-gradient(180deg, rgba(16, 36, 61, 0.94), rgba(12, 27, 47, 0.94));
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .metric strong {
+      display: block;
+      color: #fff;
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .chart-panel {
+      background: rgba(12, 27, 47, 0.88);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+      height: 320px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin: 22px 0 16px;
+    }
+
+    .toolbar h2 {
+      margin: 0;
+      font-size: 22px;
+      color: #ffffff;
+    }
+
+    .search {
+      width: min(360px, 100%);
+      height: 42px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: rgba(7, 17, 31, 0.9);
+      color: var(--text);
+      padding: 0 14px;
+      outline: none;
+    }
+
+    .search:focus {
+      border-color: rgba(48, 213, 255, 0.75);
+      box-shadow: 0 0 0 3px rgba(48, 213, 255, 0.12);
+    }
+
+    .ranking {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(16, 36, 61, 0.96), rgba(10, 24, 43, 0.96));
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      min-height: 218px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .product {
+      margin: 0 0 10px;
+      font-size: 17px;
+      color: #ffffff;
+      line-height: 1.42;
+      word-break: break-word;
+    }
+
+    .shop {
+      color: var(--cyan);
+      font-size: 14px;
+      margin-bottom: 14px;
+      word-break: break-word;
+    }
+
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .data {
+      background: rgba(7, 17, 31, 0.64);
+      border: 1px solid rgba(80, 150, 255, 0.14);
+      border-radius: 8px;
+      padding: 10px 8px;
+      min-width: 0;
+    }
+
+    .data span {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .data strong {
+      display: block;
+      font-size: 16px;
+      color: #ffffff;
+      overflow-wrap: anywhere;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      height: 38px;
+      border: 0;
+      border-radius: 8px;
+      color: #ffffff;
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+    }
+
+    .view-btn {
+      flex: 1;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+    }
+
+    .delete-btn {
+      width: 86px;
+      background: linear-gradient(135deg, #d9365f, var(--danger));
+    }
+
+    .empty {
+      grid-column: 1 / -1;
+      padding: 34px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(12, 27, 47, 0.78);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+    }
+
+    .loading {
+      opacity: 0.72;
+    }
+
+    @media (max-width: 920px) {
+      .dashboard,
+      .ranking {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .app {
+        width: min(100% - 22px, 1180px);
+        padding-top: 20px;
+      }
+
+      .header,
+      .toolbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .status {
+        text-align: left;
+      }
+
+      .dashboard,
+      .ranking {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-panel {
+        height: 280px;
+      }
+
+      .search {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
-
 <body>
+  <main class="app">
+    <header class="header">
+      <div class="brand">
+        <h1>ShopeeHunter</h1>
+        <p>Google Sheet 即時資料 Dashboard</p>
+      </div>
+      <div id="status" class="status">資料載入中...</div>
+    </header>
 
-<div class="sidebar">
-  <h2>🔥 ShopeeHunter</h2>
-  <button onclick="showPage('dashboard')">🏠 Dashboard</button>
-  <button onclick="showPage('list')">📊 排行榜</button>
-</div>
+    <section class="dashboard">
+      <div class="metric">
+        <span>總筆數</span>
+        <strong id="totalCount">0</strong>
+      </div>
+      <div class="metric">
+        <span>平均指數</span>
+        <strong id="avgIndex">0</strong>
+      </div>
+      <div class="metric">
+        <span>最高銷量</span>
+        <strong id="topSales">0</strong>
+      </div>
+    </section>
 
-<div class="main">
+    <section class="chart-panel">
+      <canvas id="hunterChart"></canvas>
+    </section>
 
-  <div id="dashboard">
-    <h1>Dashboard</h1>
-    <div class="stats">
-      <div class="stat">總筆數：<span id="total">0</span></div>
-      <div class="stat">平均指數：<span id="avg">0</span></div>
-    </div>
-    <div class="chart-box">
-      <canvas id="chart"></canvas>
-    </div>
-  </div>
+    <section class="toolbar">
+      <h2>排行榜</h2>
+      <input id="searchInput" class="search" type="search" placeholder="搜尋商品名或店名" />
+    </section>
 
-  <div id="listPage" style="display:none;">
-    <h1>排行榜</h1>
+    <section id="ranking" class="ranking">
+      <div class="empty">資料載入中...</div>
+    </section>
+  </main>
 
-    <div class="search-box">
-      <input id="searchInput" placeholder="搜尋商品名 / 店名..." oninput="applySearch()">
-    </div>
+  <script>
+    const SHEET_API = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8/Sheet1";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxTn6fVF8lQbEk7HyfEU96G8yqPXYgX7TGVVcxNMpe4v92uhD4WGBEjduWJweEAGjxD4g/exec";
 
-    <div id="list"></div>
-  </div>
+    let products = [];
+    let filteredProducts = [];
+    let chart;
 
-</div>
+    const statusEl = document.getElementById("status");
+    const totalCountEl = document.getElementById("totalCount");
+    const avgIndexEl = document.getElementById("avgIndex");
+    const topSalesEl = document.getElementById("topSales");
+    const rankingEl = document.getElementById("ranking");
+    const searchInput = document.getElementById("searchInput");
 
-<script>
-
-let items = [];
-let chart = null;
-let currentPage = "dashboard";
-
-// ⭐ 試算表 API
-const API_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8/Sheet1";
-
-// ⭐ GAS（你的）
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxTn6fVF8lQbEk7HyfEU96G8yqPXYgX7TGVVcxNMpe4v92uhD4WGBEjduWJweEAGjxD4g/exec";
-
-function parseNum(str){
-  if(!str) return 0;
-  str = String(str).replace(/,/g,"").trim();
-  if(str.includes("萬")) return parseFloat(str)*10000 || 0;
-  return parseFloat(str) || 0;
-}
-
-function showPage(page){
-  currentPage = page;
-
-  document.getElementById("dashboard").style.display="none";
-  document.getElementById("listPage").style.display="none";
-
-  if(page==="dashboard"){
-    document.getElementById("dashboard").style.display="block";
-    return;
-  }
-
-  document.getElementById("listPage").style.display="block";
-  applySearch();
-}
-
-function applySearch(){
-  const keyword=document.getElementById("searchInput").value.toLowerCase();
-
-  let data = items;
-
-  if(keyword){
-    data=data.filter(i=>
-      i.title.toLowerCase().includes(keyword) ||
-      i.shop.toLowerCase().includes(keyword)
-    );
-  }
-
-  renderList(data);
-}
-
-function renderList(data){
-
-  let html="";
-
-  if(data.length===0){
-    html = "<div class='card'>目前沒有資料</div>";
-  }else{
-
-    const maxScore = data[0]?.score || 1;
-
-    data.forEach((item,i)=>{
-      const percent=((item.score/maxScore)*100).toFixed(0);
-
-      html += `
-      <div class="card">
-        <div class="rank">#${i+1}</div>
-        <div>商品名：${item.title}</div>
-        <div>店名：${item.shop}</div>
-        <div>銷量：${item.sold}</div>
-        <div>粉絲數：${item.fans}</div>
-        <div><b>侵權指數：${percent}%</b></div>
-
-        <div style="margin-top:10px;display:flex;gap:10px;">
-          <button class="view" onclick="window.open('${item.url}','_blank')">查看</button>
-          <button class="delete" onclick="deleteItem('${item.id}')">刪除</button>
-        </div>
-      </div>`;
-    });
-
-  }
-
-  document.getElementById("list").innerHTML=html;
-}
-
-function renderDashboard(){
-
-  const total = items.length;
-  const avg = total ? items.reduce((a,b)=>a+b.score,0)/total : 0;
-
-  document.getElementById("total").innerText=total;
-  document.getElementById("avg").innerText=avg.toFixed(0);
-
-  renderChart();
-}
-
-function renderChart(){
-
-  const ranges=[0,0,0,0,0];
-  const maxScore=Math.max(...items.map(i=>i.score),1);
-
-  items.forEach(item=>{
-    const p=(item.score/maxScore)*100;
-    if(p<=20)ranges[0]++;
-    else if(p<=40)ranges[1]++;
-    else if(p<=60)ranges[2]++;
-    else if(p<=80)ranges[3]++;
-    else ranges[4]++;
-  });
-
-  if(chart) chart.destroy();
-
-  chart=new Chart(document.getElementById("chart"),{
-    type:"bar",
-    data:{
-      labels:["0-20","20-40","40-60","60-80","80-100"],
-      datasets:[{label:"侵權分布",data:ranges}]
+    function getValue(row, keys) {
+      for (const key of keys) {
+        if (row[key] !== undefined && row[key] !== null && String(row[key]).trim() !== "") {
+          return String(row[key]).trim();
+        }
+      }
+      return "";
     }
-  });
-}
 
-async function loadData(){
+    function toNumber(value) {
+      const cleaned = String(value || "").replace(/[^\d.-]/g, "");
+      const number = Number(cleaned);
+      return Number.isFinite(number) ? number : 0;
+    }
 
-  const res = await fetch(API_URL);
-  const data = await res.json();
+    function calcRiskIndex(sales, fans) {
+      const salesScore = Math.min(sales / 100, 70);
+      const fanScore = Math.min(fans / 1000, 30);
+      return Math.round(Math.min(salesScore + fanScore, 100));
+    }
 
-  items = data.map(row => ({
-    id: row.ID,
-    title: row.商品 || "",
-    shop: row.店名 || "",
-    sold: row.銷量 || "0",
-    fans: row.粉絲 || "0",
-    url: row.URL || "",
-    score: parseNum(row.銷量)*0.7 + parseNum(row.粉絲)*0.3
-  }));
+    function normalizeRow(row, index) {
+      const id = getValue(row, ["ID", "id", "Id", "A"]) || String(index + 1);
+      const url = getValue(row, ["URL", "url", "網址", "商品網址", "C"]);
+      const product = getValue(row, ["商品", "商品名", "產品", "Product", "product", "D"]) || "未命名商品";
+      const shop = getValue(row, ["店名", "商店", "Shop", "shop", "E"]) || "未命名店家";
+      const fans = toNumber(getValue(row, ["粉絲", "粉絲數", "Fans", "fans", "F"]));
+      const company = getValue(row, ["公司", "公司名", "Company", "company", "G"]);
+      const taxId = getValue(row, ["統編", "統一編號", "Tax ID", "taxId", "H"]);
+      const sales = toNumber(getValue(row, ["銷量", "銷售", "Sales", "sales", "I"]));
 
-  items.sort((a,b)=>b.score-a.score);
+      return {
+        id,
+        url,
+        product,
+        shop,
+        fans,
+        company,
+        taxId,
+        sales,
+        riskIndex: calcRiskIndex(sales, fans),
+        raw: row
+      };
+    }
 
-  renderDashboard();
-  applySearch();
-}
+    function setStatus(text, type) {
+      statusEl.textContent = text;
+      statusEl.className = "status" + (type ? " " + type : "");
+    }
 
-async function deleteItem(id){
+    async function loadData() {
+      setStatus("資料載入中...", "");
+      rankingEl.classList.add("loading");
 
-  if(!confirm("確定要刪除這筆資料嗎？")) return;
+      try {
+        const response = await fetch(SHEET_API, { cache: "no-store" });
 
-  try{
+        if (!response.ok) {
+          throw new Error("OpenSheet 回應失敗");
+        }
 
-    const res = await fetch(GAS_URL + "?action=delete&id=" + id);
-    const text = await res.text();
+        const rows = await response.json();
+        products = rows
+          .map(normalizeRow)
+          .filter(item => item.id && item.product);
 
-    if(text.includes("deleted")){
-      items = items.filter(i => i.id !== id);
+        applySearch();
+        setStatus("已同步 Google Sheet", "ok");
+      } catch (error) {
+        console.error(error);
+        setStatus("資料載入失敗", "error");
+        rankingEl.innerHTML = '<div class="empty">無法讀取 Google 試算表資料</div>';
+      } finally {
+        rankingEl.classList.remove("loading");
+      }
+    }
+
+    function applySearch() {
+      const keyword = searchInput.value.trim().toLowerCase();
+
+      filteredProducts = products.filter(item => {
+        const productText = item.product.toLowerCase();
+        const shopText = item.shop.toLowerCase();
+        return productText.includes(keyword) || shopText.includes(keyword);
+      });
+
+      filteredProducts.sort((a, b) => b.riskIndex - a.riskIndex || b.sales - a.sales);
+
       renderDashboard();
-      applySearch();
-      alert("✅ 已刪除");
-    }else{
-      alert("❌ 刪除失敗：" + text);
+      renderChart();
+      renderRanking();
     }
 
-  }catch(e){
-    console.log(e);
-    alert("❌ 刪除失敗");
-  }
-}
+    function renderDashboard() {
+      const total = filteredProducts.length;
+      const avg = total
+        ? Math.round(filteredProducts.reduce((sum, item) => sum + item.riskIndex, 0) / total)
+        : 0;
+      const topSales = total
+        ? Math.max(...filteredProducts.map(item => item.sales))
+        : 0;
 
-loadData();
+      totalCountEl.textContent = total;
+      avgIndexEl.textContent = avg;
+      topSalesEl.textContent = topSales.toLocaleString();
+    }
 
-</script>
+    function renderChart() {
+      const topItems = filteredProducts.slice(0, 8);
+      const labels = topItems.map(item => item.product.length > 10 ? item.product.slice(0, 10) + "..." : item.product);
+      const riskData = topItems.map(item => item.riskIndex);
+      const salesData = topItems.map(item => item.sales);
 
+      if (chart) {
+        chart.destroy();
+      }
+
+      const ctx = document.getElementById("hunterChart");
+
+      chart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: "侵權指數",
+              data: riskData,
+              backgroundColor: "rgba(48, 213, 255, 0.62)",
+              borderColor: "rgba(48, 213, 255, 1)",
+              borderWidth: 1,
+              yAxisID: "y"
+            },
+            {
+              label: "銷量",
+              data: salesData,
+              type: "line",
+              borderColor: "rgba(47, 140, 255, 1)",
+              backgroundColor: "rgba(47, 140, 255, 0.18)",
+              tension: 0.35,
+              yAxisID: "y1"
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false
+          },
+          plugins: {
+            legend: {
+              labels: {
+                color: "#e8f2ff"
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                color: "#8fa8c5"
+              },
+              grid: {
+                color: "rgba(143, 168, 197, 0.12)"
+              }
+            },
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                color: "#8fa8c5"
+              },
+              grid: {
+                color: "rgba(143, 168, 197, 0.12)"
+              }
+            },
+            y1: {
+              beginAtZero: true,
+              position: "right",
+              ticks: {
+                color: "#8fa8c5"
+              },
+              grid: {
+                drawOnChartArea: false
+              }
+            }
+          }
+        }
+      });
+    }
+
+    function renderRanking() {
+      if (!filteredProducts.length) {
+        rankingEl.innerHTML = '<div class="empty">沒有符合條件的資料</div>';
+        return;
+      }
+
+      rankingEl.innerHTML = filteredProducts.map(item => `
+        <article class="card" data-id="${escapeHtml(item.id)}">
+          <div>
+            <h3 class="product">${escapeHtml(item.product)}</h3>
+            <div class="shop">${escapeHtml(item.shop)}</div>
+
+            <div class="data-grid">
+              <div class="data">
+                <span>銷量</span>
+                <strong>${item.sales.toLocaleString()}</strong>
+              </div>
+              <div class="data">
+                <span>粉絲</span>
+                <strong>${item.fans.toLocaleString()}</strong>
+              </div>
+              <div class="data">
+                <span>侵權指數</span>
+                <strong>${item.riskIndex}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}')" ${item.url ? "" : "disabled"}>查看</button>
+            <button class="delete-btn" type="button" onclick="deleteProduct('${escapeJs(item.id)}')">刪除</button>
+          </div>
+        </article>
+      `).join("");
+    }
+
+    function openProduct(url) {
+      if (!url) return;
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+
+    async function deleteProduct(id) {
+      const item = products.find(product => product.id === id);
+
+      if (!item) {
+        alert("找不到這筆資料，請重新整理後再試。");
+        return;
+      }
+
+      const ok = confirm(`確定要刪除這筆資料？\n\nID：${item.id}\n商品：${item.product}\n店名：${item.shop}`);
+
+      if (!ok) {
+        return;
+      }
+
+      const card = document.querySelector(`.card[data-id="${cssEscape(id)}"]`);
+      const deleteButton = card ? card.querySelector(".delete-btn") : null;
+
+      if (deleteButton) {
+        deleteButton.disabled = true;
+        deleteButton.textContent = "刪除中";
+      }
+
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "delete");
+        body.set("id", id);
+
+        const response = await fetch(GAS_URL, {
+          method: "POST",
+          body
+        });
+
+        const text = await response.text();
+        let result = {};
+
+        try {
+          result = JSON.parse(text);
+        } catch (error) {
+          result = { ok: response.ok, message: text };
+        }
+
+        if (!response.ok || result.success === false || result.ok === false) {
+          throw new Error(result.message || "GAS 刪除失敗");
+        }
+
+        products = products.filter(product => product.id !== id);
+        applySearch();
+        setStatus("刪除成功，已同步更新", "ok");
+
+        setTimeout(loadData, 800);
+      } catch (error) {
+        console.error(error);
+        alert("刪除失敗，請確認 GAS 是否支援 action=delete 並用 id 刪除。");
+        setStatus("刪除失敗", "error");
+
+        if (deleteButton) {
+          deleteButton.disabled = false;
+          deleteButton.textContent = "刪除";
+        }
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function escapeJs(value) {
+      return String(value || "")
+        .replaceAll("\\", "\\\\")
+        .replaceAll("'", "\\'")
+        .replaceAll("\n", "\\n")
+        .replaceAll("\r", "");
+    }
+
+    function cssEscape(value) {
+      if (window.CSS && CSS.escape) {
+        return CSS.escape(value);
+      }
+
+      return String(value).replace(/["\\]/g, "\\$&");
+    }
+
+    searchInput.addEventListener("input", applySearch);
+    loadData();
+  </script>
 </body>
 </html>
