@@ -9,7 +9,6 @@
 body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
 .sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
 .sidebar h2{margin-bottom:20px;}
-.group-title{margin-top:20px;margin-bottom:8px;font-size:12px;color:#64748b;}
 .sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
 .sidebar button:hover{background:#1e293b;color:#fff;}
 .main{flex:1;padding:20px;}
@@ -17,10 +16,13 @@ body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;
 .stat,.chart-box,.card{background:#1e293b;border-radius:10px;}
 .stat{padding:20px;flex:1;}
 .chart-box{padding:20px;}
-.card{padding:20px;margin:12px 0;border:2px solid transparent;line-height:1.6;}
+.card{padding:20px;margin:12px 0;border-radius:10px;}
 .rank{color:#facc15;font-weight:bold;}
 .search-box{margin-bottom:15px;}
 .search-box input{width:100%;padding:10px;border-radius:8px;border:none;}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;}
+.delete{background:#ef4444;color:white;}
+.view{background:#3b82f6;color:white;}
 </style>
 </head>
 
@@ -28,8 +30,6 @@ body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;
 
 <div class="sidebar">
   <h2>🔥 ShopeeHunter</h2>
-
-  <div class="group-title">主功能</div>
   <button onclick="showPage('dashboard')">🏠 Dashboard</button>
   <button onclick="showPage('list')">📊 排行榜</button>
 </div>
@@ -38,12 +38,10 @@ body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;
 
   <div id="dashboard">
     <h1>Dashboard</h1>
-
     <div class="stats">
       <div class="stat">總筆數：<span id="total">0</span></div>
       <div class="stat">平均指數：<span id="avg">0</span></div>
     </div>
-
     <div class="chart-box">
       <canvas id="chart"></canvas>
     </div>
@@ -67,8 +65,11 @@ let items = [];
 let chart = null;
 let currentPage = "dashboard";
 
-// ⭐ 你的試算表
+// ⭐ 試算表 API
 const API_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8/Sheet1";
+
+// ⭐ GAS（你的）
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxTn6fVF8lQbEk7HyfEU96G8yqPXYgX7TGVVcxNMpe4v92uhD4WGBEjduWJweEAGjxD4g/exec";
 
 function parseNum(str){
   if(!str) return 0;
@@ -128,6 +129,11 @@ function renderList(data){
         <div>銷量：${item.sold}</div>
         <div>粉絲數：${item.fans}</div>
         <div><b>侵權指數：${percent}%</b></div>
+
+        <div style="margin-top:10px;display:flex;gap:10px;">
+          <button class="view" onclick="window.open('${item.url}','_blank')">查看</button>
+          <button class="delete" onclick="deleteItem('${item.id}')">刪除</button>
+        </div>
       </div>`;
     });
 
@@ -183,6 +189,7 @@ async function loadData(){
     shop: row.店名 || "",
     sold: row.銷量 || "0",
     fans: row.粉絲 || "0",
+    url: row.URL || "",
     score: parseNum(row.銷量)*0.7 + parseNum(row.粉絲)*0.3
   }));
 
@@ -190,6 +197,30 @@ async function loadData(){
 
   renderDashboard();
   applySearch();
+}
+
+async function deleteItem(id){
+
+  if(!confirm("確定要刪除這筆資料嗎？")) return;
+
+  try{
+
+    const res = await fetch(GAS_URL + "?action=delete&id=" + id);
+    const text = await res.text();
+
+    if(text.includes("deleted")){
+      items = items.filter(i => i.id !== id);
+      renderDashboard();
+      applySearch();
+      alert("✅ 已刪除");
+    }else{
+      alert("❌ 刪除失敗：" + text);
+    }
+
+  }catch(e){
+    console.log(e);
+    alert("❌ 刪除失敗");
+  }
 }
 
 loadData();
