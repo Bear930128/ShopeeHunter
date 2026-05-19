@@ -618,11 +618,23 @@
     }
 
     function getField(row, names) {
+      const normalizedRow = {};
+
+      Object.keys(row).forEach(key => {
+        normalizedRow[String(key).trim()] = row[key];
+      });
+
       for (const name of names) {
-        if (row[name] !== undefined && String(row[name]).trim() !== "") {
-          return row[name];
+        const cleanName = String(name).trim();
+
+        if (
+          normalizedRow[cleanName] !== undefined &&
+          String(normalizedRow[cleanName]).trim() !== ""
+        ) {
+          return normalizedRow[cleanName];
         }
       }
+
       return "";
     }
 
