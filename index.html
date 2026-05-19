@@ -684,6 +684,7 @@
       const shop = textValue(getField(row, ["店名", "商店", "Shop", "shop"]));
       const company = textValue(getField(row, ["公司", "公司名", "登記公司", "Company", "company"]));
       const taxId = textValue(getField(row, ["統編", "統一編號", "Tax ID", "taxId", "taxid"]));
+      const status = textValue(getField(row, ["狀態", "status", "Status"]));
 
       const rawFans = getField(row, ["粉絲", "粉絲數", "Fans", "fans"]);
       const rawSales = getField(row, ["銷量", "銷售", "Sales", "sales"]);
@@ -698,6 +699,7 @@
         shop: shop || "未命名店名",
         company: company || "無",
         taxId: taxId || "無",
+        status,
         fans,
         sales,
         fansDisplay: displayValue(rawFans, fans),
@@ -802,38 +804,63 @@
       }
     }
 
-    function getMarkedKey() {
-      return "shopeehunter_marked_" + currentUser;
+    function isMarked(itemOrId) {
+      const item = typeof itemOrId === "string"
+        ? allItems.find(entry => entry.id === itemOrId)
+        : itemOrId;
+
+      return item && item.status === "已標記";
     }
 
-    function getMarkedIds() {
+    async function toggleMark(id) {
+      const item = allItems.find(entry => entry.id === id);
+
+      if (!item) {
+        alert("找不到這筆資料，請重新整理後再試。");
+        return;
+      }
+
+      const nextStatus = item.status === "已標記" ? "" : "已標記";
+      const actionText = nextStatus === "已標記" ? "標記" : "取消標記";
+
+      showAppNotice(`正在${actionText}資料，請稍候...`, "loading");
+      setStatus(`${actionText}中`);
+
       try {
-        return JSON.parse(localStorage.getItem(getMarkedKey()) || "[]");
-      } catch {
-        return [];
+        const body = new URLSearchParams();
+        body.set("action", "mark");
+        body.set("id", id);
+        body.set("status", nextStatus);
+        body.set("user", currentUser);
+
+        const res = await fetch(GAS_URL, { method: "POST", body });
+        const text = await res.text();
+        let result;
+
+        try {
+          result = JSON.parse(text);
+        } catch {
+          result = { success: res.ok, message: text };
+        }
+
+        if (!res.ok || result.success !== true) {
+          throw new Error(result.message || text || "GAS 未回傳 success:true");
+        }
+
+        item.status = nextStatus;
+
+        renderStats();
+        renderRanking();
+        renderMarked();
+        renderChart();
+
+        setStatus(`${actionText}成功`, "ok");
+        showAppNotice(`${actionText}完成，試算表已同步`, "success");
+      } catch (error) {
+        alert(`${actionText}失敗：` + error.message);
+        setStatus(`${actionText}失敗`, "error");
+        showAppNotice(`${actionText}失敗，請稍後再試`, "error");
       }
-    }
-
-    function saveMarkedIds(ids) {
-      localStorage.setItem(getMarkedKey(), JSON.stringify(ids));
-    }
-
-    function isMarked(id) {
-      return getMarkedIds().includes(id);
-    }
-
-    function toggleMark(id) {
-      const ids = getMarkedIds();
-
-      if (ids.includes(id)) {
-        saveMarkedIds(ids.filter(x => x !== id));
-      } else {
-        saveMarkedIds([...ids, id]);
-      }
-
-      renderStats();
-      renderRanking();
-      renderMarked();
     }
 
     function itemMatchesKeyword(item, keyword) {
@@ -843,20 +870,18 @@
 
     function getRankingItems() {
       const keyword = searchInput.value.trim().toLowerCase();
-      const markedIds = getMarkedIds();
 
       return allItems
-        .filter(item => !markedIds.includes(item.id))
+        .filter(item => item.status !== "已標記")
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
 
     function getMarkedItems() {
-      const ids = getMarkedIds();
       const keyword = markedSearchInput.value.trim().toLowerCase();
 
       return allItems
-        .filter(item => ids.includes(item.id))
+        .filter(item => item.status === "已標記")
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
@@ -969,7 +994,7 @@
     }
 
     function renderCard(item) {
-      const marked = isMarked(item.id);
+      const marked = isMarked(item);
 
       return `
         <article class="card" data-id="${escapeHtml(item.id)}">
@@ -1050,7 +1075,6 @@
 
         deletedIds.add(id);
         allItems = allItems.filter(x => x.id !== id);
-        saveMarkedIds(getMarkedIds().filter(x => x !== id));
 
         renderStats();
         renderRanking();
@@ -1092,7 +1116,7 @@
 
       if (page === "marked") {
         pageTitle.textContent = "已標記";
-        pageSubtitle.textContent = "查看目前使用者標記過的商品資料，取消標記後會回到排行榜。";
+        pageSubtitle.textContent = "查看已同步標記的商品資料，取消標記後會回到排行榜。";
       }
     }
 
