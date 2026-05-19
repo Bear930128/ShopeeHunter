@@ -251,18 +251,22 @@
       padding: 18px;
       min-height: 396px;
       display: grid;
-      grid-template-rows: auto 74px 68px 38px;
+      grid-template-rows: 150px 74px 68px 38px;
       gap: 14px;
     }
 
     .product-area {
-      min-height: 132px;
+      height: 150px;
+      display: grid;
+      grid-template-rows: 92px 22px 20px;
+      gap: 8px;
+      overflow: hidden;
     }
 
     .product {
-      margin: 0 0 10px;
+      margin: 0;
       font-size: 17px;
-      line-height: 1.45;
+      line-height: 1.35;
       word-break: break-word;
       display: -webkit-box;
       -webkit-line-clamp: 4;
@@ -270,14 +274,17 @@
       overflow: hidden;
     }
 
+    .shop,
+    .captured {
+      min-width: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
     .shop {
       color: var(--cyan);
       font-size: 14px;
-      margin-bottom: 10px;
-      word-break: break-word;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .captured,
@@ -294,6 +301,7 @@
     }
 
     .company-block {
+      height: 74px;
       padding: 10px 12px;
       background: rgba(6, 17, 31, 0.44);
       border: 1px solid rgba(88, 215, 255, 0.13);
@@ -443,7 +451,10 @@
       .top-actions { align-items: stretch; }
       .stats, .grid { grid-template-columns: 1fr; }
       .chart-panel { height: 300px; }
-      .card { grid-template-rows: auto 74px auto auto; }
+      .card {
+        min-height: 396px;
+        grid-template-rows: 150px 74px 68px auto;
+      }
       .actions { grid-template-columns: 1fr; }
       .user-box { left: 12px; right: 12px; }
     }
@@ -534,6 +545,7 @@
     let allItems = [];
     let chart = null;
     let isLoading = false;
+    const deletedIds = new Set();
 
     const loginModal = document.getElementById("loginModal");
     const usernameInput = document.getElementById("usernameInput");
@@ -697,7 +709,8 @@
       setStatus("資料同步中");
 
       try {
-        const res = await fetch(OPENSHEET_URL, { cache: "no-store" });
+        const url = OPENSHEET_URL + "?t=" + Date.now();
+        const res = await fetch(url, { cache: "no-store" });
 
         if (!res.ok) {
           throw new Error("OpenSheet HTTP " + res.status);
@@ -713,6 +726,7 @@
           rows
             .map(normalizeRow)
             .filter(item => item.id && item.product)
+            .filter(item => !deletedIds.has(item.id))
         );
 
         renderAll();
@@ -926,13 +940,13 @@
         <article class="card" data-id="${escapeHtml(item.id)}">
           <div class="product-area">
             <h3 class="product">${escapeHtml(item.product)}</h3>
-            <div class="shop">${escapeHtml(item.shop)}</div>
+            <div class="shop" title="${escapeHtml(item.shop)}">${escapeHtml(item.shop)}</div>
             <div class="captured">抓取者：<strong>${escapeHtml(item.capturedBy)}</strong></div>
           </div>
 
           <div class="company-block">
-            <div class="company-info">公司：<strong>${escapeHtml(item.company)}</strong></div>
-            <div class="company-info">統編：<strong>${escapeHtml(item.taxId)}</strong></div>
+            <div class="company-info" title="${escapeHtml(item.company)}">公司：<strong>${escapeHtml(item.company)}</strong></div>
+            <div class="company-info" title="${escapeHtml(item.taxId)}">統編：<strong>${escapeHtml(item.taxId)}</strong></div>
           </div>
 
           <div class="data-row">
@@ -1001,12 +1015,14 @@
           throw new Error(result.message || text || "GAS 未回傳 success:true");
         }
 
+        deletedIds.add(id);
         allItems = allItems.filter(x => x.id !== id);
         saveMarkedIds(getMarkedIds().filter(x => x !== id));
 
         renderAll();
         setStatus("刪除成功", "ok");
-        await loadData();
+
+        setTimeout(loadData, 1200);
       } catch (error) {
         console.error(error);
         alert("刪除失敗：" + error.message + "\n\n需要確認 GAS 是否有支援用 ID 刪除試算表資料。");
