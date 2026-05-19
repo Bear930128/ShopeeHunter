@@ -843,8 +843,10 @@
 
     function getRankingItems() {
       const keyword = searchInput.value.trim().toLowerCase();
+      const markedIds = getMarkedIds();
 
       return allItems
+        .filter(item => !markedIds.includes(item.id))
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
@@ -958,7 +960,7 @@
 
     function renderRanking() {
       const items = getRankingItems();
-      rankingGrid.innerHTML = items.length ? items.map(renderCard).join("") : '<div class="empty">沒有符合條件的資料</div>';
+      rankingGrid.innerHTML = items.length ? items.map(renderCard).join("") : '<div class="empty">沒有符合條件的未標記資料</div>';
     }
 
     function renderMarked() {
@@ -1085,12 +1087,12 @@
 
       if (page === "ranking") {
         pageTitle.textContent = "排行榜";
-        pageSubtitle.textContent = "依侵權指數與銷量排序，可查看、標記或刪除單筆資料。";
+        pageSubtitle.textContent = "只顯示尚未標記的資料，可查看、標記或刪除單筆資料。";
       }
 
       if (page === "marked") {
         pageTitle.textContent = "已標記";
-        pageSubtitle.textContent = "查看目前使用者標記過的商品資料。";
+        pageSubtitle.textContent = "查看目前使用者標記過的商品資料，取消標記後會回到排行榜。";
       }
     }
 
