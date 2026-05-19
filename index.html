@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ShopeeHunter Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
   <style>
     :root {
       --bg: #06111f;
@@ -252,36 +251,35 @@
     .product-area {
       height: 150px;
       display: grid;
-      grid-template-rows: 92px 22px 20px;
-      gap: 8px;
+      grid-template-rows: 78px 58px;
+      gap: 10px;
       overflow: hidden;
     }
 
-    .product {
+    .shop-title {
       margin: 0;
-      font-size: 17px;
+      font-size: 19px;
       line-height: 1.35;
+      color: #fff;
+      font-weight: 800;
       word-break: break-word;
       display: -webkit-box;
-      -webkit-line-clamp: 4;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .shop,
-    .captured {
-      min-width: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
-    .shop {
+    .product-subtitle {
       color: var(--cyan);
       font-size: 14px;
+      line-height: 1.45;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
-    .captured,
     .company-info {
       color: var(--muted);
       font-size: 13px;
@@ -289,7 +287,6 @@
       word-break: break-word;
     }
 
-    .captured strong,
     .company-info strong {
       color: #fff;
     }
@@ -529,7 +526,7 @@
       <section id="rankingPage" class="hidden">
         <div class="toolbar">
           <h3>排行榜</h3>
-          <input id="searchInput" class="search" type="search" placeholder="搜尋商品名或店名、公司、統編" />
+          <input id="searchInput" class="search" type="search" placeholder="搜尋店名、商品名、公司、統編" />
         </div>
         <section id="rankingGrid" class="grid">
           <div class="empty">資料載入中...</div>
@@ -539,7 +536,7 @@
       <section id="markedPage" class="hidden">
         <div class="toolbar">
           <h3>已標記</h3>
-          <input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記商品、店名、公司、統編" />
+          <input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、商品名、公司、統編" />
         </div>
         <section id="markedGrid" class="grid">
           <div class="empty">尚無已標記資料</div>
@@ -694,17 +691,6 @@
       const fans = numberValue(rawFans);
       const sales = numberValue(rawSales);
 
-      const capturedBy = textValue(getField(row, [
-        "抓取者",
-        "抓取人",
-        "使用者",
-        "使用者名稱",
-        "建立者",
-        "Created By",
-        "createdBy",
-        "user"
-      ]));
-
       return {
         id,
         url,
@@ -716,8 +702,7 @@
         sales,
         fansDisplay: displayValue(rawFans, fans),
         salesDisplay: displayValue(rawSales, sales),
-        index: calcIndex(sales, fans),
-        capturedBy: capturedBy || "未記錄"
+        index: calcIndex(sales, fans)
       };
     }
 
@@ -852,7 +837,7 @@
     }
 
     function itemMatchesKeyword(item, keyword) {
-      const target = [item.product, item.shop, item.company, item.taxId, item.capturedBy].join(" ").toLowerCase();
+      const target = [item.shop, item.product, item.company, item.taxId].join(" ").toLowerCase();
       return target.includes(keyword);
     }
 
@@ -987,9 +972,8 @@
       return `
         <article class="card" data-id="${escapeHtml(item.id)}">
           <div class="product-area">
-            <h3 class="product">${escapeHtml(item.product)}</h3>
-            <div class="shop" title="${escapeHtml(item.shop)}">${escapeHtml(item.shop)}</div>
-            <div class="captured">抓取者：<strong>${escapeHtml(item.capturedBy)}</strong></div>
+            <h3 class="shop-title" title="${escapeHtml(item.shop)}">${escapeHtml(item.shop)}</h3>
+            <div class="product-subtitle" title="${escapeHtml(item.product)}">${escapeHtml(item.product)}</div>
           </div>
 
           <div class="company-block">
@@ -1026,7 +1010,7 @@
       }
 
       const ok = confirm(
-        `確定要刪除這一筆資料？\n\nID：${item.id}\n商品：${item.product}\n店名：${item.shop}\n\n確認後會透過 GAS 刪除試算表同 ID 資料。`
+        `確定要刪除這一筆資料？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n確認後會透過 GAS 刪除試算表同 ID 資料。`
       );
 
       if (!ok) return;
