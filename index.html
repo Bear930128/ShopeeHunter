@@ -3,15 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <title>ShopeeHunter</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;}
 .sidebar{width:240px;background:#020617;height:100vh;padding:20px;}
-.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;}
+.sidebar h2{margin-bottom:20px;}
+.group-title{margin-top:20px;margin-bottom:8px;font-size:12px;color:#64748b;}
+.sidebar button{width:100%;margin:6px 0;padding:12px;background:#0f172a;border:none;color:#94a3b8;border-radius:8px;cursor:pointer;text-align:left;}
 .sidebar button:hover{background:#1e293b;color:#fff;}
 .main{flex:1;padding:20px;}
-.card{background:#1e293b;padding:20px;margin:10px 0;border-radius:10px;}
+.stats{display:flex;gap:15px;margin-bottom:20px;}
+.stat,.chart-box,.card{background:#1e293b;border-radius:10px;}
+.stat{padding:20px;flex:1;}
+.chart-box{padding:20px;}
+.card{padding:20px;margin:12px 0;border:2px solid transparent;line-height:1.6;}
 .rank{color:#facc15;font-weight:bold;}
+.search-box{margin-bottom:15px;}
+.search-box input{width:100%;padding:10px;border-radius:8px;border:none;}
 </style>
 </head>
 
@@ -19,29 +28,148 @@ body{margin:0;font-family:sans-serif;background:#0f172a;color:#fff;display:flex;
 
 <div class="sidebar">
   <h2>🔥 ShopeeHunter</h2>
-  <button onclick="loadData()">刷新資料</button>
+
+  <div class="group-title">主功能</div>
+  <button onclick="showPage('dashboard')">🏠 Dashboard</button>
+  <button onclick="showPage('list')">📊 排行榜</button>
 </div>
 
 <div class="main">
-  <h1>排行榜</h1>
-  <div id="list"></div>
+
+  <div id="dashboard">
+    <h1>Dashboard</h1>
+
+    <div class="stats">
+      <div class="stat">總筆數：<span id="total">0</span></div>
+      <div class="stat">平均指數：<span id="avg">0</span></div>
+    </div>
+
+    <div class="chart-box">
+      <canvas id="chart"></canvas>
+    </div>
+  </div>
+
+  <div id="listPage" style="display:none;">
+    <h1>排行榜</h1>
+
+    <div class="search-box">
+      <input id="searchInput" placeholder="搜尋商品名 / 店名..." oninput="applySearch()">
+    </div>
+
+    <div id="list"></div>
+  </div>
+
 </div>
 
 <script>
 
 let items = [];
+let chart = null;
+let currentPage = "dashboard";
 
-// ⭐ 你的試算表 ID（我幫你抓好了）
-const SHEET_ID = "1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8";
-
-// ⭐ Google Sheet JSON API
-const API_URL = `https://opensheet.elk.sh/${SHEET_ID}/Sheet1`;
+// ⭐ 你的試算表
+const API_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8/Sheet1";
 
 function parseNum(str){
   if(!str) return 0;
-  str = String(str).replace(/,/g,"");
-  if(str.includes("萬")) return parseFloat(str)*10000;
-  return parseFloat(str)||0;
+  str = String(str).replace(/,/g,"").trim();
+  if(str.includes("萬")) return parseFloat(str)*10000 || 0;
+  return parseFloat(str) || 0;
+}
+
+function showPage(page){
+  currentPage = page;
+
+  document.getElementById("dashboard").style.display="none";
+  document.getElementById("listPage").style.display="none";
+
+  if(page==="dashboard"){
+    document.getElementById("dashboard").style.display="block";
+    return;
+  }
+
+  document.getElementById("listPage").style.display="block";
+  applySearch();
+}
+
+function applySearch(){
+  const keyword=document.getElementById("searchInput").value.toLowerCase();
+
+  let data = items;
+
+  if(keyword){
+    data=data.filter(i=>
+      i.title.toLowerCase().includes(keyword) ||
+      i.shop.toLowerCase().includes(keyword)
+    );
+  }
+
+  renderList(data);
+}
+
+function renderList(data){
+
+  let html="";
+
+  if(data.length===0){
+    html = "<div class='card'>目前沒有資料</div>";
+  }else{
+
+    const maxScore = data[0]?.score || 1;
+
+    data.forEach((item,i)=>{
+      const percent=((item.score/maxScore)*100).toFixed(0);
+
+      html += `
+      <div class="card">
+        <div class="rank">#${i+1}</div>
+        <div>商品名：${item.title}</div>
+        <div>店名：${item.shop}</div>
+        <div>銷量：${item.sold}</div>
+        <div>粉絲數：${item.fans}</div>
+        <div><b>侵權指數：${percent}%</b></div>
+      </div>`;
+    });
+
+  }
+
+  document.getElementById("list").innerHTML=html;
+}
+
+function renderDashboard(){
+
+  const total = items.length;
+  const avg = total ? items.reduce((a,b)=>a+b.score,0)/total : 0;
+
+  document.getElementById("total").innerText=total;
+  document.getElementById("avg").innerText=avg.toFixed(0);
+
+  renderChart();
+}
+
+function renderChart(){
+
+  const ranges=[0,0,0,0,0];
+  const maxScore=Math.max(...items.map(i=>i.score),1);
+
+  items.forEach(item=>{
+    const p=(item.score/maxScore)*100;
+    if(p<=20)ranges[0]++;
+    else if(p<=40)ranges[1]++;
+    else if(p<=60)ranges[2]++;
+    else if(p<=80)ranges[3]++;
+    else ranges[4]++;
+  });
+
+  if(chart) chart.destroy();
+
+  chart=new Chart(document.getElementById("chart"),{
+    type:"bar",
+    data:{
+      labels:["0-20","20-40","40-60","60-80","80-100"],
+      datasets:[{label:"侵權分布",data:ranges}]
+    }
+  });
 }
 
 async function loadData(){
@@ -49,43 +177,19 @@ async function loadData(){
   const res = await fetch(API_URL);
   const data = await res.json();
 
-  items = data.map(row => {
+  items = data.map(row => ({
+    id: row.ID,
+    title: row.商品 || "",
+    shop: row.店名 || "",
+    sold: row.銷量 || "0",
+    fans: row.粉絲 || "0",
+    score: parseNum(row.銷量)*0.7 + parseNum(row.粉絲)*0.3
+  }));
 
-    return {
-      id: row.ID,
-      title: row.商品,
-      shop: row.店名,
-      sold: row.銷量,
-      fans: row.粉絲,
-      score: parseNum(row.銷量)*0.7 + parseNum(row.粉絲)*0.3
-    };
+  items.sort((a,b)=>b.score-a.score);
 
-  });
-
-  items.sort((a,b)=>b.score - a.score);
-
-  render();
-}
-
-function render(){
-
-  let html = "";
-
-  items.forEach((item,i)=>{
-
-    html += `
-    <div class="card">
-      <div class="rank">#${i+1}</div>
-      <div>商品：${item.title}</div>
-      <div>店名：${item.shop}</div>
-      <div>銷量：${item.sold}</div>
-      <div>粉絲：${item.fans}</div>
-    </div>
-    `;
-
-  });
-
-  document.getElementById("list").innerHTML = html;
+  renderDashboard();
+  applySearch();
 }
 
 loadData();
