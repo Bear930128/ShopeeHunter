@@ -9,9 +9,6 @@
   <style>
     :root {
       --bg: #06111f;
-      --side: #07182b;
-      --panel: #0b2038;
-      --panel2: #0f2a49;
       --border: #1f4f86;
       --blue: #2f8cff;
       --cyan: #58d7ff;
@@ -23,9 +20,7 @@
       --shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -35,14 +30,8 @@
       color: var(--text);
     }
 
-    button,
-    input {
-      font-family: inherit;
-    }
-
-    a {
-      color: var(--cyan);
-    }
+    button, input { font-family: inherit; }
+    a { color: var(--cyan); }
 
     .layout {
       display: grid;
@@ -57,17 +46,13 @@
       position: sticky;
       top: 0;
       height: 100vh;
-      min-width: 0;
     }
 
-    .logo {
-      margin-bottom: 30px;
-    }
+    .logo { margin-bottom: 30px; }
 
     .logo h1 {
       margin: 0;
       font-size: 25px;
-      letter-spacing: 0;
     }
 
     .logo p {
@@ -161,13 +146,8 @@
       white-space: nowrap;
     }
 
-    .status.ok {
-      color: var(--green);
-    }
-
-    .status.error {
-      color: var(--red);
-    }
+    .status.ok { color: var(--green); }
+    .status.error { color: var(--red); }
 
     .stats {
       display: grid;
@@ -275,9 +255,7 @@
       line-height: 1.45;
     }
 
-    .captured strong {
-      color: #fff;
-    }
+    .captured strong { color: #fff; }
 
     .data-row {
       display: grid;
@@ -321,22 +299,10 @@
       font-weight: 800;
     }
 
-    .view-btn {
-      background: var(--blue);
-    }
-
-    .mark-btn {
-      background: #214f82;
-    }
-
-    .mark-btn.marked {
-      background: var(--yellow);
-      color: #0b2038;
-    }
-
-    .delete-btn {
-      background: var(--red);
-    }
+    .view-btn { background: var(--blue); }
+    .mark-btn { background: #214f82; }
+    .mark-btn.marked { background: var(--yellow); color: #0b2038; }
+    .delete-btn { background: var(--red); }
 
     .actions button:disabled {
       opacity: 0.55;
@@ -352,9 +318,7 @@
       line-height: 1.7;
     }
 
-    .hidden {
-      display: none;
-    }
+    .hidden { display: none; }
 
     .modal-mask {
       position: fixed;
@@ -376,9 +340,7 @@
       box-shadow: var(--shadow);
     }
 
-    .modal h2 {
-      margin: 0 0 10px;
-    }
+    .modal h2 { margin: 0 0 10px; }
 
     .modal p {
       margin: 0 0 18px;
@@ -410,52 +372,19 @@
     }
 
     @media (max-width: 1120px) {
-      .stats,
-      .grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .stats, .grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (max-width: 760px) {
-      .layout {
-        grid-template-columns: 190px minmax(0, 1fr);
-      }
-
-      .sidebar {
-        padding: 18px 12px;
-      }
-
-      .logo h1 {
-        font-size: 20px;
-      }
-
-      .main {
-        padding: 18px;
-      }
-
-      .topbar,
-      .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .stats,
-      .grid {
-        grid-template-columns: 1fr;
-      }
-
-      .chart-panel {
-        height: 300px;
-      }
-
-      .actions {
-        grid-template-columns: 1fr;
-      }
-
-      .user-box {
-        left: 12px;
-        right: 12px;
-      }
+      .layout { grid-template-columns: 190px minmax(0, 1fr); }
+      .sidebar { padding: 18px 12px; }
+      .logo h1 { font-size: 20px; }
+      .main { padding: 18px; }
+      .topbar, .toolbar { flex-direction: column; align-items: stretch; }
+      .stats, .grid { grid-template-columns: 1fr; }
+      .chart-panel { height: 300px; }
+      .actions { grid-template-columns: 1fr; }
+      .user-box { left: 12px; right: 12px; }
     }
   </style>
 </head>
@@ -500,22 +429,10 @@
 
       <section id="dashboardPage">
         <section class="stats">
-          <div class="stat">
-            <span>總筆數</span>
-            <strong id="totalCount">0</strong>
-          </div>
-          <div class="stat">
-            <span>平均指數</span>
-            <strong id="avgIndex">0</strong>
-          </div>
-          <div class="stat">
-            <span>最高銷量</span>
-            <strong id="maxSales">0</strong>
-          </div>
-          <div class="stat">
-            <span>已標記</span>
-            <strong id="markedCount">0</strong>
-          </div>
+          <div class="stat"><span>總筆數</span><strong id="totalCount">0</strong></div>
+          <div class="stat"><span>平均指數</span><strong id="avgIndex">0</strong></div>
+          <div class="stat"><span>最高銷量</span><strong id="maxSales">0</strong></div>
+          <div class="stat"><span>已標記</span><strong id="markedCount">0</strong></div>
         </section>
 
         <section class="chart-panel">
@@ -611,6 +528,16 @@
       return Number.isFinite(n) ? Math.round(n * multiplier) : 0;
     }
 
+    function displayValue(rawValue, numericValue) {
+      const raw = textValue(rawValue);
+
+      if (raw) {
+        return raw;
+      }
+
+      return formatNumber(numericValue);
+    }
+
     function formatNumber(value) {
       const n = Number(value) || 0;
 
@@ -642,8 +569,13 @@
       const url = textValue(getField(row, ["URL", "url", "網址"]));
       const product = textValue(getField(row, ["商品", "商品名", "Product", "product"]));
       const shop = textValue(getField(row, ["店名", "商店", "Shop", "shop"]));
-      const fans = numberValue(getField(row, ["粉絲", "粉絲數", "Fans", "fans"]));
-      const sales = numberValue(getField(row, ["銷量", "銷售", "Sales", "sales"]));
+
+      const rawFans = getField(row, ["粉絲", "粉絲數", "Fans", "fans"]);
+      const rawSales = getField(row, ["銷量", "銷售", "Sales", "sales"]);
+
+      const fans = numberValue(rawFans);
+      const sales = numberValue(rawSales);
+
       const capturedBy = textValue(getField(row, [
         "抓取者",
         "抓取人",
@@ -662,6 +594,8 @@
         shop: shop || "未命名店名",
         fans,
         sales,
+        fansDisplay: displayValue(rawFans, fans),
+        salesDisplay: displayValue(rawSales, sales),
         index: calcIndex(sales, fans),
         capturedBy: capturedBy || "未記錄"
       };
@@ -799,11 +733,11 @@
       const avg = total
         ? Math.round(allItems.reduce((sum, item) => sum + item.index, 0) / total)
         : 0;
-      const maxSales = total ? Math.max(...allItems.map(item => item.sales)) : 0;
+      const maxSalesItem = allItems.reduce((top, item) => item.sales > top.sales ? item : top, { sales: 0, salesDisplay: "0" });
 
       totalCountEl.textContent = total.toLocaleString();
       avgIndexEl.textContent = avg.toLocaleString();
-      maxSalesEl.textContent = formatNumber(maxSales);
+      maxSalesEl.textContent = maxSalesItem.salesDisplay || formatNumber(maxSalesItem.sales);
       markedCountEl.textContent = getMarkedItems().length.toLocaleString();
     }
 
@@ -861,14 +795,9 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          interaction: {
-            mode: "index",
-            intersect: false
-          },
+          interaction: { mode: "index", intersect: false },
           plugins: {
-            legend: {
-              labels: { color: "#eef6ff" }
-            },
+            legend: { labels: { color: "#eef6ff" } },
             tooltip: {
               callbacks: {
                 title(items) {
@@ -886,35 +815,20 @@
           },
           scales: {
             x: {
-              title: {
-                display: true,
-                text: "侵權指數區間",
-                color: "#8db4de"
-              },
+              title: { display: true, text: "侵權指數區間", color: "#8db4de" },
               ticks: { color: "#8db4de" },
               grid: { color: "rgba(141, 180, 222, 0.12)" }
             },
             y: {
               beginAtZero: true,
-              title: {
-                display: true,
-                text: "商品數",
-                color: "#8db4de"
-              },
-              ticks: {
-                color: "#8db4de",
-                precision: 0
-              },
+              title: { display: true, text: "商品數", color: "#8db4de" },
+              ticks: { color: "#8db4de", precision: 0 },
               grid: { color: "rgba(141, 180, 222, 0.12)" }
             },
             y1: {
               beginAtZero: true,
               position: "right",
-              title: {
-                display: true,
-                text: "總銷量",
-                color: "#8db4de"
-              },
+              title: { display: true, text: "總銷量", color: "#8db4de" },
               ticks: {
                 color: "#8db4de",
                 callback(value) {
@@ -955,11 +869,11 @@
             <div class="data-row">
               <div class="data">
                 <span>銷量</span>
-                <strong>${formatNumber(item.sales)}</strong>
+                <strong>${escapeHtml(item.salesDisplay)}</strong>
               </div>
               <div class="data">
                 <span>粉絲</span>
-                <strong>${formatNumber(item.fans)}</strong>
+                <strong>${escapeHtml(item.fansDisplay)}</strong>
               </div>
               <div class="data">
                 <span>侵權指數</span>
@@ -1010,11 +924,7 @@
         body.append("id", id);
         body.append("user", currentUser);
 
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          body
-        });
-
+        const res = await fetch(GAS_URL, { method: "POST", body });
         const text = await res.text();
         let result = {};
 
@@ -1033,7 +943,6 @@
 
         renderAll();
         setStatus("刪除成功", "ok");
-
         setTimeout(loadData, 800);
       } catch (error) {
         console.error(error);
