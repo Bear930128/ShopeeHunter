@@ -431,6 +431,21 @@
       cursor: pointer;
     }
 
+    .app-notice {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      z-index: 999999;
+      max-width: 340px;
+      padding: 14px 16px;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 800;
+      line-height: 1.45;
+      box-shadow: 0 12px 32px rgba(0,0,0,.35);
+      display: none;
+    }
+
     @media (max-width: 1120px) {
       .stats { grid-template-columns: repeat(2, 1fr); }
       .grid { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
@@ -464,6 +479,8 @@
       <button id="loginBtn" type="button">進入網站</button>
     </div>
   </div>
+
+  <div id="appNotice" class="app-notice"></div>
 
   <div class="layout">
     <aside class="sidebar">
@@ -549,6 +566,7 @@
     const statusEl = document.getElementById("status");
     const pageTitle = document.getElementById("pageTitle");
     const pageSubtitle = document.getElementById("pageSubtitle");
+    const appNotice = document.getElementById("appNotice");
 
     const dashboardPage = document.getElementById("dashboardPage");
     const rankingPage = document.getElementById("rankingPage");
@@ -563,6 +581,18 @@
     const markedGrid = document.getElementById("markedGrid");
     const searchInput = document.getElementById("searchInput");
     const markedSearchInput = document.getElementById("markedSearchInput");
+
+    function showAppNotice(text, type = "info") {
+      appNotice.textContent = text;
+      appNotice.style.display = "block";
+      appNotice.style.background = type === "error" ? "#ff4d6d" : type === "success" ? "#16a76f" : "#2f8cff";
+
+      if (type !== "loading") {
+        setTimeout(() => {
+          appNotice.style.display = "none";
+        }, 2800);
+      }
+    }
 
     function setStatus(text, type = "") {
       statusEl.textContent = text;
@@ -621,11 +651,9 @@
 
     function normalizeRowKeys(row) {
       const normalized = {};
-
       Object.keys(row || {}).forEach(key => {
         normalized[cleanKey(key)] = row[key];
       });
-
       return normalized;
     }
 
@@ -880,10 +908,7 @@
     function renderChart() {
       const buckets = getIndexBuckets(allItems);
 
-      if (!window.Chart) {
-        return;
-      }
-
+      if (!window.Chart) return;
       if (chart) chart.destroy();
 
       chart = new Chart(document.getElementById("mainChart"), {
@@ -1006,6 +1031,17 @@
 
       if (!ok) return;
 
+      const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
+      const btn = card ? card.querySelector(".delete-btn") : null;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "刪除中";
+      }
+
+      showAppNotice("正在刪除試算表資料，請稍候...", "loading");
+      setStatus("刪除中");
+
       try {
         const body = new URLSearchParams();
         body.set("action", "delete");
@@ -1036,9 +1072,16 @@
         renderChart();
 
         setStatus("刪除成功", "ok");
+        showAppNotice("刪除完成，試算表已同步", "success");
       } catch (error) {
         alert("刪除失敗：" + error.message);
         setStatus("刪除失敗", "error");
+        showAppNotice("刪除失敗，請稍後再試", "error");
+
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "刪除";
+        }
       }
     }
 
