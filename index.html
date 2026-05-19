@@ -44,7 +44,7 @@
     .data{height:68px;background:rgba(6,17,31,.68);border:1px solid rgba(88,215,255,.13);border-radius:8px;padding:10px 8px;min-width:0;display:flex;flex-direction:column;justify-content:center}
     .data span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px;white-space:nowrap}.data strong{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .actions{display:grid;grid-template-columns:1fr 1fr 86px;gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800}
-    .view-btn{background:var(--blue)}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.trash-btn{background:#8a3550}
+    .view-btn{background:var(--blue)}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}
     .actions button:disabled{opacity:.75;cursor:not-allowed}
     .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none}
     .modal-mask{position:fixed;inset:0;background:rgba(3,9,17,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
@@ -454,10 +454,10 @@
     function renderCard(item, inTrash = false) {
       const marked = isMarked(item);
       const markButton = inTrash
-        ? ""
+        ? `<button class="restore-btn" type="button" onclick="restoreItem('${escapeJs(item.id)}')">復原</button>`
         : `<button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>`;
       const deleteButton = inTrash
-        ? `<button class="trash-btn" type="button" disabled>垃圾桶</button>`
+        ? ""
         : `<button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>`;
 
       return `
@@ -580,6 +580,53 @@
       }
     }
 
+    async function restoreItem(id) {
+      const item = allItems.find(x => x.id === id);
+      if (!item) {
+        alert("找不到這筆資料，請重新整理後再試。");
+        return;
+      }
+
+      const ok = confirm(`確定要復原這筆資料？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n復原後會回到排行榜，並同步清空試算表狀態。`);
+      if (!ok) return;
+
+      const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
+      const btn = card ? card.querySelector(".restore-btn") : null;
+
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = "復原中";
+      }
+
+      showAppNotice("正在復原資料，請稍候...", "loading");
+      setStatus("復原中");
+
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "restore");
+        body.set("id", id);
+        body.set("user", currentUser);
+
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
+
+        item.status = "";
+        renderAll();
+
+        setStatus("復原成功", "ok");
+        showAppNotice("復原完成，資料已回到排行榜", "success");
+      } catch (error) {
+        alert("復原失敗：" + error.message);
+        setStatus("復原失敗", "error");
+        showAppNotice("復原失敗，請稍後再試", "error");
+
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "復原";
+        }
+      }
+    }
+
     async function bulkDeleteTrash() {
       const trashItems = getTrashItems();
 
@@ -647,7 +694,7 @@
 
       if (page === "trash") {
         pageTitle.textContent = "垃圾桶";
-        pageSubtitle.textContent = "顯示網站端刪除的資料，可一鍵永久刪除並同步試算表。";
+        pageSubtitle.textContent = "顯示網站端刪除的資料，可復原或一鍵永久刪除。";
       }
     }
 
