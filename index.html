@@ -6,467 +6,54 @@
   <title>ShopeeHunter Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root {
-      --bg: #06111f;
-      --border: #1f4f86;
-      --blue: #2f8cff;
-      --cyan: #58d7ff;
-      --green: #38d996;
-      --red: #ff4d6d;
-      --yellow: #f7c948;
-      --text: #eef6ff;
-      --muted: #8db4de;
-      --shadow: 0 18px 42px rgba(0, 0, 0, 0.28);
-    }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Arial, "Noto Sans TC", sans-serif;
-      background: radial-gradient(circle at top left, rgba(47, 140, 255, 0.18), transparent 34%), var(--bg);
-      color: var(--text);
-    }
-
-    button, input { font-family: inherit; }
-    a { color: var(--cyan); }
-
-    .layout {
-      display: grid;
-      grid-template-columns: 240px minmax(0, 1fr);
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      background: linear-gradient(180deg, #071a30, #06111f);
-      border-right: 1px solid var(--border);
-      padding: 24px 18px;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-    }
-
-    .logo { margin-bottom: 30px; }
-    .logo h1 { margin: 0; font-size: 25px; }
-
-    .logo p {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-    }
-
-    .nav { display: grid; gap: 10px; }
-
-    .nav button {
-      width: 100%;
-      height: 44px;
-      border: 1px solid transparent;
-      border-radius: 8px;
-      color: var(--muted);
-      background: transparent;
-      cursor: pointer;
-      text-align: left;
-      padding: 0 14px;
-      font-weight: 700;
-      font-size: 15px;
-    }
-
-    .nav button.active,
-    .nav button:hover {
-      color: #fff;
-      background: rgba(47, 140, 255, 0.16);
-      border-color: rgba(88, 215, 255, 0.28);
-    }
-
-    .user-box {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      bottom: 22px;
-      padding: 14px;
-      background: rgba(11, 32, 56, 0.8);
-      border: 1px solid rgba(88, 215, 255, 0.18);
-      border-radius: 8px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .user-box strong {
-      display: block;
-      color: #fff;
-      margin-top: 6px;
-      word-break: break-word;
-    }
-
-    .main {
-      padding: 26px;
-      min-width: 0;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 18px;
-      margin-bottom: 22px;
-    }
-
-    .page-title h2 {
-      margin: 0;
-      font-size: 28px;
-    }
-
-    .page-title p {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .top-actions {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .refresh-btn {
-      height: 40px;
-      border: 1px solid rgba(88, 215, 255, 0.38);
-      border-radius: 8px;
-      background: rgba(47, 140, 255, 0.18);
-      color: #fff;
-      cursor: pointer;
-      font-weight: 800;
-      padding: 0 16px;
-      white-space: nowrap;
-    }
-
-    .refresh-btn:hover { background: rgba(47, 140, 255, 0.32); }
-    .refresh-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-
-    .status {
-      padding: 11px 16px;
-      min-width: 160px;
-      text-align: center;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: rgba(7, 24, 43, 0.85);
-      color: var(--muted);
-      font-weight: 700;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    .status.ok { color: var(--green); }
-    .status.error { color: var(--red); }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
-    .stat,
-    .chart-panel,
-    .card,
-    .empty {
-      background: linear-gradient(180deg, rgba(15, 42, 73, 0.95), rgba(11, 32, 56, 0.95));
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-    }
-
-    .stat {
-      padding: 18px;
-      min-height: 112px;
-    }
-
-    .stat span {
-      display: block;
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 12px;
-    }
-
-    .stat strong {
-      display: block;
-      font-size: 30px;
-      color: #fff;
-      overflow-wrap: anywhere;
-    }
-
-    .chart-panel {
-      height: 340px;
-      padding: 18px;
-      margin-bottom: 24px;
-    }
-
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 16px;
-    }
-
-    .toolbar h3 {
-      margin: 0;
-      font-size: 22px;
-    }
-
-    .search {
-      width: min(380px, 100%);
-      height: 42px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #071426;
-      color: #fff;
-      outline: none;
-      padding: 0 14px;
-    }
-
-    .search:focus {
-      border-color: var(--cyan);
-      box-shadow: 0 0 0 3px rgba(88, 215, 255, 0.12);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(280px, 1fr));
-      gap: 16px;
-      align-items: stretch;
-    }
-
-    .card {
-      padding: 18px;
-      min-height: 396px;
-      display: grid;
-      grid-template-rows: 150px 74px 68px 38px;
-      gap: 14px;
-    }
-
-    .product-area {
-      height: 150px;
-      display: grid;
-      grid-template-rows: 78px 58px;
-      gap: 10px;
-      overflow: hidden;
-    }
-
-    .shop-title {
-      margin: 0;
-      font-size: 19px;
-      line-height: 1.35;
-      color: #fff;
-      font-weight: 800;
-      word-break: break-word;
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .product-subtitle {
-      color: var(--cyan);
-      font-size: 14px;
-      line-height: 1.45;
-      word-break: break-word;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
-    .company-info {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
-      word-break: break-word;
-    }
-
-    .company-info strong {
-      color: #fff;
-    }
-
-    .company-block {
-      height: 74px;
-      padding: 10px 12px;
-      background: rgba(6, 17, 31, 0.44);
-      border: 1px solid rgba(88, 215, 255, 0.13);
-      border-radius: 8px;
-      display: grid;
-      gap: 6px;
-      overflow: hidden;
-    }
-
-    .company-info {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .data-row {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 8px;
-    }
-
-    .data {
-      height: 68px;
-      background: rgba(6, 17, 31, 0.68);
-      border: 1px solid rgba(88, 215, 255, 0.13);
-      border-radius: 8px;
-      padding: 10px 8px;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-
-    .data span {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 6px;
-      white-space: nowrap;
-    }
-
-    .data strong {
-      font-size: 16px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr 86px;
-      gap: 8px;
-    }
-
-    .actions button {
-      height: 38px;
-      border: 0;
-      border-radius: 8px;
-      cursor: pointer;
-      color: #fff;
-      font-weight: 800;
-    }
-
-    .view-btn { background: var(--blue); }
-    .mark-btn { background: #214f82; }
-    .mark-btn.marked { background: var(--yellow); color: #0b2038; }
-    .delete-btn { background: var(--red); }
-
-    .actions button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
-
-    .empty {
-      grid-column: 1 / -1;
-      padding: 42px 20px;
-      text-align: center;
-      color: var(--muted);
-      border-style: dashed;
-      line-height: 1.7;
-    }
-
-    .hidden { display: none; }
-
-    .modal-mask {
-      position: fixed;
-      inset: 0;
-      background: rgba(3, 9, 17, 0.82);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 50;
-      padding: 20px;
-    }
-
-    .modal {
-      width: min(420px, 100%);
-      background: #0b2038;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 24px;
-      box-shadow: var(--shadow);
-    }
-
-    .modal h2 { margin: 0 0 10px; }
-
-    .modal p {
-      margin: 0 0 18px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .modal input {
-      width: 100%;
-      height: 44px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: #071426;
-      color: #fff;
-      padding: 0 14px;
-      outline: none;
-      margin-bottom: 14px;
-    }
-
-    .modal button {
-      width: 100%;
-      height: 42px;
-      border: 0;
-      border-radius: 8px;
-      color: #fff;
-      background: var(--blue);
-      font-weight: 800;
-      cursor: pointer;
-    }
-
-    .app-notice {
-      position: fixed;
-      right: 24px;
-      bottom: 24px;
-      z-index: 999999;
-      max-width: 340px;
-      padding: 14px 16px;
-      border-radius: 8px;
-      color: #fff;
-      font-weight: 800;
-      line-height: 1.45;
-      box-shadow: 0 12px 32px rgba(0,0,0,.35);
-      display: none;
-    }
-
-    @media (max-width: 1120px) {
-      .stats { grid-template-columns: repeat(2, 1fr); }
-      .grid { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
-    }
-
-    @media (max-width: 760px) {
-      .layout { grid-template-columns: 190px minmax(0, 1fr); }
-      .sidebar { padding: 18px 12px; }
-      .logo h1 { font-size: 20px; }
-      .main { padding: 18px; }
-      .topbar, .toolbar { flex-direction: column; align-items: stretch; }
-      .top-actions { align-items: stretch; }
-      .stats, .grid { grid-template-columns: 1fr; }
-      .chart-panel { height: 300px; }
-      .card {
-        min-height: 396px;
-        grid-template-rows: 150px 74px 68px auto;
-      }
-      .actions { grid-template-columns: 1fr; }
-      .user-box { left: 12px; right: 12px; }
-    }
+    :root{--bg:#06111f;--border:#1f4f86;--blue:#2f8cff;--cyan:#58d7ff;--green:#38d996;--red:#ff4d6d;--yellow:#f7c948;--text:#eef6ff;--muted:#8db4de;--shadow:0 18px 42px rgba(0,0,0,.28)}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:Arial,"Noto Sans TC",sans-serif;background:radial-gradient(circle at top left,rgba(47,140,255,.18),transparent 34%),var(--bg);color:var(--text)}
+    button,input{font-family:inherit}a{color:var(--cyan)}
+    .layout{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100vh}
+    .sidebar{background:linear-gradient(180deg,#071a30,#06111f);border-right:1px solid var(--border);padding:24px 18px;position:sticky;top:0;height:100vh}
+    .logo{margin-bottom:30px}.logo h1{margin:0;font-size:25px}.logo p{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.45}
+    .nav{display:grid;gap:10px}.nav button{width:100%;height:44px;border:1px solid transparent;border-radius:8px;color:var(--muted);background:transparent;cursor:pointer;text-align:left;padding:0 14px;font-weight:700;font-size:15px}
+    .nav button.active,.nav button:hover{color:#fff;background:rgba(47,140,255,.16);border-color:rgba(88,215,255,.28)}
+    .user-box{position:absolute;left:18px;right:18px;bottom:22px;padding:14px;background:rgba(11,32,56,.8);border:1px solid rgba(88,215,255,.18);border-radius:8px;color:var(--muted);font-size:13px}
+    .user-box strong{display:block;color:#fff;margin-top:6px;word-break:break-word}
+    .main{padding:26px;min-width:0}.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}
+    .page-title h2{margin:0;font-size:28px}.page-title p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.5}
+    .top-actions{display:flex;align-items:center;gap:10px}
+    .refresh-btn,.danger-action{height:40px;border-radius:8px;color:#fff;cursor:pointer;font-weight:800;padding:0 16px;white-space:nowrap}
+    .refresh-btn{border:1px solid rgba(88,215,255,.38);background:rgba(47,140,255,.18)}
+    .danger-action{border:1px solid rgba(255,77,109,.55);background:rgba(255,77,109,.2)}
+    .refresh-btn:hover{background:rgba(47,140,255,.32)}.danger-action:hover{background:rgba(255,77,109,.34)}
+    .refresh-btn:disabled,.danger-action:disabled{opacity:.55;cursor:not-allowed}
+    .status{padding:11px 16px;min-width:160px;text-align:center;border:1px solid var(--border);border-radius:8px;background:rgba(7,24,43,.85);color:var(--muted);font-weight:700;font-size:14px;white-space:nowrap}
+    .status.ok{color:var(--green)}.status.error{color:var(--red)}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
+    .stat,.chart-panel,.card,.empty{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
+    .stat{padding:18px;min-height:112px}.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:12px}.stat strong{display:block;font-size:30px;color:#fff;overflow-wrap:anywhere}
+    .chart-panel{height:340px;padding:18px;margin-bottom:24px}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}.toolbar h3{margin:0;font-size:22px}.toolbar-actions{display:flex;gap:10px;align-items:center}
+    .search{width:min(380px,100%);height:42px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:0 14px}.search:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
+    .grid{display:grid;grid-template-columns:repeat(3,minmax(280px,1fr));gap:16px;align-items:stretch}
+    .card{padding:18px;min-height:396px;display:grid;grid-template-rows:150px 74px 68px 38px;gap:14px}
+    .product-area{height:150px;display:grid;grid-template-rows:78px 58px;gap:10px;overflow:hidden}
+    .shop-title{margin:0;font-size:19px;line-height:1.35;color:#fff;font-weight:800;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+    .product-subtitle{color:var(--cyan);font-size:14px;line-height:1.45;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .company-info{color:var(--muted);font-size:13px;line-height:1.45;word-break:break-word;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-info strong{color:#fff}
+    .company-block{height:74px;padding:10px 12px;background:rgba(6,17,31,.44);border:1px solid rgba(88,215,255,.13);border-radius:8px;display:grid;gap:6px;overflow:hidden}
+    .data-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .data{height:68px;background:rgba(6,17,31,.68);border:1px solid rgba(88,215,255,.13);border-radius:8px;padding:10px 8px;min-width:0;display:flex;flex-direction:column;justify-content:center}
+    .data span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px;white-space:nowrap}.data strong{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .actions{display:grid;grid-template-columns:1fr 1fr 86px;gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800}
+    .view-btn{background:var(--blue)}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.actions button:disabled{opacity:.55;cursor:not-allowed}
+    .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none}
+    .modal-mask{position:fixed;inset:0;background:rgba(3,9,17,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+    .modal{width:min(420px,100%);background:#0b2038;border:1px solid var(--border);border-radius:8px;padding:24px;box-shadow:var(--shadow)}.modal h2{margin:0 0 10px}.modal p{margin:0 0 18px;color:var(--muted);line-height:1.5}
+    .modal input{width:100%;height:44px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:0 14px;outline:none;margin-bottom:14px}.modal button{width:100%;height:42px;border:0;border-radius:8px;color:#fff;background:var(--blue);font-weight:800;cursor:pointer}
+    .app-notice{position:fixed;right:24px;bottom:24px;z-index:999999;max-width:340px;padding:14px 16px;border-radius:8px;color:#fff;font-weight:800;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.35);display:none}
+    @media(max-width:1120px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(280px,1fr))}}
+    @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:396px;grid-template-rows:150px 74px 68px auto}.actions{grid-template-columns:1fr}.user-box{left:12px;right:12px}}
   </style>
 </head>
-
 <body>
   <div id="loginModal" class="modal-mask">
     <div class="modal">
@@ -485,17 +72,13 @@
         <h1>ShopeeHunter</h1>
         <p>Google Sheet 同步監控後台</p>
       </div>
-
       <nav class="nav">
         <button class="nav-btn active" data-page="dashboard" type="button">首頁</button>
         <button class="nav-btn" data-page="ranking" type="button">排行榜</button>
         <button class="nav-btn" data-page="marked" type="button">已標記</button>
+        <button class="nav-btn" data-page="trash" type="button">垃圾桶</button>
       </nav>
-
-      <div class="user-box">
-        目前使用者
-        <strong id="currentUser">尚未登入</strong>
-      </div>
+      <div class="user-box">目前使用者<strong id="currentUser">尚未登入</strong></div>
     </aside>
 
     <main class="main">
@@ -517,10 +100,7 @@
           <div class="stat"><span>最高銷量</span><strong id="maxSales">0</strong></div>
           <div class="stat"><span>已標記</span><strong id="markedCount">0</strong></div>
         </section>
-
-        <section class="chart-panel">
-          <canvas id="mainChart"></canvas>
-        </section>
+        <section class="chart-panel"><canvas id="mainChart"></canvas></section>
       </section>
 
       <section id="rankingPage" class="hidden">
@@ -528,9 +108,7 @@
           <h3>排行榜</h3>
           <input id="searchInput" class="search" type="search" placeholder="搜尋店名、商品名、公司、統編" />
         </div>
-        <section id="rankingGrid" class="grid">
-          <div class="empty">資料載入中...</div>
-        </section>
+        <section id="rankingGrid" class="grid"><div class="empty">資料載入中...</div></section>
       </section>
 
       <section id="markedPage" class="hidden">
@@ -538,9 +116,18 @@
           <h3>已標記</h3>
           <input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、商品名、公司、統編" />
         </div>
-        <section id="markedGrid" class="grid">
-          <div class="empty">尚無已標記資料</div>
-        </section>
+        <section id="markedGrid" class="grid"><div class="empty">尚無已標記資料</div></section>
+      </section>
+
+      <section id="trashPage" class="hidden">
+        <div class="toolbar">
+          <h3>垃圾桶</h3>
+          <div class="toolbar-actions">
+            <input id="trashSearchInput" class="search" type="search" placeholder="搜尋垃圾桶店名、商品名、公司、統編" />
+            <button id="bulkDeleteTrashBtn" class="danger-action" type="button">一鍵刪除</button>
+          </div>
+        </div>
+        <section id="trashGrid" class="grid"><div class="empty">垃圾桶沒有資料</div></section>
       </section>
     </main>
   </div>
@@ -553,12 +140,13 @@
     let allItems = [];
     let chart = null;
     let isLoading = false;
-    const deletedIds = new Set();
+    const permanentlyDeletedIds = new Set();
 
     const loginModal = document.getElementById("loginModal");
     const usernameInput = document.getElementById("usernameInput");
     const loginBtn = document.getElementById("loginBtn");
     const refreshBtn = document.getElementById("refreshBtn");
+    const bulkDeleteTrashBtn = document.getElementById("bulkDeleteTrashBtn");
     const currentUserEl = document.getElementById("currentUser");
     const statusEl = document.getElementById("status");
     const pageTitle = document.getElementById("pageTitle");
@@ -568,6 +156,7 @@
     const dashboardPage = document.getElementById("dashboardPage");
     const rankingPage = document.getElementById("rankingPage");
     const markedPage = document.getElementById("markedPage");
+    const trashPage = document.getElementById("trashPage");
 
     const totalCountEl = document.getElementById("totalCount");
     const avgIndexEl = document.getElementById("avgIndex");
@@ -576,19 +165,16 @@
 
     const rankingGrid = document.getElementById("rankingGrid");
     const markedGrid = document.getElementById("markedGrid");
+    const trashGrid = document.getElementById("trashGrid");
     const searchInput = document.getElementById("searchInput");
     const markedSearchInput = document.getElementById("markedSearchInput");
+    const trashSearchInput = document.getElementById("trashSearchInput");
 
     function showAppNotice(text, type = "info") {
       appNotice.textContent = text;
       appNotice.style.display = "block";
       appNotice.style.background = type === "error" ? "#ff4d6d" : type === "success" ? "#16a76f" : "#2f8cff";
-
-      if (type !== "loading") {
-        setTimeout(() => {
-          appNotice.style.display = "none";
-        }, 2800);
-      }
+      if (type !== "loading") setTimeout(() => appNotice.style.display = "none", 2800);
     }
 
     function setStatus(text, type = "") {
@@ -601,31 +187,16 @@
     }
 
     function cleanKey(value) {
-      return String(value || "")
-        .replace(/\uFEFF/g, "")
-        .replace(/\u00A0/g, " ")
-        .replace(/\s+/g, "")
-        .trim();
+      return String(value || "").replace(/\uFEFF/g, "").replace(/\u00A0/g, " ").replace(/\s+/g, "").trim();
     }
 
     function numberValue(value) {
       let text = String(value || "").trim();
       if (!text) return 0;
-
       text = text.replaceAll(",", "").replaceAll("+", "").replaceAll("＋", "").replace(/\s/g, "");
-
       let multiplier = 1;
-
-      if (text.includes("萬")) {
-        multiplier = 10000;
-        text = text.replace("萬", "");
-      }
-
-      if (text.toLowerCase().includes("k")) {
-        multiplier = 1000;
-        text = text.toLowerCase().replace("k", "");
-      }
-
+      if (text.includes("萬")) { multiplier = 10000; text = text.replace("萬", ""); }
+      if (text.toLowerCase().includes("k")) { multiplier = 1000; text = text.toLowerCase().replace("k", ""); }
       const n = Number(text.replace(/[^\d.-]/g, ""));
       return Number.isFinite(n) ? Math.round(n * multiplier) : 0;
     }
@@ -637,37 +208,27 @@
 
     function formatNumber(value) {
       const n = Number(value) || 0;
-
       if (n >= 10000) {
         const v = n / 10000;
         return Number.isInteger(v) ? `${v}萬` : `${v.toFixed(1)}萬`;
       }
-
       return n.toLocaleString();
     }
 
     function normalizeRowKeys(row) {
       const normalized = {};
-      Object.keys(row || {}).forEach(key => {
-        normalized[cleanKey(key)] = row[key];
-      });
+      Object.keys(row || {}).forEach(key => normalized[cleanKey(key)] = row[key]);
       return normalized;
     }
 
     function getField(row, names) {
       const normalizedRow = normalizeRowKeys(row);
-
       for (const name of names) {
         const cleanName = cleanKey(name);
-
-        if (
-          normalizedRow[cleanName] !== undefined &&
-          String(normalizedRow[cleanName]).trim() !== ""
-        ) {
+        if (normalizedRow[cleanName] !== undefined && String(normalizedRow[cleanName]).trim() !== "") {
           return normalizedRow[cleanName];
         }
       }
-
       return "";
     }
 
@@ -685,23 +246,19 @@
       const company = textValue(getField(row, ["公司", "公司名", "登記公司", "Company", "company"]));
       const taxId = textValue(getField(row, ["統編", "統一編號", "Tax ID", "taxId", "taxid"]));
       const status = textValue(getField(row, ["狀態", "status", "Status"]));
-
       const rawFans = getField(row, ["粉絲", "粉絲數", "Fans", "fans"]);
       const rawSales = getField(row, ["銷量", "銷售", "Sales", "sales"]);
-
       const fans = numberValue(rawFans);
       const sales = numberValue(rawSales);
 
       return {
-        id,
-        url,
+        id, url,
         product: product || "未命名商品",
         shop: shop || "未命名店名",
         company: company || "無",
         taxId: taxId || "無",
         status,
-        fans,
-        sales,
+        fans, sales,
         fansDisplay: displayValue(rawFans, fans),
         salesDisplay: displayValue(rawSales, sales),
         index: calcIndex(sales, fans)
@@ -710,22 +267,16 @@
 
     function dedupeItems(items) {
       const map = new Map();
-
       for (const item of items) {
         const key = item.id || item.url || `${item.product}-${item.shop}`;
         if (!key) continue;
-
         if (!map.has(key)) {
           map.set(key, item);
           continue;
         }
-
         const oldItem = map.get(key);
-        if (item.sales >= oldItem.sales) {
-          map.set(key, item);
-        }
+        if (item.sales >= oldItem.sales) map.set(key, item);
       }
-
       return Array.from(map.values());
     }
 
@@ -735,7 +286,6 @@
         usernameInput.focus();
         return;
       }
-
       if (isLoading) return;
 
       isLoading = true;
@@ -745,21 +295,15 @@
 
       try {
         const res = await fetch(OPENSHEET_URL, { cache: "reload" });
-
-        if (!res.ok) {
-          throw new Error("OpenSheet HTTP " + res.status);
-        }
+        if (!res.ok) throw new Error("OpenSheet HTTP " + res.status);
 
         const rows = await res.json();
-
-        if (!Array.isArray(rows)) {
-          throw new Error(rows && rows.error ? rows.error : "OpenSheet 回傳格式不是陣列");
-        }
+        if (!Array.isArray(rows)) throw new Error(rows && rows.error ? rows.error : "OpenSheet 回傳格式不是陣列");
 
         const normalizedItems = rows
           .map(normalizeRow)
           .filter(item => item.id && item.product)
-          .filter(item => !deletedIds.has(item.id));
+          .filter(item => !permanentlyDeletedIds.has(item.id));
 
         if (!normalizedItems.length && rows.length) {
           const firstKeys = Object.keys(rows[0]).join("、");
@@ -767,36 +311,17 @@
         }
 
         allItems = dedupeItems(normalizedItems);
-
-        renderStats();
-        renderRanking();
-        renderMarked();
-
-        try {
-          renderChart();
-        } catch (chartError) {
-          console.error(chartError);
-        }
-
+        renderAll();
         setStatus("資料已同步", "ok");
       } catch (error) {
         console.error(error);
         allItems = [];
-        renderStats();
-        renderRanking();
-        renderMarked();
+        renderAll();
         setStatus("資料載入失敗", "error");
-
-        const message = `
-          <div class="empty">
-            資料讀取失敗：${escapeHtml(error.message)}
-            <br><br>
-            <a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a>
-          </div>
-        `;
-
+        const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br><a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a></div>`;
         rankingGrid.innerHTML = message;
         markedGrid.innerHTML = message;
+        trashGrid.innerHTML = message;
       } finally {
         isLoading = false;
         refreshBtn.disabled = false;
@@ -804,17 +329,16 @@
       }
     }
 
-    function isMarked(itemOrId) {
-      const item = typeof itemOrId === "string"
-        ? allItems.find(entry => entry.id === itemOrId)
-        : itemOrId;
-
+    function isMarked(item) {
       return item && item.status === "已標記";
+    }
+
+    function isTrash(item) {
+      return item && item.status === "已刪除";
     }
 
     async function toggleMark(id) {
       const item = allItems.find(entry => entry.id === id);
-
       if (!item) {
         alert("找不到這筆資料，請重新整理後再試。");
         return;
@@ -833,27 +357,11 @@
         body.set("status", nextStatus);
         body.set("user", currentUser);
 
-        const res = await fetch(GAS_URL, { method: "POST", body });
-        const text = await res.text();
-        let result;
-
-        try {
-          result = JSON.parse(text);
-        } catch {
-          result = { success: res.ok, message: text };
-        }
-
-        if (!res.ok || result.success !== true) {
-          throw new Error(result.message || text || "GAS 未回傳 success:true");
-        }
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
 
         item.status = nextStatus;
-
-        renderStats();
-        renderRanking();
-        renderMarked();
-        renderChart();
-
+        renderAll();
         setStatus(`${actionText}成功`, "ok");
         showAppNotice(`${actionText}完成，試算表已同步`, "success");
       } catch (error) {
@@ -870,26 +378,41 @@
 
     function getRankingItems() {
       const keyword = searchInput.value.trim().toLowerCase();
-
       return allItems
-        .filter(item => item.status !== "已標記")
+        .filter(item => item.status !== "已標記" && item.status !== "已刪除")
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
 
     function getMarkedItems() {
       const keyword = markedSearchInput.value.trim().toLowerCase();
-
       return allItems
         .filter(item => item.status === "已標記")
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
 
+    function getTrashItems() {
+      const keyword = trashSearchInput.value.trim().toLowerCase();
+      return allItems
+        .filter(item => item.status === "已刪除")
+        .filter(item => itemMatchesKeyword(item, keyword))
+        .sort((a, b) => b.index - a.index || b.sales - a.sales);
+    }
+
+    function renderAll() {
+      renderStats();
+      renderRanking();
+      renderMarked();
+      renderTrash();
+      try { renderChart(); } catch (error) { console.error(error); }
+    }
+
     function renderStats() {
-      const total = allItems.length;
-      const avg = total ? Math.round(allItems.reduce((sum, item) => sum + item.index, 0) / total) : 0;
-      const maxSalesItem = allItems.reduce((top, item) => item.sales > top.sales ? item : top, { sales: 0, salesDisplay: "0" });
+      const activeItems = allItems.filter(item => item.status !== "已刪除");
+      const total = activeItems.length;
+      const avg = total ? Math.round(activeItems.reduce((sum, item) => sum + item.index, 0) / total) : 0;
+      const maxSalesItem = activeItems.reduce((top, item) => item.sales > top.sales ? item : top, { sales: 0, salesDisplay: "0" });
 
       totalCountEl.textContent = total.toLocaleString();
       avgIndexEl.textContent = avg.toLocaleString();
@@ -905,7 +428,6 @@
         { label: "61-80", min: 61, max: 80, count: 0, sales: 0 },
         { label: "81-100", min: 81, max: 100, count: 0, sales: 0 }
       ];
-
       for (const item of items) {
         const bucket = buckets.find(group => item.index >= group.min && item.index <= group.max);
         if (bucket) {
@@ -913,13 +435,11 @@
           bucket.sales += item.sales;
         }
       }
-
       return buckets;
     }
 
     function renderChart() {
-      const buckets = getIndexBuckets(allItems);
-
+      const buckets = getIndexBuckets(allItems.filter(item => item.status !== "已刪除"));
       if (!window.Chart) return;
       if (chart) chart.destroy();
 
@@ -928,56 +448,19 @@
         data: {
           labels: buckets.map(bucket => bucket.label),
           datasets: [
-            {
-              label: "商品數",
-              data: buckets.map(bucket => bucket.count),
-              backgroundColor: "rgba(47, 140, 255, 0.68)",
-              borderColor: "#58d7ff",
-              borderWidth: 1,
-              yAxisID: "y"
-            },
-            {
-              label: "總銷量",
-              data: buckets.map(bucket => bucket.sales),
-              type: "line",
-              borderColor: "#38d996",
-              backgroundColor: "rgba(56, 217, 150, 0.12)",
-              tension: 0.35,
-              yAxisID: "y1"
-            }
+            { label: "商品數", data: buckets.map(bucket => bucket.count), backgroundColor: "rgba(47,140,255,.68)", borderColor: "#58d7ff", borderWidth: 1, yAxisID: "y" },
+            { label: "總銷量", data: buckets.map(bucket => bucket.sales), type: "line", borderColor: "#38d996", backgroundColor: "rgba(56,217,150,.12)", tension: .35, yAxisID: "y1" }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
-          plugins: {
-            legend: { labels: { color: "#eef6ff" } }
-          },
+          plugins: { legend: { labels: { color: "#eef6ff" } } },
           scales: {
-            x: {
-              title: { display: true, text: "侵權指數區間", color: "#8db4de" },
-              ticks: { color: "#8db4de" },
-              grid: { color: "rgba(141, 180, 222, 0.12)" }
-            },
-            y: {
-              beginAtZero: true,
-              title: { display: true, text: "商品數", color: "#8db4de" },
-              ticks: { color: "#8db4de", precision: 0 },
-              grid: { color: "rgba(141, 180, 222, 0.12)" }
-            },
-            y1: {
-              beginAtZero: true,
-              position: "right",
-              title: { display: true, text: "總銷量", color: "#8db4de" },
-              ticks: {
-                color: "#8db4de",
-                callback(value) {
-                  return formatNumber(value);
-                }
-              },
-              grid: { drawOnChartArea: false }
-            }
+            x: { title: { display: true, text: "侵權指數區間", color: "#8db4de" }, ticks: { color: "#8db4de" }, grid: { color: "rgba(141,180,222,.12)" } },
+            y: { beginAtZero: true, title: { display: true, text: "商品數", color: "#8db4de" }, ticks: { color: "#8db4de", precision: 0 }, grid: { color: "rgba(141,180,222,.12)" } },
+            y1: { beginAtZero: true, position: "right", title: { display: true, text: "總銷量", color: "#8db4de" }, ticks: { color: "#8db4de", callback(value) { return formatNumber(value); } }, grid: { drawOnChartArea: false } }
           }
         }
       });
@@ -993,8 +476,16 @@
       markedGrid.innerHTML = items.length ? items.map(renderCard).join("") : '<div class="empty">尚無已標記資料</div>';
     }
 
-    function renderCard(item) {
+    function renderTrash() {
+      const items = getTrashItems();
+      trashGrid.innerHTML = items.length ? items.map(item => renderCard(item, true)).join("") : '<div class="empty">垃圾桶沒有資料</div>';
+      bulkDeleteTrashBtn.disabled = items.length === 0;
+    }
+
+    function renderCard(item, inTrash = false) {
       const marked = isMarked(item);
+      const markButton = inTrash ? "" : `<button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>`;
+      const deleteButton = inTrash ? `<button class="delete-btn" type="button" disabled>垃圾桶</button>` : `<button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>`;
 
       return `
         <article class="card" data-id="${escapeHtml(item.id)}">
@@ -1002,22 +493,19 @@
             <h3 class="shop-title" title="${escapeHtml(item.shop)}">${escapeHtml(item.shop)}</h3>
             <div class="product-subtitle" title="${escapeHtml(item.product)}">${escapeHtml(item.product)}</div>
           </div>
-
           <div class="company-block">
             <div class="company-info" title="${escapeHtml(item.company)}">公司：<strong>${escapeHtml(item.company)}</strong></div>
             <div class="company-info" title="${escapeHtml(item.taxId)}">統編：<strong>${escapeHtml(item.taxId)}</strong></div>
           </div>
-
           <div class="data-row">
             <div class="data"><span>銷量</span><strong>${escapeHtml(item.salesDisplay)}</strong></div>
             <div class="data"><span>粉絲</span><strong>${escapeHtml(item.fansDisplay)}</strong></div>
             <div class="data"><span>侵權指數</span><strong>${item.index}</strong></div>
           </div>
-
           <div class="actions">
             <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}')" ${item.url ? "" : "disabled"}>查看</button>
-            <button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>
-            <button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>
+            ${markButton}
+            ${deleteButton}
           </div>
         </article>
       `;
@@ -1028,18 +516,24 @@
       window.open(url, "_blank", "noopener,noreferrer");
     }
 
+    async function postGas(body) {
+      const res = await fetch(GAS_URL, { method: "POST", body });
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { success: res.ok, message: text };
+      }
+    }
+
     async function deleteItem(id) {
       const item = allItems.find(x => x.id === id);
-
       if (!item) {
         alert("找不到這筆資料，請重新整理後再試。");
         return;
       }
 
-      const ok = confirm(
-        `確定要刪除這一筆資料？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n確認後會透過 GAS 刪除試算表同 ID 資料。`
-      );
-
+      const ok = confirm(`確定要把這筆資料移到垃圾桶？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n此操作會同步把試算表狀態改成「已刪除」。`);
       if (!ok) return;
 
       const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
@@ -1050,7 +544,7 @@
         btn.textContent = "刪除中";
       }
 
-      showAppNotice("正在刪除試算表資料，請稍候...", "loading");
+      showAppNotice("正在移到垃圾桶，請稍候...", "loading");
       setStatus("刪除中");
 
       try {
@@ -1059,30 +553,14 @@
         body.set("id", id);
         body.set("user", currentUser);
 
-        const res = await fetch(GAS_URL, { method: "POST", body });
-        const text = await res.text();
-        let result;
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
 
-        try {
-          result = JSON.parse(text);
-        } catch {
-          result = { success: res.ok, message: text };
-        }
+        item.status = "已刪除";
+        renderAll();
 
-        if (!res.ok || result.success !== true) {
-          throw new Error(result.message || text || "GAS 未回傳 success:true");
-        }
-
-        deletedIds.add(id);
-        allItems = allItems.filter(x => x.id !== id);
-
-        renderStats();
-        renderRanking();
-        renderMarked();
-        renderChart();
-
-        setStatus("刪除成功", "ok");
-        showAppNotice("刪除完成，試算表已同步", "success");
+        setStatus("已移到垃圾桶", "ok");
+        showAppNotice("已移到垃圾桶，試算表狀態已同步", "success");
       } catch (error) {
         alert("刪除失敗：" + error.message);
         setStatus("刪除失敗", "error");
@@ -1095,14 +573,55 @@
       }
     }
 
+    async function bulkDeleteTrash() {
+      const trashItems = getTrashItems();
+
+      if (!trashItems.length) {
+        alert("垃圾桶沒有資料可以刪除。");
+        return;
+      }
+
+      const ok = confirm(`確定要永久刪除垃圾桶裡的 ${trashItems.length} 筆資料？\n\n這會直接刪除試算表中所有狀態為「已刪除」的資料，刪除後無法從網站復原。`);
+      if (!ok) return;
+
+      bulkDeleteTrashBtn.disabled = true;
+      bulkDeleteTrashBtn.textContent = "刪除中";
+      showAppNotice(`正在永久刪除垃圾桶 ${trashItems.length} 筆資料，請稍候...`, "loading");
+      setStatus("垃圾桶刪除中");
+
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "bulkDeleteTrash");
+        body.set("user", currentUser);
+
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
+
+        trashItems.forEach(item => permanentlyDeletedIds.add(item.id));
+        allItems = allItems.filter(item => item.status !== "已刪除");
+
+        renderAll();
+
+        const deletedCount = result.deletedCount || trashItems.length;
+        setStatus("垃圾桶已清空", "ok");
+        showAppNotice(`永久刪除完成，共刪除 ${deletedCount} 筆資料`, "success");
+      } catch (error) {
+        alert("一鍵刪除失敗：" + error.message);
+        setStatus("垃圾桶刪除失敗", "error");
+        showAppNotice("一鍵刪除失敗，請稍後再試", "error");
+      } finally {
+        bulkDeleteTrashBtn.disabled = getTrashItems().length === 0;
+        bulkDeleteTrashBtn.textContent = "一鍵刪除";
+      }
+    }
+
     function switchPage(page) {
-      document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.page === page);
-      });
+      document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.page === page));
 
       dashboardPage.classList.toggle("hidden", page !== "dashboard");
       rankingPage.classList.toggle("hidden", page !== "ranking");
       markedPage.classList.toggle("hidden", page !== "marked");
+      trashPage.classList.toggle("hidden", page !== "trash");
 
       if (page === "dashboard") {
         pageTitle.textContent = "首頁";
@@ -1111,24 +630,27 @@
 
       if (page === "ranking") {
         pageTitle.textContent = "排行榜";
-        pageSubtitle.textContent = "只顯示尚未標記的資料，可查看、標記或刪除單筆資料。";
+        pageSubtitle.textContent = "只顯示尚未標記、尚未刪除的資料。";
       }
 
       if (page === "marked") {
         pageTitle.textContent = "已標記";
         pageSubtitle.textContent = "查看已同步標記的商品資料，取消標記後會回到排行榜。";
       }
+
+      if (page === "trash") {
+        pageTitle.textContent = "垃圾桶";
+        pageSubtitle.textContent = "顯示網站端刪除的資料，可一鍵永久刪除並同步試算表。";
+      }
     }
 
     function login() {
       const name = usernameInput.value.trim();
-
       if (!name) {
         alert("請輸入使用者名稱。");
         usernameInput.focus();
         return;
       }
-
       currentUser = name;
       currentUserEl.textContent = name;
       loginModal.style.display = "none";
@@ -1136,20 +658,11 @@
     }
 
     function escapeHtml(value) {
-      return String(value || "")
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+      return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
     }
 
     function escapeJs(value) {
-      return String(value || "")
-        .replaceAll("\\", "\\\\")
-        .replaceAll("'", "\\'")
-        .replaceAll("\n", "\\n")
-        .replaceAll("\r", "");
+      return String(value || "").replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("\n", "\\n").replaceAll("\r", "");
     }
 
     function cssEscape(value) {
@@ -1157,23 +670,15 @@
       return String(value).replace(/["\\]/g, "\\$&");
     }
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-      btn.addEventListener("click", () => switchPage(btn.dataset.page));
-    });
-
+    document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => switchPage(btn.dataset.page)));
     searchInput.addEventListener("input", renderRanking);
     markedSearchInput.addEventListener("input", renderMarked);
+    trashSearchInput.addEventListener("input", renderTrash);
     loginBtn.addEventListener("click", login);
     refreshBtn.addEventListener("click", loadData);
-
-    usernameInput.addEventListener("keydown", event => {
-      if (event.key === "Enter") login();
-    });
-
-    window.addEventListener("load", () => {
-      usernameInput.focus();
-      switchPage("dashboard");
-    });
+    bulkDeleteTrashBtn.addEventListener("click", bulkDeleteTrash);
+    usernameInput.addEventListener("keydown", event => { if (event.key === "Enter") login(); });
+    window.addEventListener("load", () => { usernameInput.focus(); switchPage("dashboard"); });
   </script>
 </body>
 </html>
