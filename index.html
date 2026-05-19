@@ -44,7 +44,8 @@
     .data{height:68px;background:rgba(6,17,31,.68);border:1px solid rgba(88,215,255,.13);border-radius:8px;padding:10px 8px;min-width:0;display:flex;flex-direction:column;justify-content:center}
     .data span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px;white-space:nowrap}.data strong{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .actions{display:grid;grid-template-columns:1fr 1fr 86px;gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800}
-    .view-btn{background:var(--blue)}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.actions button:disabled{opacity:.55;cursor:not-allowed}
+    .view-btn{background:var(--blue)}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.trash-btn{background:#8a3550}
+    .actions button:disabled{opacity:.75;cursor:not-allowed}
     .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none}
     .modal-mask{position:fixed;inset:0;background:rgba(3,9,17,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
     .modal{width:min(420px,100%);background:#0b2038;border:1px solid var(--border);border-radius:8px;padding:24px;box-shadow:var(--shadow)}.modal h2{margin:0 0 10px}.modal p{margin:0 0 18px;color:var(--muted);line-height:1.5}
@@ -333,44 +334,6 @@
       return item && item.status === "已標記";
     }
 
-    function isTrash(item) {
-      return item && item.status === "已刪除";
-    }
-
-    async function toggleMark(id) {
-      const item = allItems.find(entry => entry.id === id);
-      if (!item) {
-        alert("找不到這筆資料，請重新整理後再試。");
-        return;
-      }
-
-      const nextStatus = item.status === "已標記" ? "" : "已標記";
-      const actionText = nextStatus === "已標記" ? "標記" : "取消標記";
-
-      showAppNotice(`正在${actionText}資料，請稍候...`, "loading");
-      setStatus(`${actionText}中`);
-
-      try {
-        const body = new URLSearchParams();
-        body.set("action", "mark");
-        body.set("id", id);
-        body.set("status", nextStatus);
-        body.set("user", currentUser);
-
-        const result = await postGas(body);
-        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
-
-        item.status = nextStatus;
-        renderAll();
-        setStatus(`${actionText}成功`, "ok");
-        showAppNotice(`${actionText}完成，試算表已同步`, "success");
-      } catch (error) {
-        alert(`${actionText}失敗：` + error.message);
-        setStatus(`${actionText}失敗`, "error");
-        showAppNotice(`${actionText}失敗，請稍後再試`, "error");
-      }
-    }
-
     function itemMatchesKeyword(item, keyword) {
       const target = [item.shop, item.product, item.company, item.taxId].join(" ").toLowerCase();
       return target.includes(keyword);
@@ -468,24 +431,34 @@
 
     function renderRanking() {
       const items = getRankingItems();
-      rankingGrid.innerHTML = items.length ? items.map(renderCard).join("") : '<div class="empty">沒有符合條件的未標記資料</div>';
+      rankingGrid.innerHTML = items.length
+        ? items.map(item => renderCard(item, false)).join("")
+        : '<div class="empty">沒有符合條件的未標記資料</div>';
     }
 
     function renderMarked() {
       const items = getMarkedItems();
-      markedGrid.innerHTML = items.length ? items.map(renderCard).join("") : '<div class="empty">尚無已標記資料</div>';
+      markedGrid.innerHTML = items.length
+        ? items.map(item => renderCard(item, false)).join("")
+        : '<div class="empty">尚無已標記資料</div>';
     }
 
     function renderTrash() {
       const items = getTrashItems();
-      trashGrid.innerHTML = items.length ? items.map(item => renderCard(item, true)).join("") : '<div class="empty">垃圾桶沒有資料</div>';
+      trashGrid.innerHTML = items.length
+        ? items.map(item => renderCard(item, true)).join("")
+        : '<div class="empty">垃圾桶沒有資料</div>';
       bulkDeleteTrashBtn.disabled = items.length === 0;
     }
 
     function renderCard(item, inTrash = false) {
       const marked = isMarked(item);
-      const markButton = inTrash ? "" : `<button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>`;
-      const deleteButton = inTrash ? `<button class="delete-btn" type="button" disabled>垃圾桶</button>` : `<button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>`;
+      const markButton = inTrash
+        ? ""
+        : `<button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>`;
+      const deleteButton = inTrash
+        ? `<button class="trash-btn" type="button" disabled>垃圾桶</button>`
+        : `<button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>`;
 
       return `
         <article class="card" data-id="${escapeHtml(item.id)}">
@@ -523,6 +496,40 @@
         return JSON.parse(text);
       } catch {
         return { success: res.ok, message: text };
+      }
+    }
+
+    async function toggleMark(id) {
+      const item = allItems.find(entry => entry.id === id);
+      if (!item) {
+        alert("找不到這筆資料，請重新整理後再試。");
+        return;
+      }
+
+      const nextStatus = item.status === "已標記" ? "" : "已標記";
+      const actionText = nextStatus === "已標記" ? "標記" : "取消標記";
+
+      showAppNotice(`正在${actionText}資料，請稍候...`, "loading");
+      setStatus(`${actionText}中`);
+
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "mark");
+        body.set("id", id);
+        body.set("status", nextStatus);
+        body.set("user", currentUser);
+
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
+
+        item.status = nextStatus;
+        renderAll();
+        setStatus(`${actionText}成功`, "ok");
+        showAppNotice(`${actionText}完成，試算表已同步`, "success");
+      } catch (error) {
+        alert(`${actionText}失敗：` + error.message);
+        setStatus(`${actionText}失敗`, "error");
+        showAppNotice(`${actionText}失敗，請稍後再試`, "error");
       }
     }
 
