@@ -49,11 +49,7 @@
     }
 
     .logo { margin-bottom: 30px; }
-
-    .logo h1 {
-      margin: 0;
-      font-size: 25px;
-    }
+    .logo h1 { margin: 0; font-size: 25px; }
 
     .logo p {
       margin: 8px 0 0;
@@ -62,10 +58,7 @@
       line-height: 1.45;
     }
 
-    .nav {
-      display: grid;
-      gap: 10px;
-    }
+    .nav { display: grid; gap: 10px; }
 
     .nav button {
       width: 100%;
@@ -249,16 +242,21 @@
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
       gap: 16px;
+      align-items: stretch;
     }
 
     .card {
       padding: 18px;
-      min-height: 330px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
+      min-height: 396px;
+      display: grid;
+      grid-template-rows: auto 74px 68px 38px;
+      gap: 14px;
+    }
+
+    .product-area {
+      min-height: 132px;
     }
 
     .product {
@@ -266,20 +264,26 @@
       font-size: 17px;
       line-height: 1.45;
       word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .shop {
       color: var(--cyan);
       font-size: 14px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       word-break: break-word;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .captured,
     .company-info {
       color: var(--muted);
       font-size: 13px;
-      margin-bottom: 8px;
       line-height: 1.45;
       word-break: break-word;
     }
@@ -290,26 +294,37 @@
     }
 
     .company-block {
-      margin: 12px 0 14px;
       padding: 10px 12px;
       background: rgba(6, 17, 31, 0.44);
       border: 1px solid rgba(88, 215, 255, 0.13);
       border-radius: 8px;
+      display: grid;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .company-info {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .data-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 8px;
-      margin-bottom: 16px;
     }
 
     .data {
+      height: 68px;
       background: rgba(6, 17, 31, 0.68);
       border: 1px solid rgba(88, 215, 255, 0.13);
       border-radius: 8px;
       padding: 10px 8px;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
 
     .data span {
@@ -317,11 +332,14 @@
       color: var(--muted);
       font-size: 12px;
       margin-bottom: 6px;
+      white-space: nowrap;
     }
 
     .data strong {
       font-size: 16px;
-      overflow-wrap: anywhere;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .actions {
@@ -412,7 +430,8 @@
     }
 
     @media (max-width: 1120px) {
-      .stats, .grid { grid-template-columns: repeat(2, 1fr); }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .grid { grid-template-columns: repeat(2, minmax(280px, 1fr)); }
     }
 
     @media (max-width: 760px) {
@@ -424,6 +443,7 @@
       .top-actions { align-items: stretch; }
       .stats, .grid { grid-template-columns: 1fr; }
       .chart-panel { height: 300px; }
+      .card { grid-template-rows: auto 74px auto auto; }
       .actions { grid-template-columns: 1fr; }
       .user-box { left: 12px; right: 12px; }
     }
@@ -549,14 +569,9 @@
 
     function numberValue(value) {
       let text = String(value || "").trim();
-
       if (!text) return 0;
 
-      text = text
-        .replaceAll(",", "")
-        .replaceAll("+", "")
-        .replaceAll("＋", "")
-        .replace(/\s/g, "");
+      text = text.replaceAll(",", "").replaceAll("+", "").replaceAll("＋", "").replace(/\s/g, "");
 
       let multiplier = 1;
 
@@ -635,8 +650,8 @@
         url,
         product: product || "未命名商品",
         shop: shop || "未命名店名",
-        company: company || "未登記",
-        taxId: taxId || "未登記",
+        company: company || "無",
+        taxId: taxId || "無",
         fans,
         sales,
         fansDisplay: displayValue(rawFans, fans),
@@ -758,14 +773,7 @@
     }
 
     function itemMatchesKeyword(item, keyword) {
-      const target = [
-        item.product,
-        item.shop,
-        item.company,
-        item.taxId,
-        item.capturedBy
-      ].join(" ").toLowerCase();
-
+      const target = [item.product, item.shop, item.company, item.taxId, item.capturedBy].join(" ").toLowerCase();
       return target.includes(keyword);
     }
 
@@ -796,9 +804,7 @@
 
     function renderStats() {
       const total = allItems.length;
-      const avg = total
-        ? Math.round(allItems.reduce((sum, item) => sum + item.index, 0) / total)
-        : 0;
+      const avg = total ? Math.round(allItems.reduce((sum, item) => sum + item.index, 0) / total) : 0;
       const maxSalesItem = allItems.reduce((top, item) => item.sales > top.sales ? item : top, { sales: 0, salesDisplay: "0" });
 
       totalCountEl.textContent = total.toLocaleString();
@@ -830,9 +836,7 @@
     function renderChart() {
       const buckets = getIndexBuckets(allItems);
 
-      if (chart) {
-        chart.destroy();
-      }
+      if (chart) chart.destroy();
 
       chart = new Chart(document.getElementById("mainChart"), {
         type: "bar",
@@ -870,10 +874,7 @@
                   return `侵權指數區間：${items[0].label}`;
                 },
                 label(context) {
-                  if (context.dataset.label === "總銷量") {
-                    return `總銷量：${formatNumber(context.raw)}`;
-                  }
-
+                  if (context.dataset.label === "總銷量") return `總銷量：${formatNumber(context.raw)}`;
                   return `商品數：${context.raw}`;
                 }
               }
@@ -910,16 +911,12 @@
 
     function renderRanking() {
       const items = getRankingItems();
-      rankingGrid.innerHTML = items.length
-        ? items.map(renderCard).join("")
-        : '<div class="empty">沒有符合條件的資料</div>';
+      rankingGrid.innerHTML = items.length ? items.map(renderCard).join("") : '<div class="empty">沒有符合條件的資料</div>';
     }
 
     function renderMarked() {
       const items = getMarkedItems();
-      markedGrid.innerHTML = items.length
-        ? items.map(renderCard).join("")
-        : '<div class="empty">尚無已標記資料</div>';
+      markedGrid.innerHTML = items.length ? items.map(renderCard).join("") : '<div class="empty">尚無已標記資料</div>';
     }
 
     function renderCard(item) {
@@ -927,30 +924,21 @@
 
       return `
         <article class="card" data-id="${escapeHtml(item.id)}">
-          <div>
+          <div class="product-area">
             <h3 class="product">${escapeHtml(item.product)}</h3>
             <div class="shop">${escapeHtml(item.shop)}</div>
             <div class="captured">抓取者：<strong>${escapeHtml(item.capturedBy)}</strong></div>
+          </div>
 
-            <div class="company-block">
-              <div class="company-info">公司：<strong>${escapeHtml(item.company)}</strong></div>
-              <div class="company-info">統編：<strong>${escapeHtml(item.taxId)}</strong></div>
-            </div>
+          <div class="company-block">
+            <div class="company-info">公司：<strong>${escapeHtml(item.company)}</strong></div>
+            <div class="company-info">統編：<strong>${escapeHtml(item.taxId)}</strong></div>
+          </div>
 
-            <div class="data-row">
-              <div class="data">
-                <span>銷量</span>
-                <strong>${escapeHtml(item.salesDisplay)}</strong>
-              </div>
-              <div class="data">
-                <span>粉絲</span>
-                <strong>${escapeHtml(item.fansDisplay)}</strong>
-              </div>
-              <div class="data">
-                <span>侵權指數</span>
-                <strong>${item.index}</strong>
-              </div>
-            </div>
+          <div class="data-row">
+            <div class="data"><span>銷量</span><strong>${escapeHtml(item.salesDisplay)}</strong></div>
+            <div class="data"><span>粉絲</span><strong>${escapeHtml(item.fansDisplay)}</strong></div>
+            <div class="data"><span>侵權指數</span><strong>${item.index}</strong></div>
           </div>
 
           <div class="actions">
@@ -976,7 +964,7 @@
       }
 
       const ok = confirm(
-        `確定要刪除這一筆資料？\n\nID：${item.id}\n商品：${item.product}\n店名：${item.shop}\n\n此操作會透過 GAS 從試算表刪除。`
+        `確定要刪除這一筆資料？\n\nID：${item.id}\n商品：${item.product}\n店名：${item.shop}\n\n確認後會透過 GAS 刪除試算表同 ID 資料。`
       );
 
       if (!ok) return;
@@ -991,13 +979,17 @@
 
       try {
         const body = new URLSearchParams();
-        body.append("action", "delete");
-        body.append("id", id);
-        body.append("user", currentUser);
+        body.set("action", "delete");
+        body.set("id", id);
+        body.set("user", currentUser);
 
-        const res = await fetch(GAS_URL, { method: "POST", body });
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          body
+        });
+
         const text = await res.text();
-        let result = {};
+        let result;
 
         try {
           result = JSON.parse(text);
@@ -1005,8 +997,8 @@
           result = { success: res.ok, message: text };
         }
 
-        if (!res.ok || result.success === false || result.ok === false) {
-          throw new Error(result.message || "刪除失敗");
+        if (!res.ok || result.success !== true) {
+          throw new Error(result.message || text || "GAS 未回傳 success:true");
         }
 
         allItems = allItems.filter(x => x.id !== id);
@@ -1014,10 +1006,10 @@
 
         renderAll();
         setStatus("刪除成功", "ok");
-        setTimeout(loadData, 800);
+        await loadData();
       } catch (error) {
         console.error(error);
-        alert("刪除失敗，請確認 GAS 是用 ID 刪除單筆資料。");
+        alert("刪除失敗：" + error.message + "\n\n需要確認 GAS 是否有支援用 ID 刪除試算表資料。");
         setStatus("刪除失敗", "error");
 
         if (btn) {
