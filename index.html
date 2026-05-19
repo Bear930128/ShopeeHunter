@@ -144,14 +144,8 @@
       white-space: nowrap;
     }
 
-    .refresh-btn:hover {
-      background: rgba(47, 140, 255, 0.32);
-    }
-
-    .refresh-btn:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
+    .refresh-btn:hover { background: rgba(47, 140, 255, 0.32); }
+    .refresh-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .status {
       padding: 11px 16px;
@@ -583,6 +577,7 @@
       return String(value || "")
         .replace(/\uFEFF/g, "")
         .replace(/\u00A0/g, " ")
+        .replace(/\s+/g, "")
         .trim();
     }
 
@@ -624,12 +619,18 @@
       return n.toLocaleString();
     }
 
-    function getField(row, names) {
-      const normalizedRow = {};
+    function normalizeRowKeys(row) {
+      const normalized = {};
 
       Object.keys(row || {}).forEach(key => {
-        normalizedRow[cleanKey(key)] = row[key];
+        normalized[cleanKey(key)] = row[key];
       });
+
+      return normalized;
+    }
+
+    function getField(row, names) {
+      const normalizedRow = normalizeRowKeys(row);
 
       for (const name of names) {
         const cleanName = cleanKey(name);
@@ -728,7 +729,7 @@
       setStatus("資料同步中");
 
       try {
-        const res = await fetch(OPENSHEET_URL + "?t=" + Date.now(), { cache: "no-store" });
+        const res = await fetch(OPENSHEET_URL, { cache: "reload" });
 
         if (!res.ok) {
           throw new Error("OpenSheet HTTP " + res.status);
@@ -745,21 +746,35 @@
           .filter(item => item.id && item.product)
           .filter(item => !deletedIds.has(item.id));
 
+        if (!normalizedItems.length && rows.length) {
+          const firstKeys = Object.keys(rows[0]).join("、");
+          throw new Error("有讀到資料，但欄位對不上。實際欄位：" + firstKeys);
+        }
+
         allItems = dedupeItems(normalizedItems);
 
-        renderAll();
+        renderStats();
+        renderRanking();
+        renderMarked();
+
+        try {
+          renderChart();
+        } catch (chartError) {
+          console.error(chartError);
+        }
+
         setStatus("資料已同步", "ok");
       } catch (error) {
         console.error(error);
         allItems = [];
-        renderAll();
+        renderStats();
+        renderRanking();
+        renderMarked();
         setStatus("資料載入失敗", "error");
 
         const message = `
           <div class="empty">
             資料讀取失敗：${escapeHtml(error.message)}
-            <br><br>
-            請確認 OpenSheet 網址可直接開啟，且第一列欄位包含 ID、URL、商品、店名、粉絲、公司、統編、銷量。
             <br><br>
             <a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a>
           </div>
@@ -803,7 +818,9 @@
         saveMarkedIds([...ids, id]);
       }
 
-      renderAll();
+      renderStats();
+      renderRanking();
+      renderMarked();
     }
 
     function itemMatchesKeyword(item, keyword) {
@@ -827,13 +844,6 @@
         .filter(item => ids.includes(item.id))
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
-    }
-
-    function renderAll() {
-      renderStats();
-      renderChart();
-      renderRanking();
-      renderMarked();
     }
 
     function renderStats() {
@@ -870,6 +880,10 @@
     function renderChart() {
       const buckets = getIndexBuckets(allItems);
 
+      if (!window.Chart) {
+        return;
+      }
+
       if (chart) chart.destroy();
 
       chart = new Chart(document.getElementById("mainChart"), {
@@ -901,18 +915,7 @@
           maintainAspectRatio: false,
           interaction: { mode: "index", intersect: false },
           plugins: {
-            legend: { labels: { color: "#eef6ff" } },
-            tooltip: {
-              callbacks: {
-                title(items) {
-                  return `侵權指數區間：${items[0].label}`;
-                },
-                label(context) {
-                  if (context.dataset.label === "總銷量") return `總銷量：${formatNumber(context.raw)}`;
-                  return `商品數：${context.raw}`;
-                }
-              }
-            }
+            legend: { labels: { color: "#eef6ff" } }
           },
           scales: {
             x: {
@@ -1003,25 +1006,13 @@
 
       if (!ok) return;
 
-      const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
-      const btn = card ? card.querySelector(".delete-btn") : null;
-
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = "刪除中";
-      }
-
       try {
         const body = new URLSearchParams();
         body.set("action", "delete");
         body.set("id", id);
         body.set("user", currentUser);
 
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          body
-        });
-
+        const res = await fetch(GAS_URL, { method: "POST", body });
         const text = await res.text();
         let result;
 
@@ -1039,19 +1030,15 @@
         allItems = allItems.filter(x => x.id !== id);
         saveMarkedIds(getMarkedIds().filter(x => x !== id));
 
-        renderAll();
+        renderStats();
+        renderRanking();
+        renderMarked();
+        renderChart();
+
         setStatus("刪除成功", "ok");
-
-        setTimeout(loadData, 1200);
       } catch (error) {
-        console.error(error);
-        alert("刪除失敗：" + error.message + "\n\n需要確認 GAS 是否有支援用 ID 刪除試算表資料。");
+        alert("刪除失敗：" + error.message);
         setStatus("刪除失敗", "error");
-
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = "刪除";
-        }
       }
     }
 
