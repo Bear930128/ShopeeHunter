@@ -512,10 +512,11 @@
       }
     }
 
-    function openScreenshotTool() {
+    function openScreenshotTool(shopName) {
+      const encodedShop = encodeURIComponent(String(shopName || "").trim());
       const launcher = document.createElement("iframe");
       launcher.style.display = "none";
-      launcher.src = "shopeehuntershot://open";
+      launcher.src = "shopeehuntershot://open?shop=" + encodedShop;
       document.body.appendChild(launcher);
       setTimeout(() => launcher.remove(), 1500);
     }
@@ -527,7 +528,7 @@
         if (!copied) showAppNotice("店名複製失敗，請手動複製店名", "error");
       }
 
-      openScreenshotTool();
+      openScreenshotTool(shopName);
 
       if (!url) return;
       window.open(url, "_blank", "noopener,noreferrer");
@@ -780,5 +781,6 @@
   </script>
 </body>
 </html>
+
 
 
