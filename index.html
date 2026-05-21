@@ -476,7 +476,7 @@
             <div class="data"><span>侵權指數</span><strong>${item.index}</strong></div>
           </div>
           <div class="actions">
-            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}')" ${item.url ? "" : "disabled"}>查看</button>
+            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}')" ${item.url ? "" : "disabled"}>查看</button>
             ${markButton}
             ${deleteButton}
           </div>
@@ -484,7 +484,41 @@
       `;
     }
 
-    function openProduct(url) {
+    async function copyTextToClipboard(text) {
+      const value = String(text || "").trim();
+      if (!value) return false;
+
+      try {
+        await navigator.clipboard.writeText(value);
+        return true;
+      } catch (error) {
+        const input = document.createElement("textarea");
+        input.value = value;
+        input.style.position = "fixed";
+        input.style.left = "-9999px";
+        input.style.top = "-9999px";
+        document.body.appendChild(input);
+        input.focus();
+        input.select();
+
+        try {
+          document.execCommand("copy");
+          return true;
+        } catch {
+          return false;
+        } finally {
+          document.body.removeChild(input);
+        }
+      }
+    }
+
+    async function openProduct(url, shopName) {
+      if (shopName) {
+        const copied = await copyTextToClipboard(shopName);
+        if (copied) showAppNotice("已複製店名，可直接開啟截圖工具", "success");
+        if (!copied) showAppNotice("店名複製失敗，請手動複製店名", "error");
+      }
+
       if (!url) return;
       window.open(url, "_blank", "noopener,noreferrer");
     }
