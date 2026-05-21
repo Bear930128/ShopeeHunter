@@ -512,12 +512,22 @@
       }
     }
 
+    function openScreenshotTool() {
+      const launcher = document.createElement("iframe");
+      launcher.style.display = "none";
+      launcher.src = "shopeehuntershot://open";
+      document.body.appendChild(launcher);
+      setTimeout(() => launcher.remove(), 1500);
+    }
+
     async function openProduct(url, shopName) {
       if (shopName) {
         const copied = await copyTextToClipboard(shopName);
-        if (copied) showAppNotice("已複製店名，可直接開啟截圖工具", "success");
+        if (copied) showAppNotice("已複製店名，正在開啟截圖工具", "success");
         if (!copied) showAppNotice("店名複製失敗，請手動複製店名", "error");
       }
+
+      openScreenshotTool();
 
       if (!url) return;
       window.open(url, "_blank", "noopener,noreferrer");
@@ -770,4 +780,5 @@
   </script>
 </body>
 </html>
+
 
