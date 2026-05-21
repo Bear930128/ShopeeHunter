@@ -6,7 +6,7 @@
   <title>ShopeeHunter Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    :root{--bg:#06111f;--border:#1f4f86;--blue:#2f8cff;--cyan:#58d7ff;--green:#38d996;--red:#ff4d6d;--yellow:#f7c948;--text:#eef6ff;--muted:#8db4de;--shadow:0 18px 42px rgba(0,0,0,.28)}
+    :root{--bg:#06111f;--panel:#0b2038;--panel2:#0f2a49;--border:#1f4f86;--blue:#2f8cff;--cyan:#58d7ff;--green:#38d996;--red:#ff4d6d;--yellow:#f7c948;--text:#eef6ff;--muted:#8db4de;--shadow:0 18px 42px rgba(0,0,0,.28)}
     *{box-sizing:border-box}
     body{margin:0;min-height:100vh;font-family:Arial,"Noto Sans TC",sans-serif;background:radial-gradient(circle at top left,rgba(47,140,255,.18),transparent 34%),var(--bg);color:var(--text)}
     button,input{font-family:inherit}a{color:var(--cyan)}
@@ -19,7 +19,7 @@
     .user-box strong{display:block;color:#fff;margin-top:6px;word-break:break-word}
     .main{padding:26px;min-width:0}.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}
     .page-title h2{margin:0;font-size:28px}.page-title p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.5}
-    .top-actions{display:flex;align-items:center;gap:10px}
+    .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
     .refresh-btn,.danger-action{height:40px;border-radius:8px;color:#fff;cursor:pointer;font-weight:800;padding:0 16px;white-space:nowrap}
     .refresh-btn{border:1px solid rgba(88,215,255,.38);background:rgba(47,140,255,.18)}
     .danger-action{border:1px solid rgba(255,77,109,.55);background:rgba(255,77,109,.2)}
@@ -27,6 +27,7 @@
     .refresh-btn:disabled,.danger-action:disabled{opacity:.55;cursor:not-allowed}
     .status{padding:11px 16px;min-width:160px;text-align:center;border:1px solid var(--border);border-radius:8px;background:rgba(7,24,43,.85);color:var(--muted);font-weight:700;font-size:14px;white-space:nowrap}
     .status.ok{color:var(--green)}.status.error{color:var(--red)}
+    .sync-meta{width:100%;text-align:right;color:var(--muted);font-size:12px;margin-top:-10px;margin-bottom:16px}
     .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
     .stat,.chart-panel,.card,.empty{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
     .stat{padding:18px;min-height:112px}.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:12px}.stat strong{display:block;font-size:30px;color:#fff;overflow-wrap:anywhere}
@@ -38,12 +39,13 @@
     .product-area{height:150px;display:grid;grid-template-rows:78px 58px;gap:10px;overflow:hidden}
     .shop-title{margin:0;font-size:19px;line-height:1.35;color:#fff;font-weight:800;word-break:break-word;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
     .product-subtitle{color:var(--cyan);font-size:14px;line-height:1.45;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .company-info{color:var(--muted);font-size:13px;line-height:1.45;word-break:break-word;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-info strong{color:#fff}
     .company-block{height:74px;padding:10px 12px;background:rgba(6,17,31,.44);border:1px solid rgba(88,215,255,.13);border-radius:8px;display:grid;gap:6px;overflow:hidden}
+    .company-info{color:var(--muted);font-size:13px;line-height:1.45;word-break:break-word;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.company-info strong{color:#fff}
     .data-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
     .data{height:68px;background:rgba(6,17,31,.68);border:1px solid rgba(88,215,255,.13);border-radius:8px;padding:10px 8px;min-width:0;display:flex;flex-direction:column;justify-content:center}
     .data span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px;white-space:nowrap}.data strong{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .actions{display:grid;grid-template-columns:1fr 1fr 86px;gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800}
+    .actions{display:grid;grid-template-columns:1fr 1fr 86px;gap:8px}.actions.trash-actions{grid-template-columns:1fr 1fr}
+    .actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800}
     .view-btn{background:var(--blue)}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}
     .actions button:disabled{opacity:.75;cursor:not-allowed}
     .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none}
@@ -52,16 +54,16 @@
     .modal input{width:100%;height:44px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:0 14px;outline:none;margin-bottom:14px}.modal button{width:100%;height:42px;border:0;border-radius:8px;color:#fff;background:var(--blue);font-weight:800;cursor:pointer}
     .app-notice{position:fixed;right:24px;bottom:24px;z-index:999999;max-width:340px;padding:14px 16px;border-radius:8px;color:#fff;font-weight:800;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.35);display:none}
     @media(max-width:1120px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(280px,1fr))}}
-    @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:396px;grid-template-rows:150px 74px 68px auto}.actions{grid-template-columns:1fr}.user-box{left:12px;right:12px}}
+    @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:396px;grid-template-rows:150px 74px 68px auto}.actions,.actions.trash-actions{grid-template-columns:1fr}.sync-meta{text-align:left;margin-top:0}.user-box{left:12px;right:12px}}
   </style>
 </head>
 <body>
   <div id="loginModal" class="modal-mask">
     <div class="modal">
       <h2>輸入使用者名稱</h2>
-      <p>每次進入或重新整理網站都需要輸入，方便多人使用時辨識操作來源。</p>
-      <input id="usernameInput" type="text" placeholder="例如：Amy、業務A、管理員" autocomplete="off" />
-      <button id="loginBtn" type="button">進入網站</button>
+      <p>此網站多人使用，請先輸入你的名稱。重新整理網站時也會重新確認使用者。</p>
+      <input id="usernameInput" type="text" placeholder="例如：Amy、阿宏、測試人員 1" autocomplete="off" />
+      <button id="loginBtn" type="button">進入系統</button>
     </div>
   </div>
 
@@ -86,13 +88,15 @@
       <header class="topbar">
         <div class="page-title">
           <h2 id="pageTitle">首頁</h2>
-          <p id="pageSubtitle">總覽目前試算表同步資料、排行榜與風險區間分布。</p>
+          <p id="pageSubtitle">總覽目前試算表同步資料、排行榜與風險指標。</p>
         </div>
         <div class="top-actions">
           <button id="refreshBtn" class="refresh-btn" type="button">刷新資料</button>
           <div id="status" class="status">等待登入</div>
         </div>
       </header>
+
+      <div id="syncMeta" class="sync-meta">自動同步：每 10 秒</div>
 
       <section id="dashboardPage">
         <section class="stats">
@@ -107,7 +111,7 @@
       <section id="rankingPage" class="hidden">
         <div class="toolbar">
           <h3>排行榜</h3>
-          <input id="searchInput" class="search" type="search" placeholder="搜尋店名、商品名、公司、統編" />
+          <input id="searchInput" class="search" type="search" placeholder="搜尋商品名、店名、公司、統編" />
         </div>
         <section id="rankingGrid" class="grid"><div class="empty">資料載入中...</div></section>
       </section>
@@ -117,7 +121,7 @@
           <h3>已標記</h3>
           <input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、商品名、公司、統編" />
         </div>
-        <section id="markedGrid" class="grid"><div class="empty">尚無已標記資料</div></section>
+        <section id="markedGrid" class="grid"><div class="empty">目前沒有已標記資料</div></section>
       </section>
 
       <section id="trashPage" class="hidden">
@@ -128,7 +132,7 @@
             <button id="bulkDeleteTrashBtn" class="danger-action" type="button">一鍵刪除</button>
           </div>
         </div>
-        <section id="trashGrid" class="grid"><div class="empty">垃圾桶沒有資料</div></section>
+        <section id="trashGrid" class="grid"><div class="empty">垃圾桶目前是空的</div></section>
       </section>
     </main>
   </div>
@@ -136,11 +140,15 @@
   <script>
     const OPENSHEET_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8/Sheet1";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
+    const AUTO_REFRESH_MS = 10000;
 
     let currentUser = "";
+    let currentPage = "dashboard";
     let allItems = [];
     let chart = null;
     let isLoading = false;
+    let isMutating = false;
+    let autoRefreshTimer = null;
     const permanentlyDeletedIds = new Set();
 
     const loginModal = document.getElementById("loginModal");
@@ -150,20 +158,18 @@
     const bulkDeleteTrashBtn = document.getElementById("bulkDeleteTrashBtn");
     const currentUserEl = document.getElementById("currentUser");
     const statusEl = document.getElementById("status");
+    const syncMeta = document.getElementById("syncMeta");
     const pageTitle = document.getElementById("pageTitle");
     const pageSubtitle = document.getElementById("pageSubtitle");
     const appNotice = document.getElementById("appNotice");
-
     const dashboardPage = document.getElementById("dashboardPage");
     const rankingPage = document.getElementById("rankingPage");
     const markedPage = document.getElementById("markedPage");
     const trashPage = document.getElementById("trashPage");
-
     const totalCountEl = document.getElementById("totalCount");
     const avgIndexEl = document.getElementById("avgIndex");
     const maxSalesEl = document.getElementById("maxSales");
     const markedCountEl = document.getElementById("markedCount");
-
     const rankingGrid = document.getElementById("rankingGrid");
     const markedGrid = document.getElementById("markedGrid");
     const trashGrid = document.getElementById("trashGrid");
@@ -183,20 +189,21 @@
       statusEl.className = "status " + type;
     }
 
-    function textValue(value) {
-      return String(value || "").trim();
+    function setSyncTime() {
+      const time = new Date().toLocaleTimeString("zh-TW", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+      syncMeta.textContent = `自動同步：每 10 秒｜最後同步：${time}`;
     }
 
-    function cleanKey(value) {
-      return String(value || "").replace(/\uFEFF/g, "").replace(/\u00A0/g, " ").replace(/\s+/g, "").trim();
-    }
+    function textValue(value) { return String(value || "").trim(); }
+    function cleanKey(value) { return String(value || "").replace(/\uFEFF/g,"").replace(/\u00A0/g," ").replace(/\s+/g,"").trim(); }
 
     function numberValue(value) {
       let text = String(value || "").trim();
       if (!text) return 0;
-      text = text.replaceAll(",", "").replaceAll("+", "").replaceAll("＋", "").replace(/\s/g, "");
+      text = text.replaceAll(",", "").replaceAll("+", "").replace(/\s/g, "");
       let multiplier = 1;
       if (text.includes("萬")) { multiplier = 10000; text = text.replace("萬", ""); }
+      if (text.includes("億")) { multiplier = 100000000; text = text.replace("億", ""); }
       if (text.toLowerCase().includes("k")) { multiplier = 1000; text = text.toLowerCase().replace("k", ""); }
       const n = Number(text.replace(/[^\d.-]/g, ""));
       return Number.isFinite(n) ? Math.round(n * multiplier) : 0;
@@ -209,6 +216,10 @@
 
     function formatNumber(value) {
       const n = Number(value) || 0;
+      if (n >= 100000000) {
+        const v = n / 100000000;
+        return Number.isInteger(v) ? `${v}億` : `${v.toFixed(1)}億`;
+      }
       if (n >= 10000) {
         const v = n / 10000;
         return Number.isInteger(v) ? `${v}萬` : `${v.toFixed(1)}萬`;
@@ -226,9 +237,7 @@
       const normalizedRow = normalizeRowKeys(row);
       for (const name of names) {
         const cleanName = cleanKey(name);
-        if (normalizedRow[cleanName] !== undefined && String(normalizedRow[cleanName]).trim() !== "") {
-          return normalizedRow[cleanName];
-        }
+        if (normalizedRow[cleanName] !== undefined && String(normalizedRow[cleanName]).trim() !== "") return normalizedRow[cleanName];
       }
       return "";
     }
@@ -239,27 +248,33 @@
       return Math.round(Math.min(100, salesScore + fanScore));
     }
 
+    function normalizeStatus(value) {
+      const status = textValue(value);
+      if (status === "已標記") return "已標記";
+      if (status === "已刪除") return "已刪除";
+      return "";
+    }
+
     function normalizeRow(row) {
-      const id = textValue(getField(row, ["ID", "Id", "id"]));
-      const url = textValue(getField(row, ["URL", "url", "網址"]));
-      const product = textValue(getField(row, ["商品", "商品名", "Product", "product"]));
-      const shop = textValue(getField(row, ["店名", "商店", "Shop", "shop"]));
-      const company = textValue(getField(row, ["公司", "公司名", "登記公司", "Company", "company"]));
-      const taxId = textValue(getField(row, ["統編", "統一編號", "Tax ID", "taxId", "taxid"]));
-      const status = textValue(getField(row, ["狀態", "status", "Status"]));
-      const rawFans = getField(row, ["粉絲", "粉絲數", "Fans", "fans"]);
-      const rawSales = getField(row, ["銷量", "銷售", "Sales", "sales"]);
+      const id = textValue(getField(row, ["ID","Id","id"]));
+      const url = textValue(getField(row, ["URL","url","網址"]));
+      const product = textValue(getField(row, ["商品","商品名","Product","product"]));
+      const shop = textValue(getField(row, ["店名","賣場","商店","Shop","shop"]));
+      const company = textValue(getField(row, ["公司","公司名稱","登記公司","Company","company"]));
+      const taxId = textValue(getField(row, ["統編","公司統編","Tax ID","taxId","taxid"]));
+      const status = normalizeStatus(getField(row, ["狀態","status","Status"]));
+      const rawFans = getField(row, ["粉絲","粉絲數","Fans","fans"]);
+      const rawSales = getField(row, ["銷量","銷售","Sales","sales"]);
       const fans = numberValue(rawFans);
       const sales = numberValue(rawSales);
 
       return {
         id, url,
         product: product || "未命名商品",
-        shop: shop || "未命名店名",
+        shop: shop || "未命名店家",
         company: company || "無",
         taxId: taxId || "無",
-        status,
-        fans, sales,
+        status, fans, sales,
         fansDisplay: displayValue(rawFans, fans),
         salesDisplay: displayValue(rawSales, sales),
         index: calcIndex(sales, fans)
@@ -271,58 +286,54 @@
       for (const item of items) {
         const key = item.id || item.url || `${item.product}-${item.shop}`;
         if (!key) continue;
-        if (!map.has(key)) {
-          map.set(key, item);
-          continue;
-        }
+        if (!map.has(key)) { map.set(key, item); continue; }
         const oldItem = map.get(key);
         if (item.sales >= oldItem.sales) map.set(key, item);
       }
       return Array.from(map.values());
     }
 
-    async function loadData() {
+    async function loadData(options = {}) {
+      const silent = options.silent === true;
       if (!currentUser) {
-        alert("請先輸入使用者名稱。");
-        usernameInput.focus();
+        if (!silent) { alert("請先輸入使用者名稱"); usernameInput.focus(); }
         return;
       }
-      if (isLoading) return;
+      if (isLoading || isMutating) return;
 
       isLoading = true;
       refreshBtn.disabled = true;
-      refreshBtn.textContent = "同步中";
-      setStatus("資料同步中");
+      if (!silent) { refreshBtn.textContent = "同步中..."; setStatus("資料同步中"); }
 
       try {
-        const res = await fetch(OPENSHEET_URL, { cache: "reload" });
+        const res = await fetch(`${OPENSHEET_URL}?t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error("OpenSheet HTTP " + res.status);
-
         const rows = await res.json();
         if (!Array.isArray(rows)) throw new Error(rows && rows.error ? rows.error : "OpenSheet 回傳格式不是陣列");
 
-        const normalizedItems = rows
-          .map(normalizeRow)
-          .filter(item => item.id && item.product)
-          .filter(item => !permanentlyDeletedIds.has(item.id));
-
+        const normalizedItems = rows.map(normalizeRow).filter(item => item.id && item.product).filter(item => !permanentlyDeletedIds.has(item.id));
         if (!normalizedItems.length && rows.length) {
           const firstKeys = Object.keys(rows[0]).join("、");
-          throw new Error("有讀到資料，但欄位對不上。實際欄位：" + firstKeys);
+          throw new Error("讀得到資料，但欄位名稱可能不一致。目前欄位：" + firstKeys);
         }
 
         allItems = dedupeItems(normalizedItems);
         renderAll();
         setStatus("資料已同步", "ok");
+        setSyncTime();
       } catch (error) {
         console.error(error);
-        allItems = [];
-        renderAll();
-        setStatus("資料載入失敗", "error");
-        const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br><a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a></div>`;
-        rankingGrid.innerHTML = message;
-        markedGrid.innerHTML = message;
-        trashGrid.innerHTML = message;
+        if (!silent) {
+          allItems = [];
+          renderAll();
+          setStatus("資料載入失敗", "error");
+          const message = `<div class="empty">資料讀取失敗。請確認 Google 試算表已公開、分頁名稱正確，且第一列欄位包含 ID、URL、商品、店名、粉絲、公司、統編、銷量、狀態。<br><br>錯誤訊息：${escapeHtml(error.message)}<br><br><a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a></div>`;
+          rankingGrid.innerHTML = message;
+          markedGrid.innerHTML = message;
+          trashGrid.innerHTML = message;
+        } else {
+          setStatus("自動同步失敗", "error");
+        }
       } finally {
         isLoading = false;
         refreshBtn.disabled = false;
@@ -330,37 +341,35 @@
       }
     }
 
-    function isMarked(item) {
-      return item && item.status === "已標記";
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      autoRefreshTimer = setInterval(() => {
+        if (!currentUser || isLoading || isMutating) return;
+        loadData({ silent: true });
+      }, AUTO_REFRESH_MS);
     }
 
-    function itemMatchesKeyword(item, keyword) {
-      const target = [item.shop, item.product, item.company, item.taxId].join(" ").toLowerCase();
-      return target.includes(keyword);
+    function stopAutoRefresh() {
+      if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+      autoRefreshTimer = null;
     }
+
+    function isMarked(item) { return item && item.status === "已標記"; }
+    function itemMatchesKeyword(item, keyword) { return [item.shop,item.product,item.company,item.taxId].join(" ").toLowerCase().includes(keyword); }
 
     function getRankingItems() {
       const keyword = searchInput.value.trim().toLowerCase();
-      return allItems
-        .filter(item => item.status !== "已標記" && item.status !== "已刪除")
-        .filter(item => itemMatchesKeyword(item, keyword))
-        .sort((a, b) => b.index - a.index || b.sales - a.sales);
+      return allItems.filter(item => item.status !== "已標記" && item.status !== "已刪除").filter(item => itemMatchesKeyword(item, keyword)).sort((a,b) => b.index - a.index || b.sales - a.sales);
     }
 
     function getMarkedItems() {
       const keyword = markedSearchInput.value.trim().toLowerCase();
-      return allItems
-        .filter(item => item.status === "已標記")
-        .filter(item => itemMatchesKeyword(item, keyword))
-        .sort((a, b) => b.index - a.index || b.sales - a.sales);
+      return allItems.filter(item => item.status === "已標記").filter(item => itemMatchesKeyword(item, keyword)).sort((a,b) => b.index - a.index || b.sales - a.sales);
     }
 
     function getTrashItems() {
       const keyword = trashSearchInput.value.trim().toLowerCase();
-      return allItems
-        .filter(item => item.status === "已刪除")
-        .filter(item => itemMatchesKeyword(item, keyword))
-        .sort((a, b) => b.index - a.index || b.sales - a.sales);
+      return allItems.filter(item => item.status === "已刪除").filter(item => itemMatchesKeyword(item, keyword)).sort((a,b) => b.index - a.index || b.sales - a.sales);
     }
 
     function renderAll() {
@@ -374,29 +383,25 @@
     function renderStats() {
       const activeItems = allItems.filter(item => item.status !== "已刪除");
       const total = activeItems.length;
-      const avg = total ? Math.round(activeItems.reduce((sum, item) => sum + item.index, 0) / total) : 0;
-      const maxSalesItem = activeItems.reduce((top, item) => item.sales > top.sales ? item : top, { sales: 0, salesDisplay: "0" });
-
+      const avg = total ? Math.round(activeItems.reduce((sum,item) => sum + item.index, 0) / total) : 0;
+      const maxSalesItem = activeItems.reduce((top,item) => item.sales > top.sales ? item : top, { sales:0, salesDisplay:"0" });
       totalCountEl.textContent = total.toLocaleString();
       avgIndexEl.textContent = avg.toLocaleString();
       maxSalesEl.textContent = maxSalesItem.salesDisplay || formatNumber(maxSalesItem.sales);
-      markedCountEl.textContent = getMarkedItems().length.toLocaleString();
+      markedCountEl.textContent = allItems.filter(item => item.status === "已標記").length.toLocaleString();
     }
 
     function getIndexBuckets(items) {
       const buckets = [
-        { label: "0-20", min: 0, max: 20, count: 0, sales: 0 },
-        { label: "21-40", min: 21, max: 40, count: 0, sales: 0 },
-        { label: "41-60", min: 41, max: 60, count: 0, sales: 0 },
-        { label: "61-80", min: 61, max: 80, count: 0, sales: 0 },
-        { label: "81-100", min: 81, max: 100, count: 0, sales: 0 }
+        { label:"0-20", min:0, max:20, count:0, sales:0 },
+        { label:"21-40", min:21, max:40, count:0, sales:0 },
+        { label:"41-60", min:41, max:60, count:0, sales:0 },
+        { label:"61-80", min:61, max:80, count:0, sales:0 },
+        { label:"81-100", min:81, max:100, count:0, sales:0 }
       ];
       for (const item of items) {
         const bucket = buckets.find(group => item.index >= group.min && item.index <= group.max);
-        if (bucket) {
-          bucket.count += 1;
-          bucket.sales += item.sales;
-        }
+        if (bucket) { bucket.count += 1; bucket.sales += item.sales; }
       }
       return buckets;
     }
@@ -405,25 +410,24 @@
       const buckets = getIndexBuckets(allItems.filter(item => item.status !== "已刪除"));
       if (!window.Chart) return;
       if (chart) chart.destroy();
-
       chart = new Chart(document.getElementById("mainChart"), {
-        type: "bar",
-        data: {
-          labels: buckets.map(bucket => bucket.label),
-          datasets: [
-            { label: "商品數", data: buckets.map(bucket => bucket.count), backgroundColor: "rgba(47,140,255,.68)", borderColor: "#58d7ff", borderWidth: 1, yAxisID: "y" },
-            { label: "總銷量", data: buckets.map(bucket => bucket.sales), type: "line", borderColor: "#38d996", backgroundColor: "rgba(56,217,150,.12)", tension: .35, yAxisID: "y1" }
+        type:"bar",
+        data:{
+          labels:buckets.map(bucket => bucket.label),
+          datasets:[
+            { label:"資料筆數", data:buckets.map(bucket => bucket.count), backgroundColor:"rgba(47,140,255,.68)", borderColor:"#58d7ff", borderWidth:1, yAxisID:"y" },
+            { label:"總銷量", data:buckets.map(bucket => bucket.sales), type:"line", borderColor:"#38d996", backgroundColor:"rgba(56,217,150,.12)", tension:.35, yAxisID:"y1" }
           ]
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: "index", intersect: false },
-          plugins: { legend: { labels: { color: "#eef6ff" } } },
-          scales: {
-            x: { title: { display: true, text: "侵權指數區間", color: "#8db4de" }, ticks: { color: "#8db4de" }, grid: { color: "rgba(141,180,222,.12)" } },
-            y: { beginAtZero: true, title: { display: true, text: "商品數", color: "#8db4de" }, ticks: { color: "#8db4de", precision: 0 }, grid: { color: "rgba(141,180,222,.12)" } },
-            y1: { beginAtZero: true, position: "right", title: { display: true, text: "總銷量", color: "#8db4de" }, ticks: { color: "#8db4de", callback(value) { return formatNumber(value); } }, grid: { drawOnChartArea: false } }
+        options:{
+          responsive:true,
+          maintainAspectRatio:false,
+          interaction:{ mode:"index", intersect:false },
+          plugins:{ legend:{ labels:{ color:"#eef6ff" } } },
+          scales:{
+            x:{ title:{ display:true, text:"侵權指數區間", color:"#8db4de" }, ticks:{ color:"#8db4de" }, grid:{ color:"rgba(141,180,222,.12)" } },
+            y:{ beginAtZero:true, title:{ display:true, text:"資料筆數", color:"#8db4de" }, ticks:{ color:"#8db4de", precision:0 }, grid:{ color:"rgba(141,180,222,.12)" } },
+            y1:{ beginAtZero:true, position:"right", title:{ display:true, text:"總銷量", color:"#8db4de" }, ticks:{ color:"#8db4de", callback(value){ return formatNumber(value); } }, grid:{ drawOnChartArea:false } }
           }
         }
       });
@@ -431,23 +435,17 @@
 
     function renderRanking() {
       const items = getRankingItems();
-      rankingGrid.innerHTML = items.length
-        ? items.map(item => renderCard(item, false)).join("")
-        : '<div class="empty">沒有符合條件的未標記資料</div>';
+      rankingGrid.innerHTML = items.length ? items.map(item => renderCard(item, false)).join("") : '<div class="empty">目前沒有符合條件的排行榜資料</div>';
     }
 
     function renderMarked() {
       const items = getMarkedItems();
-      markedGrid.innerHTML = items.length
-        ? items.map(item => renderCard(item, false)).join("")
-        : '<div class="empty">尚無已標記資料</div>';
+      markedGrid.innerHTML = items.length ? items.map(item => renderCard(item, false)).join("") : '<div class="empty">目前沒有已標記資料</div>';
     }
 
     function renderTrash() {
       const items = getTrashItems();
-      trashGrid.innerHTML = items.length
-        ? items.map(item => renderCard(item, true)).join("")
-        : '<div class="empty">垃圾桶沒有資料</div>';
+      trashGrid.innerHTML = items.length ? items.map(item => renderCard(item, true)).join("") : '<div class="empty">垃圾桶目前是空的</div>';
       bulkDeleteTrashBtn.disabled = items.length === 0;
     }
 
@@ -455,10 +453,8 @@
       const marked = isMarked(item);
       const markButton = inTrash
         ? `<button class="restore-btn" type="button" onclick="restoreItem('${escapeJs(item.id)}')">復原</button>`
-        : `<button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>`;
-      const deleteButton = inTrash
-        ? ""
-        : `<button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>`;
+        : `<button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "取消標記" : "標記"}</button>`;
+      const deleteButton = inTrash ? "" : `<button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>`;
 
       return `
         <article class="card" data-id="${escapeHtml(item.id)}">
@@ -475,8 +471,8 @@
             <div class="data"><span>粉絲</span><strong>${escapeHtml(item.fansDisplay)}</strong></div>
             <div class="data"><span>侵權指數</span><strong>${item.index}</strong></div>
           </div>
-          <div class="actions">
-            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}')" ${item.url ? "" : "disabled"}>查看</button>
+          <div class="actions ${inTrash ? "trash-actions" : ""}">
+            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}')" ${item.url ? "" : "disabled"}>查看</button>
             ${markButton}
             ${deleteButton}
           </div>
@@ -484,239 +480,186 @@
       `;
     }
 
-    function openProduct(url) {
+    async function copyTextToClipboard(text) {
+      const value = String(text || "").trim();
+      if (!value) return false;
+
+      try {
+        await navigator.clipboard.writeText(value);
+        return true;
+      } catch (error) {
+        const input = document.createElement("textarea");
+        input.value = value;
+        input.style.position = "fixed";
+        input.style.left = "-9999px";
+        input.style.top = "-9999px";
+        document.body.appendChild(input);
+        input.focus();
+        input.select();
+        try { document.execCommand("copy"); return true; }
+        catch { return false; }
+        finally { document.body.removeChild(input); }
+      }
+    }
+
+    async function openProduct(url, shopName) {
+      if (shopName) {
+        const copied = await copyTextToClipboard(shopName);
+        if (copied) showAppNotice("已複製店名，可直接開啟截圖工具", "success");
+      }
       if (!url) return;
       window.open(url, "_blank", "noopener,noreferrer");
     }
 
     async function postGas(body) {
-      const res = await fetch(GAS_URL, { method: "POST", body });
+      const res = await fetch(GAS_URL, { method:"POST", body });
       const text = await res.text();
-      try {
-        return JSON.parse(text);
-      } catch {
-        return { success: res.ok, message: text };
-      }
+      try { return JSON.parse(text); }
+      catch { return { success:res.ok, message:text }; }
     }
 
     async function toggleMark(id) {
       const item = allItems.find(entry => entry.id === id);
-      if (!item) {
-        alert("找不到這筆資料，請重新整理後再試。");
-        return;
-      }
-
+      if (!item) { alert("找不到這筆資料，請刷新後再試。"); return; }
       const nextStatus = item.status === "已標記" ? "" : "已標記";
       const actionText = nextStatus === "已標記" ? "標記" : "取消標記";
-
+      isMutating = true;
       showAppNotice(`正在${actionText}資料，請稍候...`, "loading");
       setStatus(`${actionText}中`);
-
       try {
         const body = new URLSearchParams();
-        body.set("action", "mark");
-        body.set("id", id);
-        body.set("status", nextStatus);
-        body.set("user", currentUser);
-
+        body.set("action","mark"); body.set("id",id); body.set("status",nextStatus); body.set("user",currentUser);
         const result = await postGas(body);
-        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
-
+        if (!result.success) throw new Error(result.message || "GAS 沒有回傳 success:true");
         item.status = nextStatus;
         renderAll();
-        setStatus(`${actionText}成功`, "ok");
-        showAppNotice(`${actionText}完成，試算表已同步`, "success");
+        setStatus(`${actionText}完成`, "ok");
+        showAppNotice(`${actionText}成功，已同步試算表`, "success");
       } catch (error) {
         alert(`${actionText}失敗：` + error.message);
         setStatus(`${actionText}失敗`, "error");
         showAppNotice(`${actionText}失敗，請稍後再試`, "error");
-      }
+      } finally { isMutating = false; }
     }
 
     async function deleteItem(id) {
-      const item = allItems.find(x => x.id === id);
-      if (!item) {
-        alert("找不到這筆資料，請重新整理後再試。");
-        return;
-      }
-
-      const ok = confirm(`確定要把這筆資料移到垃圾桶？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n此操作會同步把試算表狀態改成「已刪除」。`);
+      const item = allItems.find(entry => entry.id === id);
+      if (!item) { alert("找不到這筆資料，請刷新後再試。"); return; }
+      const ok = confirm(`確定要把這筆資料移到垃圾桶嗎？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n此操作會同步更新 Google 試算表狀態。`);
       if (!ok) return;
-
       const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
       const btn = card ? card.querySelector(".delete-btn") : null;
-
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = "刪除中";
-      }
-
+      if (btn) { btn.disabled = true; btn.textContent = "刪除中"; }
+      isMutating = true;
       showAppNotice("正在移到垃圾桶，請稍候...", "loading");
       setStatus("刪除中");
-
       try {
         const body = new URLSearchParams();
-        body.set("action", "delete");
-        body.set("id", id);
-        body.set("user", currentUser);
-
+        body.set("action","delete"); body.set("id",id); body.set("user",currentUser);
         const result = await postGas(body);
-        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
-
+        if (!result.success) throw new Error(result.message || "GAS 沒有回傳 success:true");
         item.status = "已刪除";
         renderAll();
-
         setStatus("已移到垃圾桶", "ok");
-        showAppNotice("已移到垃圾桶，試算表狀態已同步", "success");
+        showAppNotice("已移到垃圾桶，試算表已同步", "success");
       } catch (error) {
         alert("刪除失敗：" + error.message);
         setStatus("刪除失敗", "error");
         showAppNotice("刪除失敗，請稍後再試", "error");
-
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = "刪除";
-        }
-      }
+        if (btn) { btn.disabled = false; btn.textContent = "刪除"; }
+      } finally { isMutating = false; }
     }
 
     async function restoreItem(id) {
-      const item = allItems.find(x => x.id === id);
-      if (!item) {
-        alert("找不到這筆資料，請重新整理後再試。");
-        return;
-      }
-
-      const ok = confirm(`確定要復原這筆資料？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n復原後會回到排行榜，並同步清空試算表狀態。`);
+      const item = allItems.find(entry => entry.id === id);
+      if (!item) { alert("找不到這筆資料，請刷新後再試。"); return; }
+      const ok = confirm(`確定要復原這筆資料嗎？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n復原後會回到排行榜，並同步更新 Google 試算表。`);
       if (!ok) return;
-
       const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
       const btn = card ? card.querySelector(".restore-btn") : null;
-
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = "復原中";
-      }
-
+      if (btn) { btn.disabled = true; btn.textContent = "復原中"; }
+      isMutating = true;
       showAppNotice("正在復原資料，請稍候...", "loading");
       setStatus("復原中");
-
       try {
         const body = new URLSearchParams();
-        body.set("action", "restore");
-        body.set("id", id);
-        body.set("user", currentUser);
-
+        body.set("action","restore"); body.set("id",id); body.set("user",currentUser);
         const result = await postGas(body);
-        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
-
+        if (!result.success) throw new Error(result.message || "GAS 沒有回傳 success:true");
         item.status = "";
         renderAll();
-
-        setStatus("復原成功", "ok");
-        showAppNotice("復原完成，資料已回到排行榜", "success");
+        setStatus("復原完成", "ok");
+        showAppNotice("復原成功，已回到排行榜", "success");
       } catch (error) {
         alert("復原失敗：" + error.message);
         setStatus("復原失敗", "error");
         showAppNotice("復原失敗，請稍後再試", "error");
-
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = "復原";
-        }
-      }
+        if (btn) { btn.disabled = false; btn.textContent = "復原"; }
+      } finally { isMutating = false; }
     }
 
     async function bulkDeleteTrash() {
       const trashItems = getTrashItems();
-
-      if (!trashItems.length) {
-        alert("垃圾桶沒有資料可以刪除。");
-        return;
-      }
-
-      const ok = confirm(`確定要永久刪除垃圾桶裡的 ${trashItems.length} 筆資料？\n\n這會直接刪除試算表中所有狀態為「已刪除」的資料，刪除後無法從網站復原。`);
+      if (!trashItems.length) { alert("垃圾桶目前沒有資料可以刪除。"); return; }
+      const ok = confirm(`確定要永久刪除垃圾桶裡的 ${trashItems.length} 筆資料嗎？\n\n這會直接刪除 Google 試算表內狀態為「已刪除」的資料，刪除後不能從網站復原。`);
       if (!ok) return;
-
       bulkDeleteTrashBtn.disabled = true;
       bulkDeleteTrashBtn.textContent = "刪除中";
+      isMutating = true;
       showAppNotice(`正在永久刪除垃圾桶 ${trashItems.length} 筆資料，請稍候...`, "loading");
       setStatus("垃圾桶刪除中");
-
       try {
         const body = new URLSearchParams();
-        body.set("action", "bulkDeleteTrash");
-        body.set("user", currentUser);
-
+        body.set("action","bulkDeleteTrash"); body.set("user",currentUser);
         const result = await postGas(body);
-        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
-
+        if (!result.success) throw new Error(result.message || "GAS 沒有回傳 success:true");
         trashItems.forEach(item => permanentlyDeletedIds.add(item.id));
         allItems = allItems.filter(item => item.status !== "已刪除");
-
         renderAll();
-
         const deletedCount = result.deletedCount || trashItems.length;
         setStatus("垃圾桶已清空", "ok");
-        showAppNotice(`永久刪除完成，共刪除 ${deletedCount} 筆資料`, "success");
+        showAppNotice(`永久刪除完成，共刪除 ${deletedCount} 筆`, "success");
       } catch (error) {
         alert("一鍵刪除失敗：" + error.message);
         setStatus("垃圾桶刪除失敗", "error");
         showAppNotice("一鍵刪除失敗，請稍後再試", "error");
       } finally {
+        isMutating = false;
         bulkDeleteTrashBtn.disabled = getTrashItems().length === 0;
         bulkDeleteTrashBtn.textContent = "一鍵刪除";
       }
     }
 
     function switchPage(page) {
+      currentPage = page;
       document.querySelectorAll(".nav-btn").forEach(btn => btn.classList.toggle("active", btn.dataset.page === page));
-
       dashboardPage.classList.toggle("hidden", page !== "dashboard");
       rankingPage.classList.toggle("hidden", page !== "ranking");
       markedPage.classList.toggle("hidden", page !== "marked");
       trashPage.classList.toggle("hidden", page !== "trash");
 
-      if (page === "dashboard") {
-        pageTitle.textContent = "首頁";
-        pageSubtitle.textContent = "總覽目前試算表同步資料、排行榜與風險區間分布。";
-      }
-
-      if (page === "ranking") {
-        pageTitle.textContent = "排行榜";
-        pageSubtitle.textContent = "只顯示尚未標記、尚未刪除的資料。";
-      }
-
-      if (page === "marked") {
-        pageTitle.textContent = "已標記";
-        pageSubtitle.textContent = "查看已同步標記的商品資料，取消標記後會回到排行榜。";
-      }
-
-      if (page === "trash") {
-        pageTitle.textContent = "垃圾桶";
-        pageSubtitle.textContent = "顯示網站端刪除的資料，可復原或一鍵永久刪除。";
-      }
+      if (page === "dashboard") { pageTitle.textContent = "首頁"; pageSubtitle.textContent = "總覽目前試算表同步資料、排行榜與風險指標。"; }
+      if (page === "ranking") { pageTitle.textContent = "排行榜"; pageSubtitle.textContent = "依侵權指數與銷量排序，可查看、標記或刪除單筆資料。"; }
+      if (page === "marked") { pageTitle.textContent = "已標記"; pageSubtitle.textContent = "查看已標記的重點資料，可取消標記或移到垃圾桶。"; }
+      if (page === "trash") { pageTitle.textContent = "垃圾桶"; pageSubtitle.textContent = "顯示網站端刪除的資料，可復原或一鍵永久刪除並同步試算表。"; }
     }
 
     function login() {
       const name = usernameInput.value.trim();
-      if (!name) {
-        alert("請輸入使用者名稱。");
-        usernameInput.focus();
-        return;
-      }
+      if (!name) { alert("請輸入使用者名稱"); usernameInput.focus(); return; }
       currentUser = name;
       currentUserEl.textContent = name;
       loginModal.style.display = "none";
       loadData();
+      startAutoRefresh();
     }
 
     function escapeHtml(value) {
-      return String(value || "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+      return String(value || "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
     }
 
     function escapeJs(value) {
-      return String(value || "").replaceAll("\\", "\\\\").replaceAll("'", "\\'").replaceAll("\n", "\\n").replaceAll("\r", "");
+      return String(value || "").replaceAll("\\","\\\\").replaceAll("'","\\'").replaceAll("\n","\\n").replaceAll("\r","");
     }
 
     function cssEscape(value) {
@@ -729,10 +672,11 @@
     markedSearchInput.addEventListener("input", renderMarked);
     trashSearchInput.addEventListener("input", renderTrash);
     loginBtn.addEventListener("click", login);
-    refreshBtn.addEventListener("click", loadData);
+    refreshBtn.addEventListener("click", () => loadData());
     bulkDeleteTrashBtn.addEventListener("click", bulkDeleteTrash);
     usernameInput.addEventListener("keydown", event => { if (event.key === "Enter") login(); });
     window.addEventListener("load", () => { usernameInput.focus(); switchPage("dashboard"); });
+    window.addEventListener("beforeunload", stopAutoRefresh);
   </script>
 </body>
 </html>
