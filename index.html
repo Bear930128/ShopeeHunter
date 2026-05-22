@@ -189,6 +189,15 @@
       statusEl.textContent = text;
       statusEl.className = "status " + type;
     }
+    function setSyncTime() {
+      const time = new Date().toLocaleTimeString("zh-TW", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+      const target = document.getElementById("syncMeta");
+      if (target) target.textContent = `自動同步：每 10 秒｜最後同步：${time}`;
+    }
 
     function textValue(value) {
       return String(value || "").trim();
@@ -835,6 +844,7 @@
   </script>
 </body>
 </html>
+
 
 
 
