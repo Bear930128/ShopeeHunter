@@ -32,7 +32,7 @@
     .stat{padding:18px;min-height:112px}.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:12px}.stat strong{display:block;font-size:30px;color:#fff;overflow-wrap:anywhere}
     .chart-panel{height:340px;padding:18px;margin-bottom:24px}
     .toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}.toolbar h3{margin:0;font-size:22px}.toolbar-actions{display:flex;gap:10px;align-items:center}
-    .search{width:min(380px,100%);height:42px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:0 14px}.search:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
+    .search,.category-select{width:min(380px,100%);height:42px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:0 14px}.category-select{width:180px;font-weight:800}.search:focus,.category-select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
     .grid{display:grid;grid-template-columns:repeat(3,minmax(280px,1fr));gap:16px;align-items:stretch}
     .card{padding:18px;min-height:396px;display:grid;grid-template-rows:150px 74px 68px 38px;gap:14px}
     .product-area{height:150px;display:grid;grid-template-rows:78px 58px;gap:10px;overflow:hidden}
@@ -107,7 +107,7 @@
       <section id="rankingPage" class="hidden">
         <div class="toolbar">
           <h3>排行榜</h3>
-          <input id="searchInput" class="search" type="search" placeholder="搜尋店名、商品名、公司、統編" />
+          <div class="toolbar-actions"><select id="categoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><input id="searchInput" class="search" type="search" placeholder="搜尋店名、商品名、公司、統編" /></div>
         </div>
         <section id="rankingGrid" class="grid"><div class="empty">資料載入中...</div></section>
       </section>
@@ -136,6 +136,7 @@
   <script>
     const OPENSHEET_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8/Sheet1";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
+    const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
 
     let currentUser = "";
     let allItems = [];
@@ -168,6 +169,7 @@
     const markedGrid = document.getElementById("markedGrid");
     const trashGrid = document.getElementById("trashGrid");
     const searchInput = document.getElementById("searchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
     const markedSearchInput = document.getElementById("markedSearchInput");
     const trashSearchInput = document.getElementById("trashSearchInput");
 
@@ -247,6 +249,7 @@
       const company = textValue(getField(row, ["公司", "公司名", "登記公司", "Company", "company"]));
       const taxId = textValue(getField(row, ["統編", "統一編號", "Tax ID", "taxId", "taxid"]));
       const status = textValue(getField(row, ["狀態", "status", "Status"]));
+      const category = textValue(getField(row, ["分類", "category", "Category"]));
       const rawFans = getField(row, ["粉絲", "粉絲數", "Fans", "fans"]);
       const rawSales = getField(row, ["銷量", "銷售", "Sales", "sales"]);
       const fans = numberValue(rawFans);
@@ -259,6 +262,7 @@
         company: company || "無",
         taxId: taxId || "無",
         status,
+        category: PRODUCT_CATEGORIES.includes(category) ? category : "未分類",
         fans, sales,
         fansDisplay: displayValue(rawFans, fans),
         salesDisplay: displayValue(rawSales, sales),
@@ -341,8 +345,10 @@
 
     function getRankingItems() {
       const keyword = searchInput.value.trim().toLowerCase();
+      const selectedCategory = categoryFilter ? categoryFilter.value : "全部";
       return allItems
         .filter(item => item.status !== "已標記" && item.status !== "已刪除")
+        .filter(item => selectedCategory === "全部" || item.category === selectedCategory)
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
@@ -464,7 +470,7 @@
         <article class="card" data-id="${escapeHtml(item.id)}">
           <div class="product-area">
             <h3 class="shop-title" title="${escapeHtml(item.shop)}">${escapeHtml(item.shop)}</h3>
-            <div class="product-subtitle" title="${escapeHtml(item.product)}">${escapeHtml(item.product)}</div>
+            <div class="product-subtitle" title="${escapeHtml(item.product)}">${escapeHtml(item.product)}<br>分類：${escapeHtml(item.category || "未分類")}</div>
           </div>
           <div class="company-block">
             <div class="company-info" title="${escapeHtml(item.company)}">公司：<strong>${escapeHtml(item.company)}</strong></div>
@@ -512,23 +518,32 @@
       }
     }
 
-    function openScreenshotTool(shopName) {
+    function openScreenshotTool(shopName, category) {
       const encodedShop = encodeURIComponent(String(shopName || "").trim());
+      const encodedCategory = encodeURIComponent(String(category || "").trim());
       const launcher = document.createElement("iframe");
       launcher.style.display = "none";
-      launcher.src = "shopeehuntershot://open?shop=" + encodedShop;
+      launcher.src = "shopeehuntershot://open?shop=" + encodedShop + "&category=" + encodedCategory;
       document.body.appendChild(launcher);
       setTimeout(() => launcher.remove(), 1500);
     }
 
     async function openProduct(url, shopName) {
+      const selectedCategory = categoryFilter ? categoryFilter.value : "全部";
+
+      if (selectedCategory === "全部") {
+        showAppNotice("請先在排行榜上方選擇商品分類，再開啟截圖工具", "error");
+        alert("請先選擇商品分類，再按查看。\n\n分類會決定截圖最後存到哪一個資料夾。");
+        return;
+      }
+
       if (shopName) {
         const copied = await copyTextToClipboard(shopName);
         if (copied) showAppNotice("已複製店名，正在開啟截圖工具", "success");
         if (!copied) showAppNotice("店名複製失敗，請手動複製店名", "error");
       }
 
-      openScreenshotTool(shopName);
+      openScreenshotTool(shopName, selectedCategory);
 
       if (!url) return;
       window.open(url, "_blank", "noopener,noreferrer");
@@ -771,6 +786,7 @@
 
     document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => switchPage(btn.dataset.page)));
     searchInput.addEventListener("input", renderRanking);
+    categoryFilter.addEventListener("change", renderRanking);
     markedSearchInput.addEventListener("input", renderMarked);
     trashSearchInput.addEventListener("input", renderTrash);
     loginBtn.addEventListener("click", login);
@@ -781,6 +797,9 @@
   </script>
 </body>
 </html>
+
+
+
 
 
 
