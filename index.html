@@ -52,6 +52,11 @@
     .modal{width:min(420px,100%);background:#0b2038;border:1px solid var(--border);border-radius:8px;padding:24px;box-shadow:var(--shadow)}.modal h2{margin:0 0 10px}.modal p{margin:0 0 18px;color:var(--muted);line-height:1.5}
     .modal input{width:100%;height:44px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:0 14px;outline:none;margin-bottom:14px}.modal button{width:100%;height:42px;border:0;border-radius:8px;color:#fff;background:var(--blue);font-weight:800;cursor:pointer}
     .app-notice{position:fixed;right:24px;bottom:24px;z-index:999999;max-width:340px;padding:14px 16px;border-radius:8px;color:#fff;font-weight:800;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.35);display:none}
+        .mobile-panel{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+    .mobile-form{display:grid;gap:12px;max-width:760px}.mobile-form textarea{min-height:180px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:12px 14px;line-height:1.6}.mobile-form textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
+    .mobile-table{width:100%;border-collapse:collapse;background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--shadow)}
+    .mobile-table th,.mobile-table td{border-bottom:1px solid rgba(88,215,255,.13);padding:12px;text-align:left;vertical-align:middle}.mobile-table th{color:var(--muted);font-size:13px;background:rgba(6,17,31,.36)}.mobile-table td{color:#fff;font-size:14px}.mobile-table tr:last-child td{border-bottom:0}.url-cell{max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cyan)}
+    .mini-actions{display:flex;gap:8px}.mini-actions button,.import-btn{height:36px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;padding:0 14px}.mini-view{background:var(--blue)}.mini-delete{background:var(--red)}.import-btn{background:var(--green);color:#062015;width:max-content}.mobile-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
     @media(max-width:1120px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(280px,1fr))}}
     @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:396px;grid-template-rows:150px 74px 68px auto}.actions{grid-template-columns:1fr}.user-box{left:12px;right:12px}}
   </style>
@@ -79,6 +84,8 @@
         <button class="nav-btn" data-page="ranking" type="button">排行榜</button>
         <button class="nav-btn" data-page="marked" type="button">已標記</button>
         <button class="nav-btn" data-page="trash" type="button">垃圾桶</button>
+        <button class="nav-btn" data-page="mobileImport" type="button">手機匯入資料</button>
+        <button class="nav-btn" data-page="mobilePending" type="button">手機待確認</button>
       </nav>
       <div class="user-box">目前使用者<strong id="currentUser">尚未登入</strong></div>
     </aside>
@@ -131,6 +138,44 @@
         </div>
         <section id="trashGrid" class="grid"><div class="empty">垃圾桶沒有資料</div></section>
       </section>
+
+      <section id="mobileImportPage" class="hidden">
+        <div class="toolbar">
+          <h3>手機匯入資料</h3>
+        </div>
+        <div class="mobile-panel">
+          <div class="mobile-form">
+            <select id="mobileImportCategory" class="category-select">
+              <option value="鞋托架">鞋托架</option>
+              <option value="置物架">置物架</option>
+              <option value="手機架">手機架</option>
+              <option value="文件盒">文件盒</option>
+              <option value="鏡櫃盒">鏡櫃盒</option>
+              <option value="翻蓋盒">翻蓋盒</option>
+            </select>
+            <textarea id="mobileImportUrls" placeholder="請貼上蝦皮商品網址，一行一筆"></textarea>
+            <button id="mobileImportBtn" class="import-btn" type="button">匯入手機資料</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="mobilePendingPage" class="hidden">
+        <div class="toolbar">
+          <h3>手機待確認</h3>
+          <div class="toolbar-actions">
+            <select id="mobilePendingCategory" class="category-select">
+              <option value="全部">全部</option>
+              <option value="鞋托架">鞋托架</option>
+              <option value="置物架">置物架</option>
+              <option value="手機架">手機架</option>
+              <option value="文件盒">文件盒</option>
+              <option value="鏡櫃盒">鏡櫃盒</option>
+              <option value="翻蓋盒">翻蓋盒</option>
+            </select>
+          </div>
+        </div>
+        <section id="mobilePendingList"><div class="empty">手機待確認目前沒有資料</div></section>
+      </section>
     </main>
   </div>
 
@@ -164,6 +209,13 @@
     const rankingPage = document.getElementById("rankingPage");
     const markedPage = document.getElementById("markedPage");
     const trashPage = document.getElementById("trashPage");
+    const mobileImportPage = document.getElementById("mobileImportPage");
+    const mobilePendingPage = document.getElementById("mobilePendingPage");
+    const mobileImportCategory = document.getElementById("mobileImportCategory");
+    const mobileImportUrls = document.getElementById("mobileImportUrls");
+    const mobileImportBtn = document.getElementById("mobileImportBtn");
+    const mobilePendingCategory = document.getElementById("mobilePendingCategory");
+    const mobilePendingList = document.getElementById("mobilePendingList");
 
     const totalCountEl = document.getElementById("totalCount");
     const avgIndexEl = document.getElementById("avgIndex");
@@ -387,7 +439,7 @@
       const keyword = searchInput.value.trim().toLowerCase();
       const selectedCategory = categoryFilter ? categoryFilter.value : "全部";
       return allItems
-        .filter(item => item.status !== "已標記" && item.status !== "已刪除")
+        .filter(item => item.status !== "已標記" && item.status !== "已刪除" && item.status !== "手機未確認")
         .filter(item => selectedCategory === "全部" || item.category === selectedCategory)
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
@@ -409,11 +461,128 @@
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
 
+
+    function getMobilePendingItems() {
+      const selectedCategory = mobilePendingCategory ? mobilePendingCategory.value : "全部";
+      return allItems
+        .filter(item => item.status === "手機未確認")
+        .filter(item => selectedCategory === "全部" || item.category === selectedCategory)
+        .sort((a, b) => (a.category || "").localeCompare(b.category || ""));
+    }
+
+    function renderMobilePending() {
+      const items = getMobilePendingItems();
+      if (!items.length) {
+        mobilePendingList.innerHTML = '<div class="empty">手機待確認目前沒有資料</div>';
+        return;
+      }
+
+      mobilePendingList.innerHTML = `
+        <table class="mobile-table">
+          <thead><tr><th>分類</th><th>URL</th><th>操作</th></tr></thead>
+          <tbody>
+            ${items.map(item => `
+              <tr>
+                <td>${escapeHtml(item.category || "未分類")}</td>
+                <td class="url-cell" title="${escapeHtml(item.url)}">${escapeHtml(item.url)}</td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="mini-view" type="button" onclick="openMobilePending('${escapeJs(item.url)}', '${escapeJs(item.id)}')">查看</button>
+                    <button class="mini-delete" type="button" onclick="deleteMobilePending('${escapeJs(item.id)}')">刪除</button>
+                  </div>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function parseMobileUrls(text) {
+      const rawUrls = String(text || "")
+        .split(/\r?\n/)
+        .map(value => value.trim())
+        .filter(Boolean);
+      return Array.from(new Set(rawUrls));
+    }
+
+    async function importMobileUrls() {
+      const category = mobileImportCategory.value;
+      const urls = parseMobileUrls(mobileImportUrls.value);
+
+      if (!category) {
+        alert("請先選擇分類。");
+        return;
+      }
+
+      if (!urls.length) {
+        alert("請貼上至少一個商品網址。");
+        mobileImportUrls.focus();
+        return;
+      }
+
+      mobileImportBtn.disabled = true;
+      mobileImportBtn.textContent = "匯入中";
+      showAppNotice("手機資料匯入中，請稍候...", "loading");
+
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "mobileImport");
+        body.set("category", category);
+        body.set("urls", urls.join("\n"));
+        body.set("user", currentUser);
+
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
+
+        mobileImportUrls.value = "";
+        showAppNotice(`手機資料匯入完成，共新增 ${result.insertedCount || urls.length} 筆`, "success");
+        await loadData();
+        switchPage("mobilePending");
+      } catch (error) {
+        alert("手機資料匯入失敗：" + error.message);
+        showAppNotice("手機資料匯入失敗", "error");
+      } finally {
+        mobileImportBtn.disabled = false;
+        mobileImportBtn.textContent = "匯入手機資料";
+      }
+    }
+
+    function openMobilePending(url, id) {
+      if (!url) return;
+      const separator = url.includes("#") ? "&" : "#";
+      window.open(url + separator + "shopeeHunterPendingId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");
+    }
+
+    async function deleteMobilePending(id) {
+      const ok = confirm("確定要刪除這筆手機待確認資料嗎？\n\n這會直接從試算表刪除這筆線索。");
+      if (!ok) return;
+
+      showAppNotice("正在刪除手機待確認資料...", "loading");
+
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "deletePending");
+        body.set("id", id);
+        body.set("user", currentUser);
+
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
+
+        allItems = allItems.filter(item => item.id !== id);
+        renderAll();
+        showAppNotice("手機待確認資料已刪除", "success");
+      } catch (error) {
+        alert("刪除失敗：" + error.message);
+        showAppNotice("刪除失敗", "error");
+      }
+    }
     function renderAll() {
       renderStats();
       renderRanking();
       renderMarked();
       renderTrash();
+      renderMobilePending();
       try { renderChart(); } catch (error) { console.error(error); }
     }
 
@@ -781,6 +950,8 @@
       rankingPage.classList.toggle("hidden", page !== "ranking");
       markedPage.classList.toggle("hidden", page !== "marked");
       trashPage.classList.toggle("hidden", page !== "trash");
+      mobileImportPage.classList.toggle("hidden", page !== "mobileImport");
+      mobilePendingPage.classList.toggle("hidden", page !== "mobilePending");
 
       if (page === "dashboard") {
         pageTitle.textContent = "首頁";
@@ -795,6 +966,16 @@
       if (page === "marked") {
         pageTitle.textContent = "已標記";
         pageSubtitle.textContent = "查看已同步標記的商品資料，取消標記後會回到排行榜。";
+      }
+
+      if (page === "mobileImport") {
+        pageTitle.textContent = "手機匯入資料";
+        pageSubtitle.textContent = "手機圖搜圖找到的商品連結可先匯入，之後回電腦逐筆確認。";
+      }
+
+      if (page === "mobilePending") {
+        pageTitle.textContent = "手機待確認";
+        pageSubtitle.textContent = "用列表管理手機匯入的商品線索，查看後可用擴充功能正式抓資料。";
       }
 
       if (page === "trash") {
@@ -838,12 +1019,15 @@
     loginBtn.addEventListener("click", login);
     refreshBtn.addEventListener("click", () => loadData());
     bulkDeleteTrashBtn.addEventListener("click", bulkDeleteTrash);
+    mobileImportBtn.addEventListener("click", importMobileUrls);
+    mobilePendingCategory.addEventListener("change", renderMobilePending);
     usernameInput.addEventListener("keydown", event => { if (event.key === "Enter") login(); });
     window.addEventListener("load", () => { usernameInput.focus(); switchPage("dashboard"); });
     window.addEventListener("beforeunload", stopAutoRefresh);
   </script>
 </body>
 </html>
+
 
 
 
