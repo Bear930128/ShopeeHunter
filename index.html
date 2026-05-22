@@ -27,6 +27,7 @@
     .refresh-btn:disabled,.danger-action:disabled{opacity:.55;cursor:not-allowed}
     .status{padding:11px 16px;min-width:160px;text-align:center;border:1px solid var(--border);border-radius:8px;background:rgba(7,24,43,.85);color:var(--muted);font-weight:700;font-size:14px;white-space:nowrap}
     .status.ok{color:var(--green)}.status.error{color:var(--red)}
+    .sync-meta{width:100%;text-align:right;color:var(--muted);font-size:12px;margin-top:-10px;margin-bottom:16px}
     .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:18px}
     .stat,.chart-panel,.card,.empty{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
     .stat{padding:18px;min-height:112px}.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:12px}.stat strong{display:block;font-size:30px;color:#fff;overflow-wrap:anywhere}
@@ -137,11 +138,14 @@
     const OPENSHEET_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8/Sheet1";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
     const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
+    const AUTO_REFRESH_MS = 10000;
 
     let currentUser = "";
     let allItems = [];
     let chart = null;
     let isLoading = false;
+    let isMutating = false;
+    let autoRefreshTimer = null;
     const permanentlyDeletedIds = new Set();
 
     const loginModal = document.getElementById("loginModal");
@@ -151,6 +155,7 @@
     const bulkDeleteTrashBtn = document.getElementById("bulkDeleteTrashBtn");
     const currentUserEl = document.getElementById("currentUser");
     const statusEl = document.getElementById("status");
+    const syncMeta = document.getElementById("syncMeta");
     const pageTitle = document.getElementById("pageTitle");
     const pageSubtitle = document.getElementById("pageSubtitle");
     const appNotice = document.getElementById("appNotice");
@@ -285,21 +290,27 @@
       return Array.from(map.values());
     }
 
-    async function loadData() {
+    async function loadData(options = {}) {
+      const silent = options.silent === true;
+
       if (!currentUser) {
-        alert("請先輸入使用者名稱。");
-        usernameInput.focus();
+        if (!silent) {
+          alert("請先輸入使用者名稱。");
+          usernameInput.focus();
+        }
         return;
       }
-      if (isLoading) return;
+      if (isLoading || isMutating) return;
 
       isLoading = true;
       refreshBtn.disabled = true;
-      refreshBtn.textContent = "同步中";
-      setStatus("資料同步中");
+      if (!silent) {
+        refreshBtn.textContent = "同步中";
+        setStatus("資料同步中");
+      }
 
       try {
-        const res = await fetch(OPENSHEET_URL, { cache: "reload" });
+        const res = await fetch(`${OPENSHEET_URL}?t=${Date.now()}`, { cache: "no-store" });
         if (!res.ok) throw new Error("OpenSheet HTTP " + res.status);
 
         const rows = await res.json();
@@ -318,19 +329,39 @@
         allItems = dedupeItems(normalizedItems);
         renderAll();
         setStatus("資料已同步", "ok");
+        setSyncTime();
       } catch (error) {
         console.error(error);
-        allItems = [];
-        renderAll();
-        setStatus("資料載入失敗", "error");
-        const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br><a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a></div>`;
-        rankingGrid.innerHTML = message;
-        markedGrid.innerHTML = message;
-        trashGrid.innerHTML = message;
+        if (!silent) {
+          allItems = [];
+          renderAll();
+          setStatus("資料載入失敗", "error");
+          const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br><a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a></div>`;
+          rankingGrid.innerHTML = message;
+          markedGrid.innerHTML = message;
+          trashGrid.innerHTML = message;
+        } else {
+          setStatus("自動同步失敗", "error");
+        }
       } finally {
         isLoading = false;
         refreshBtn.disabled = false;
         refreshBtn.textContent = "刷新資料";
+      }
+    }
+
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      autoRefreshTimer = setInterval(() => {
+        if (!currentUser || isLoading || isMutating) return;
+        loadData({ silent: true });
+      }, AUTO_REFRESH_MS);
+    }
+
+    function stopAutoRefresh() {
+      if (autoRefreshTimer) {
+        clearInterval(autoRefreshTimer);
+        autoRefreshTimer = null;
       }
     }
 
@@ -550,12 +581,17 @@
     }
 
     async function postGas(body) {
-      const res = await fetch(GAS_URL, { method: "POST", body });
-      const text = await res.text();
+      isMutating = true;
       try {
-        return JSON.parse(text);
-      } catch {
-        return { success: res.ok, message: text };
+        const res = await fetch(GAS_URL, { method: "POST", body });
+        const text = await res.text();
+        try {
+          return JSON.parse(text);
+        } catch {
+          return { success: res.ok, message: text };
+        }
+      } finally {
+        isMutating = false;
       }
     }
 
@@ -769,6 +805,7 @@
       currentUserEl.textContent = name;
       loginModal.style.display = "none";
       loadData();
+      startAutoRefresh();
     }
 
     function escapeHtml(value) {
@@ -790,13 +827,16 @@
     markedSearchInput.addEventListener("input", renderMarked);
     trashSearchInput.addEventListener("input", renderTrash);
     loginBtn.addEventListener("click", login);
-    refreshBtn.addEventListener("click", loadData);
+    refreshBtn.addEventListener("click", () => loadData());
     bulkDeleteTrashBtn.addEventListener("click", bulkDeleteTrash);
     usernameInput.addEventListener("keydown", event => { if (event.key === "Enter") login(); });
     window.addEventListener("load", () => { usernameInput.focus(); switchPage("dashboard"); });
+    window.addEventListener("beforeunload", stopAutoRefresh);
   </script>
 </body>
 </html>
+
+
 
 
 
