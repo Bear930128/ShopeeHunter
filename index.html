@@ -310,7 +310,7 @@
       }
 
       try {
-        const res = await fetch(`${OPENSHEET_URL}?t=${Date.now()}`, { cache: "no-store" });
+        const res = await fetch(OPENSHEET_URL, { cache: "reload" });
         if (!res.ok) throw new Error("OpenSheet HTTP " + res.status);
 
         const rows = await res.json();
@@ -835,6 +835,7 @@
   </script>
 </body>
 </html>
+
 
 
 
