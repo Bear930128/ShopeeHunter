@@ -85,7 +85,7 @@
         <button class="nav-btn" data-page="marked" type="button">已標記</button>
         <button class="nav-btn" data-page="trash" type="button">垃圾桶</button>
         <button class="nav-btn" data-page="mobileImport" type="button">手機匯入資料</button>
-        <button class="nav-btn" data-page="mobilePending" type="button">手機待確認</button>
+        <button id="mobilePendingNavBtn" class="nav-btn" data-page="mobilePending" type="button">手機待確認</button>
       </nav>
       <div class="user-box">目前使用者<strong id="currentUser">尚未登入</strong></div>
     </aside>
@@ -216,6 +216,7 @@
     const mobileImportBtn = document.getElementById("mobileImportBtn");
     const mobilePendingCategory = document.getElementById("mobilePendingCategory");
     const mobilePendingList = document.getElementById("mobilePendingList");
+    const mobilePendingNavBtn = document.getElementById("mobilePendingNavBtn");
 
     const totalCountEl = document.getElementById("totalCount");
     const avgIndexEl = document.getElementById("avgIndex");
@@ -462,6 +463,13 @@
     }
 
 
+
+    function updateMobilePendingCount() {
+      const count = allItems.filter(item => item.status === "手機未確認").length;
+      if (mobilePendingNavBtn) {
+        mobilePendingNavBtn.textContent = count > 0 ? `手機待確認（${count}）` : "手機待確認";
+      }
+    }
     function getMobilePendingItems() {
       const selectedCategory = mobilePendingCategory ? mobilePendingCategory.value : "全部";
       return allItems
@@ -536,7 +544,10 @@
         if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
 
         mobileImportUrls.value = "";
-        showAppNotice(`手機資料匯入完成，共新增 ${result.insertedCount || urls.length} 筆`, "success");
+        const insertedCount = Number(result.insertedCount || 0);
+        const skippedCount = Number(result.skippedCount || 0);
+        showAppNotice(`手機資料匯入完成：新增 ${insertedCount} 筆，重複略過 ${skippedCount} 筆`, "success");
+        alert(`手機資料匯入完成\n\n新增：${insertedCount} 筆\n重複略過：${skippedCount} 筆`);
         await loadData();
         switchPage("mobilePending");
       } catch (error) {
@@ -583,6 +594,7 @@
       renderMarked();
       renderTrash();
       renderMobilePending();
+      updateMobilePendingCount();
       try { renderChart(); } catch (error) { console.error(error); }
     }
 
@@ -1027,6 +1039,7 @@
   </script>
 </body>
 </html>
+
 
 
 
