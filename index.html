@@ -185,7 +185,7 @@
   </div>
 
   <script>
-    const OPENSHEET_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8/Sheet1";
+    const OPENSHEET_BASE_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
     const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
     const AUTO_REFRESH_MS = 10000;
@@ -371,22 +371,25 @@
         }
         return;
       }
-      if (isLoading || isMutating) return;
+      if (isLoading) return;
 
       isLoading = true;
-      refreshBtn.disabled = true;
       if (!silent) {
-        refreshBtn.textContent = "同步中";
-        setStatus("資料同步中");
+        setStatus("資料讀取中");
+        refreshBtn.disabled = true;
       }
 
       try {
-        const res = await fetch(OPENSHEET_URL, { cache: "reload" });
-        if (!res.ok) throw new Error("OpenSheet HTTP " + res.status);
+        const sheetResults = await Promise.all(PRODUCT_CATEGORIES.map(async category => {
+          const url = OPENSHEET_BASE_URL + "/" + encodeURIComponent(category);
+          const res = await fetch(url, { cache: "reload" });
+          if (!res.ok) throw new Error(category + " OpenSheet HTTP " + res.status);
+          const rows = await res.json();
+          if (!Array.isArray(rows)) throw new Error(category + " 回傳格式不是陣列");
+          return rows.map(row => Object.assign({}, row, { 款式: row["款式"] || category }));
+        }));
 
-        const rows = await res.json();
-        if (!Array.isArray(rows)) throw new Error(rows && rows.error ? rows.error : "OpenSheet 回傳格式不是陣列");
-
+        const rows = sheetResults.flat();
         const normalizedItems = rows
           .map(normalizeRow)
           .filter(item => item.id && (item.shop || item.url))
@@ -394,7 +397,7 @@
 
         if (!normalizedItems.length && rows.length) {
           const firstKeys = Object.keys(rows[0]).join("、");
-          throw new Error("有讀到資料，但缺少必要欄位。請確認第一列至少有：款式、URL、店名、粉絲數、登記公司、統編、銷量、完成蒐證、ID、時間。實際欄位：" + firstKeys);
+          throw new Error("有讀到資料，但缺少必要欄位。請確認六個分頁第一列都有：款式、URL、店名、粉絲數、登記公司、統編、銷量、完成蒐證、ID、時間。實際欄位：" + firstKeys);
         }
 
         allItems = dedupeItems(normalizedItems);
@@ -407,7 +410,8 @@
           allItems = [];
           renderAll();
           setStatus("資料載入失敗", "error");
-          const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br><a href="${OPENSHEET_URL}" target="_blank" rel="noopener noreferrer">測試 opensheet 資料連結</a></div>`;
+          const testLinks = PRODUCT_CATEGORIES.map(category => `<a href="${OPENSHEET_BASE_URL}/${encodeURIComponent(category)}" target="_blank" rel="noopener noreferrer">${escapeHtml(category)}</a>`).join(" ｜ ");
+          const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br>測試 opensheet 分頁：${testLinks}</div>`;
           rankingGrid.innerHTML = message;
           markedGrid.innerHTML = message;
           trashGrid.innerHTML = message;
@@ -416,11 +420,9 @@
         }
       } finally {
         isLoading = false;
-        refreshBtn.disabled = false;
-        refreshBtn.textContent = "刷新資料";
+        if (!silent) refreshBtn.disabled = false;
       }
     }
-
     function startAutoRefresh() {
       stopAutoRefresh();
       autoRefreshTimer = setInterval(() => {
