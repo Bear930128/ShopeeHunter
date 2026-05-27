@@ -389,12 +389,12 @@
 
         const normalizedItems = rows
           .map(normalizeRow)
-          .filter(item => item.id && item.product)
+          .filter(item => item.id && (item.shop || item.url))
           .filter(item => !permanentlyDeletedIds.has(item.id));
 
         if (!normalizedItems.length && rows.length) {
           const firstKeys = Object.keys(rows[0]).join("、");
-          throw new Error("有讀到資料，但欄位對不上。實際欄位：" + firstKeys);
+          throw new Error("有讀到資料，但缺少必要欄位。請確認第一列至少有：款式、URL、店名、粉絲數、登記公司、統編、銷量、完成蒐證、ID、時間。實際欄位：" + firstKeys);
         }
 
         allItems = dedupeItems(normalizedItems);
