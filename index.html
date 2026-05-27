@@ -128,7 +128,7 @@
       <section id="markedPage" class="hidden">
         <div class="toolbar">
           <h3>已標記</h3>
-          <div class="toolbar-actions"><select id="markedCompletenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、商品名、公司、統編" /></div>
+          <div class="toolbar-actions"><select id="markedCategoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><select id="markedCompletenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、商品名、公司、統編" /></div>
         </div>
         <section id="markedGrid" class="grid"><div class="empty">尚無已標記資料</div></section>
       </section>
@@ -236,6 +236,7 @@
     const categoryFilter = document.getElementById("categoryFilter");
     const completenessFilter = document.getElementById("completenessFilter");
     const markedSearchInput = document.getElementById("markedSearchInput");
+    const markedCategoryFilter = document.getElementById("markedCategoryFilter");
     const markedCompletenessFilter = document.getElementById("markedCompletenessFilter");
     const trashSearchInput = document.getElementById("trashSearchInput");
 
@@ -462,14 +463,15 @@
     }
     function getMarkedItems() {
       const keyword = markedSearchInput.value.trim().toLowerCase();
+      const selectedCategory = markedCategoryFilter ? markedCategoryFilter.value : "全部";
       const selectedCompleteness = markedCompletenessFilter ? markedCompletenessFilter.value : "全部";
       return allItems
         .filter(item => item.status === "已標記")
+        .filter(item => selectedCategory === "全部" || item.category === selectedCategory)
         .filter(item => matchesCompletenessFilter(item, selectedCompleteness))
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
-
     function getTrashItems() {
       const keyword = trashSearchInput.value.trim().toLowerCase();
       return allItems
@@ -1101,6 +1103,7 @@
     categoryFilter.addEventListener("change", renderRanking);
     completenessFilter.addEventListener("change", renderRanking);
     markedSearchInput.addEventListener("input", renderMarked);
+    markedCategoryFilter.addEventListener("change", renderMarked);
     markedCompletenessFilter.addEventListener("change", renderMarked);
     trashSearchInput.addEventListener("input", renderTrash);
     loginBtn.addEventListener("click", login);
