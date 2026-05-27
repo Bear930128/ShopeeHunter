@@ -120,7 +120,7 @@
       <section id="rankingPage" class="hidden">
         <div class="toolbar">
           <h3>排行榜</h3>
-          <div class="toolbar-actions"><select id="categoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><select id="completenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="searchInput" class="search" type="search" placeholder="搜尋店名、商品名、公司、統編" /></div>
+          <div class="toolbar-actions"><select id="categoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><select id="completenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="searchInput" class="search" type="search" placeholder="搜尋店名、登記公司、統編" /></div>
         </div>
         <section id="rankingGrid" class="grid"><div class="empty">資料載入中...</div></section>
       </section>
@@ -128,7 +128,7 @@
       <section id="markedPage" class="hidden">
         <div class="toolbar">
           <h3>已標記</h3>
-          <div class="toolbar-actions"><select id="markedCategoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><select id="markedCompletenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、商品名、公司、統編" /></div>
+          <div class="toolbar-actions"><select id="markedCategoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><select id="markedCompletenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、登記公司、統編" /></div>
         </div>
         <section id="markedGrid" class="grid"><div class="empty">尚無已標記資料</div></section>
       </section>
@@ -137,7 +137,7 @@
         <div class="toolbar">
           <h3>垃圾桶</h3>
           <div class="toolbar-actions">
-            <input id="trashSearchInput" class="search" type="search" placeholder="搜尋垃圾桶店名、商品名、公司、統編" />
+            <input id="trashSearchInput" class="search" type="search" placeholder="搜尋垃圾桶店名、登記公司、統編" />
             <button id="bulkDeleteTrashBtn" class="danger-action" type="button">一鍵刪除</button>
           </div>
         </div>
@@ -320,13 +320,13 @@
     function normalizeRow(row) {
       const id = textValue(getField(row, ["ID", "Id", "id"]));
       const url = textValue(getField(row, ["URL", "url", "網址"]));
-      const product = textValue(getField(row, ["商品", "商品名", "Product", "product"]));
+      const product = "";
       const shop = textValue(getField(row, ["店名", "商店", "Shop", "shop"]));
-      const company = textValue(getField(row, ["公司", "公司名", "登記公司", "Company", "company"]));
+      const company = textValue(getField(row, ["登記公司", "公司", "公司名", "Company", "company"]));
       const taxId = textValue(getField(row, ["統編", "統一編號", "Tax ID", "taxId", "taxid"]));
-      const status = textValue(getField(row, ["狀態", "status", "Status"]));
-      const category = textValue(getField(row, ["分類", "category", "Category"]));
-      const rawFans = getField(row, ["粉絲", "粉絲數", "Fans", "fans"]);
+      const status = textValue(getField(row, ["完成蒐證", "狀態", "status", "Status"]));
+      const category = textValue(getField(row, ["款式", "分類", "category", "Category"]));
+      const rawFans = getField(row, ["粉絲數", "粉絲", "Fans", "fans"]);
       const rawSales = getField(row, ["銷量", "銷售", "Sales", "sales"]);
       const fans = numberValue(rawFans);
       const sales = numberValue(rawSales);
@@ -441,7 +441,7 @@
     }
 
     function itemMatchesKeyword(item, keyword) {
-      const target = [item.shop, item.product, item.company, item.taxId].join(" ").toLowerCase();
+      const target = [item.shop, item.company, item.taxId, item.category].join(" ").toLowerCase();
       return target.includes(keyword);
     }
 
@@ -714,10 +714,10 @@
         <article class="card" data-id="${escapeHtml(item.id)}">
           <div class="product-area">
             <h3 class="shop-title" title="${escapeHtml(item.shop)}">${escapeHtml(item.shop)}</h3>
-            <div class="product-subtitle" title="${escapeHtml(item.product)}">${escapeHtml(item.product)}<br>分類：${escapeHtml(item.category || "未分類")}</div>
+            <div class="product-subtitle" title="${escapeHtml(item.category || "未分類")}">款式：${escapeHtml(item.category || "未分類")}</div>
           </div>
           <div class="company-block ${incompleteCompany ? "incomplete" : "complete"}">
-            <div class="company-info" title="${escapeHtml(item.company)}">公司：<strong>${escapeHtml(item.company)}</strong></div>
+            <div class="company-info" title="${escapeHtml(item.company)}">登記公司：<strong>${escapeHtml(item.company)}</strong></div>
             <div class="company-info" title="${escapeHtml(item.taxId)}">統編：<strong>${escapeHtml(item.taxId)}</strong></div>
             ${companyWarning}
           </div>
@@ -752,7 +752,7 @@
 
       const companyDefault = isMissingCompanyValue(item.company) ? "" : item.company;
       const taxIdDefault = isMissingCompanyValue(item.taxId) ? "" : item.taxId;
-      const company = prompt(`請輸入「${item.shop}」的公司名稱`, companyDefault);
+      const company = prompt(`請輸入「${item.shop}」的登記公司`, companyDefault);
       if (company === null) return;
       const taxId = prompt(`請輸入「${item.shop}」的統編`, taxIdDefault);
       if (taxId === null) return;
@@ -760,11 +760,11 @@
       const nextCompany = company.trim();
       const nextTaxId = taxId.trim();
       if (!nextCompany || !nextTaxId) {
-        alert("公司與統編都要填，才會解除資料不齊全警示。");
+        alert("登記公司與統編都要填，才會解除資料不齊全警示。");
         return;
       }
 
-      showAppNotice("正在更新公司與統編...", "loading");
+      showAppNotice("正在更新登記公司與統編...", "loading");
       try {
         const body = new URLSearchParams();
         body.set("action", "updateCompanyInfo");
@@ -779,7 +779,7 @@
         item.company = nextCompany;
         item.taxId = nextTaxId;
         renderAll();
-        showAppNotice("公司與統編已更新", "success");
+        showAppNotice("登記公司與統編已更新", "success");
       } catch (error) {
         console.error(error);
         showAppNotice("更新失敗：" + error.message, "error");
@@ -828,8 +828,8 @@
       const selectedCategory = categoryFilter ? categoryFilter.value : "全部";
 
       if (selectedCategory === "全部") {
-        showAppNotice("請先在排行榜上方選擇商品分類，再開啟截圖工具", "error");
-        alert("請先選擇商品分類，再按查看。\n\n分類會決定截圖最後存到哪一個資料夾。");
+        showAppNotice("請先在排行榜上方選擇商品款式，再開啟截圖工具", "error");
+        alert("請先選擇商品款式，再按查看。\n\n款式會決定截圖最後存到哪一個資料夾。");
         return;
       }
 
@@ -901,7 +901,7 @@
         return;
       }
 
-      const ok = confirm(`確定要把這筆資料移到垃圾桶？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n此操作會同步把試算表狀態改成「已刪除」。`);
+      const ok = confirm(`確定要把這筆資料移到垃圾桶？\n\nID：${item.id}\n店名：${item.shop}\n\n此操作會同步把試算表狀態改成「已刪除」。`);
       if (!ok) return;
 
       const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
@@ -948,7 +948,7 @@
         return;
       }
 
-      const ok = confirm(`確定要復原這筆資料？\n\nID：${item.id}\n店名：${item.shop}\n商品：${item.product}\n\n復原後會回到排行榜，並同步清空試算表狀態。`);
+      const ok = confirm(`確定要復原這筆資料？\n\nID：${item.id}\n店名：${item.shop}\n\n復原後會回到排行榜，並同步清空試算表狀態。`);
       if (!ok) return;
 
       const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
