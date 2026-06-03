@@ -526,25 +526,80 @@
       `;
     }
 
+    function normalizeImportUrl(url) {
+      const raw = String(url || "").trim();
+      if (!raw) return "";
+      try {
+        const parsed = new URL(raw);
+        parsed.hash = "";
+        ["sp_atk", "xptdk", "uls_trackid", "display_model_id", "model_id", "entry_point", "search", "source", "utm_source", "utm_medium", "utm_campaign"].forEach(param => parsed.searchParams.delete(param));
+        const query = parsed.searchParams.toString();
+        return (parsed.origin + parsed.pathname + (query ? "?" + query : "")).toLowerCase();
+      } catch (error) {
+        return raw.split("#")[0].trim().toLowerCase();
+      }
+    }
+
     function parseMobileUrls(text) {
       const rawUrls = String(text || "")
         .split(/\r?\n/)
         .map(value => value.trim())
         .filter(Boolean);
-      return Array.from(new Set(rawUrls));
+      const seen = new Set();
+      const urls = [];
+      let duplicateInPasteCount = 0;
+
+      rawUrls.forEach(url => {
+        const key = normalizeImportUrl(url);
+        if (!key) return;
+        if (seen.has(key)) {
+          duplicateInPasteCount++;
+          return;
+        }
+        seen.add(key);
+        urls.push(url);
+      });
+
+      return { urls, duplicateInPasteCount, originalCount: rawUrls.length };
+    }
+
+    function filterExistingMobileUrls(urls) {
+      const existingKeys = new Set(allItems.map(item => normalizeImportUrl(item.url)).filter(Boolean));
+      const freshUrls = [];
+      let existingCount = 0;
+
+      urls.forEach(url => {
+        const key = normalizeImportUrl(url);
+        if (existingKeys.has(key)) {
+          existingCount++;
+          return;
+        }
+        freshUrls.push(url);
+      });
+
+      return { freshUrls, existingCount };
     }
 
     async function importMobileUrls() {
       const category = mobileImportCategory.value;
-      const urls = parseMobileUrls(mobileImportUrls.value);
+      const parsed = parseMobileUrls(mobileImportUrls.value);
+      const filtered = filterExistingMobileUrls(parsed.urls);
+      const urls = filtered.freshUrls;
+      const frontSkippedCount = parsed.duplicateInPasteCount + filtered.existingCount;
 
       if (!category) {
         alert("請先選擇分類。");
         return;
       }
 
-      if (!urls.length) {
+      if (!parsed.originalCount) {
         alert("請貼上至少一個商品網址。");
+        mobileImportUrls.focus();
+        return;
+      }
+
+      if (!urls.length) {
+        alert(`這次貼上的 ${parsed.originalCount} 筆網址都已經存在或重複，沒有需要匯入的新資料。\n\n同批重複：${parsed.duplicateInPasteCount} 筆\n已存在資料：${filtered.existingCount} 筆`);
         mobileImportUrls.focus();
         return;
       }
@@ -565,9 +620,10 @@
 
         mobileImportUrls.value = "";
         const insertedCount = Number(result.insertedCount || 0);
-        const skippedCount = Number(result.skippedCount || 0);
-        showAppNotice(`手機資料匯入完成：新增 ${insertedCount} 筆，重複略過 ${skippedCount} 筆`, "success");
-        alert(`手機資料匯入完成\n\n新增：${insertedCount} 筆\n重複略過：${skippedCount} 筆`);
+        const backendSkippedCount = Number(result.skippedCount || 0);
+        const totalSkippedCount = frontSkippedCount + backendSkippedCount;
+        showAppNotice(`手機資料匯入完成：新增 ${insertedCount} 筆，重複略過 ${totalSkippedCount} 筆`, "success");
+        alert(`手機資料匯入完成\n\n新增：${insertedCount} 筆\n前端先略過：${frontSkippedCount} 筆\n後端重複略過：${backendSkippedCount} 筆`);
         await loadData();
         switchPage("mobilePending");
       } catch (error) {
@@ -1125,6 +1181,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
