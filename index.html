@@ -729,7 +729,7 @@
             <div class="data"><span>侵權指數</span><strong>${item.index}</strong></div>
           </div>
           <div class="actions">
-            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}')" ${item.url ? "" : "disabled"}>查看</button>
+            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}')" ${item.url ? "" : "disabled"}>查看</button>
             ${markButton}
             ${deleteButton}
           </div>
@@ -819,32 +819,34 @@
     function openScreenshotTool(shopName, category) {
       const encodedShop = encodeURIComponent(String(shopName || "").trim());
       const encodedCategory = encodeURIComponent(String(category || "").trim());
-      const launcher = document.createElement("iframe");
+      const protocolUrl = "shopeehunter-screenshot://open?shop=" + encodedShop + "&category=" + encodedCategory;
+      const launcher = document.createElement("a");
+      launcher.href = protocolUrl;
       launcher.style.display = "none";
-      launcher.src = "shopeehuntershot://open?shop=" + encodedShop + "&category=" + encodedCategory;
       document.body.appendChild(launcher);
-      setTimeout(() => launcher.remove(), 1500);
+      launcher.click();
+      setTimeout(() => launcher.remove(), 1000);
     }
 
-    async function openProduct(url, shopName) {
-      const selectedCategory = categoryFilter ? categoryFilter.value : "全部";
+    async function openProduct(url, shopName, itemCategory) {
+      const selectedCategory = PRODUCT_CATEGORIES.includes(itemCategory) ? itemCategory : (categoryFilter ? categoryFilter.value : "全部");
 
-      if (selectedCategory === "全部") {
-        showAppNotice("請先在排行榜上方選擇商品款式，再開啟截圖工具", "error");
-        alert("請先選擇商品款式，再按查看。\n\n款式會決定截圖最後存到哪一個資料夾。");
+      if (!PRODUCT_CATEGORIES.includes(selectedCategory)) {
+        showAppNotice("這筆資料缺少商品款式，無法開啟截圖工具", "error");
+        alert("這筆資料缺少商品款式，無法決定截圖資料夾。\n\n請先確認試算表的款式欄位。");
         return;
       }
 
       if (shopName) {
         const copied = await copyTextToClipboard(shopName);
         if (copied) showAppNotice("已複製店名，正在開啟截圖工具", "success");
-        if (!copied) showAppNotice("店名複製失敗，請手動複製店名", "error");
+        if (!copied) showAppNotice("正在開啟截圖工具，店名請以畫面為準", "success");
       }
 
       openScreenshotTool(shopName, selectedCategory);
 
       if (!url) return;
-      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => window.open(url, "_blank", "noopener,noreferrer"), 250);
     }
 
     async function postGas(body) {
@@ -1119,6 +1121,7 @@
   </script>
 </body>
 </html>
+
 
 
 
