@@ -843,10 +843,14 @@
         if (!copied) showAppNotice("正在開啟截圖工具，店名請以畫面為準", "success");
       }
 
-      openScreenshotTool(shopName, selectedCategory);
+      let productWindow = null;
+      if (url) productWindow = window.open(url, "_blank", "noopener,noreferrer");
+      if (url && !productWindow) {
+        showAppNotice("商品頁可能被 Chrome 擋住，請允許此網站開啟彈出視窗", "error");
+        alert("商品頁沒有成功開啟。\n\n請在 Chrome 右上角允許 shopee-hunter.vercel.app 開啟彈出視窗後，再按一次查看。");
+      }
 
-      if (!url) return;
-      setTimeout(() => window.open(url, "_blank", "noopener,noreferrer"), 250);
+      setTimeout(() => openScreenshotTool(shopName, selectedCategory), 150);
     }
 
     async function postGas(body) {
@@ -1121,6 +1125,7 @@
   </script>
 </body>
 </html>
+
 
 
 
