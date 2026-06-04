@@ -44,12 +44,12 @@
     .company-block.complete{grid-template-rows:1fr 1fr;align-content:center}
     .company-block.incomplete{border-color:rgba(255,193,7,.65);background:rgba(255,193,7,.08)}
     .missing-alert{height:28px;border:1px solid rgba(255,193,7,.55);border-radius:7px;background:rgba(255,193,7,.16);color:#ffd56a;font-size:12px;font-weight:800;cursor:pointer;text-align:left;padding:0 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .missing-alert:hover{background:rgba(255,193,7,.25)}
+    .missing-alert:hover{background:rgba(255,193,7,.25)}.viewed-alert{height:28px;border:1px solid rgba(247,201,72,.55);border-radius:7px;background:rgba(247,201,72,.14);color:#ffd56a;font-size:12px;font-weight:800;display:flex;align-items:center;padding:0 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .data-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
     .data{height:68px;background:rgba(6,17,31,.68);border:1px solid rgba(88,215,255,.13);border-radius:8px;padding:10px 8px;min-width:0;display:flex;flex-direction:column;justify-content:center}
     .data span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px;white-space:nowrap}.data strong{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .actions{display:grid;grid-template-columns:1fr 1fr 86px;gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800}
-    .view-btn{background:var(--blue)}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}
+    .view-btn{background:var(--blue)}.view-btn.viewed{background:#6b7c93}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}
     .actions button:disabled{opacity:.75;cursor:not-allowed}
     .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none}
     .modal-mask{position:fixed;inset:0;background:rgba(3,9,17,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
@@ -199,6 +199,8 @@
     const permanentlyDeletedIds = new Set();
     const MOBILE_PENDING_IMPORTING_KEY = "shopeeHunterMobilePendingImportingIds";
     const mobilePendingImportingIds = new Set(JSON.parse(localStorage.getItem(MOBILE_PENDING_IMPORTING_KEY) || "[]"));
+    const RANKING_VIEWED_KEY = "shopeeHunterRankingViewedIds";
+    const rankingViewedIds = new Set(JSON.parse(localStorage.getItem(RANKING_VIEWED_KEY) || "[]"));
 
     const loginModal = document.getElementById("loginModal");
     const usernameInput = document.getElementById("usernameInput");
@@ -275,6 +277,33 @@
         }
       });
       if (changed) saveMobilePendingImportingState();
+    }
+    function saveRankingViewedState() {
+      localStorage.setItem(RANKING_VIEWED_KEY, JSON.stringify(Array.from(rankingViewedIds)));
+    }
+
+    function markRankingViewed(id) {
+      if (!id) return;
+      rankingViewedIds.add(id);
+      saveRankingViewedState();
+      renderRanking();
+    }
+
+    function clearRankingViewed(id) {
+      if (!id) return;
+      if (rankingViewedIds.delete(id)) saveRankingViewedState();
+    }
+
+    function cleanupRankingViewedState() {
+      const liveRankingIds = new Set(allItems.filter(item => item.status !== "已標記" && item.status !== "已刪除" && item.status !== "手機未確認").map(item => item.id));
+      let changed = false;
+      Array.from(rankingViewedIds).forEach(id => {
+        if (!liveRankingIds.has(id)) {
+          rankingViewedIds.delete(id);
+          changed = true;
+        }
+      });
+      if (changed) saveRankingViewedState();
     }
     function setStatus(text, type = "") {
       statusEl.textContent = text;
@@ -431,6 +460,7 @@
 
         allItems = dedupeItems(normalizedItems);
         cleanupMobilePendingImportingState();
+        cleanupRankingViewedState();
         renderAll();
         setStatus("資料已同步", "ok");
         setSyncTime();
@@ -795,6 +825,8 @@
     function renderCard(item, inTrash = false) {
       const marked = isMarked(item);
       const incompleteCompany = isIncompleteCompanyInfo(item);
+      const viewed = rankingViewedIds.has(item.id) && !inTrash && item.status !== "已標記" && item.status !== "已刪除" && item.status !== "手機未確認";
+      const viewedWarning = viewed ? `<div class="viewed-alert">已查看，待標記</div>` : "";
       const companyWarning = incompleteCompany && !inTrash
         ? `<button class="missing-alert" type="button" onclick="editCompanyInfo('${escapeJs(item.id)}')">資料不齊全，可手動補</button>`
         : "";
@@ -814,7 +846,7 @@
           <div class="company-block ${incompleteCompany ? "incomplete" : "complete"}">
             <div class="company-info" title="${escapeHtml(item.company)}">登記公司：<strong>${escapeHtml(item.company)}</strong></div>
             <div class="company-info" title="${escapeHtml(item.taxId)}">統編：<strong>${escapeHtml(item.taxId)}</strong></div>
-            ${companyWarning}
+            ${viewedWarning}${companyWarning}
           </div>
           <div class="data-row">
             <div class="data"><span>銷量</span><strong>${escapeHtml(item.salesDisplay)}</strong></div>
@@ -822,7 +854,7 @@
             <div class="data"><span>侵權指數</span><strong>${item.index}</strong></div>
           </div>
           <div class="actions">
-            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}')" ${item.url ? "" : "disabled"}>查看</button>
+            <button class="view-btn ${viewed ? "viewed" : ""}" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>${viewed ? "已查看" : "查看"}</button>
             ${markButton}
             ${deleteButton}
           </div>
@@ -921,7 +953,7 @@
       setTimeout(() => launcher.remove(), 1000);
     }
 
-    async function openProduct(url, shopName, itemCategory) {
+    async function openProduct(url, shopName, itemCategory, itemId) {
       const selectedCategory = PRODUCT_CATEGORIES.includes(itemCategory) ? itemCategory : (categoryFilter ? categoryFilter.value : "全部");
 
       if (!PRODUCT_CATEGORIES.includes(selectedCategory)) {
@@ -929,6 +961,8 @@
         alert("這筆資料缺少商品款式，無法決定截圖資料夾。\n\n請先確認試算表的款式欄位。");
         return;
       }
+
+      markRankingViewed(itemId);
 
       if (shopName) {
         const copied = await copyTextToClipboard(shopName);
@@ -985,6 +1019,7 @@
         if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
 
         item.status = nextStatus;
+        if (nextStatus === "已標記") clearRankingViewed(id);
         renderAll();
         setStatus(`${actionText}成功`, "ok");
         showAppNotice(`${actionText}完成，試算表已同步`, "success");
@@ -1026,6 +1061,7 @@
         if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
 
         item.status = "已刪除";
+        clearRankingViewed(id);
         renderAll();
 
         setStatus("已移到垃圾桶", "ok");
@@ -1218,6 +1254,9 @@
   </script>
 </body>
 </html>
+
+
+
 
 
 
