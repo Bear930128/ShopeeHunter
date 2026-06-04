@@ -60,7 +60,7 @@
     .mobile-form{display:grid;gap:12px;max-width:760px}.mobile-form textarea{min-height:180px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:12px 14px;line-height:1.6}.mobile-form textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
     .mobile-table{width:100%;border-collapse:collapse;background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--shadow)}
     .mobile-table th,.mobile-table td{border-bottom:1px solid rgba(88,215,255,.13);padding:12px;text-align:left;vertical-align:middle}.mobile-table th{color:var(--muted);font-size:13px;background:rgba(6,17,31,.36)}.mobile-table td{color:#fff;font-size:14px}.mobile-table tr:last-child td{border-bottom:0}.url-cell{max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cyan)}
-    .mini-actions{display:flex;gap:8px}.mini-actions button,.import-btn{height:36px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;padding:0 14px}.mini-view{background:var(--blue)}.mini-view.processing{background:#6b7c93;cursor:wait}.mini-delete{background:var(--red)}.pending-status{display:inline-flex;align-items:center;gap:6px;color:var(--yellow);font-weight:800;white-space:nowrap}.pending-status.done{color:var(--green)}.pending-dot{width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px rgba(247,201,72,.16)}.import-btn{background:var(--green);color:#062015;width:max-content}.mobile-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
+    .pager{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding:12px;border:1px solid rgba(88,215,255,.18);border-radius:8px;background:rgba(6,17,31,.36)}.pager button,.pager select{height:34px;border:1px solid var(--border);border-radius:8px;background:#0b2038;color:#fff;font-weight:800;padding:0 10px}.pager button{cursor:pointer;background:#12365f}.pager button:disabled{opacity:.45;cursor:not-allowed}.pager span{color:var(--muted);font-size:13px;font-weight:800}.mini-actions{display:flex;gap:8px}.mini-actions button,.import-btn{height:36px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;padding:0 14px}.mini-view{background:var(--blue)}.mini-view.processing{background:#6b7c93;cursor:wait}.mini-delete{background:var(--red)}.pending-status{display:inline-flex;align-items:center;gap:6px;color:var(--yellow);font-weight:800;white-space:nowrap}.pending-status.done{color:var(--green)}.pending-dot{width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px rgba(247,201,72,.16)}.import-btn{background:var(--green);color:#062015;width:max-content}.mobile-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
     @media(max-width:1120px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(280px,1fr))}}
     @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:418px;grid-template-rows:150px 96px 68px auto}.actions{grid-template-columns:1fr}.user-box{left:12px;right:12px}}
   </style>
@@ -188,7 +188,9 @@
     const OPENSHEET_BASE_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
     const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
-    const AUTO_REFRESH_MS = 10000;
+    const AUTO_REFRESH_MS = 30000;
+    const PAGE_SIZE_KEY = "shopeeHunterPageSize";
+    const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
     let currentUser = "";
     let allItems = [];
@@ -196,6 +198,9 @@
     let isLoading = false;
     let isMutating = false;
     let autoRefreshTimer = null;
+    let pageSize = Number(localStorage.getItem(PAGE_SIZE_KEY) || 50);
+    if (!PAGE_SIZE_OPTIONS.includes(pageSize)) pageSize = 50;
+    const paginationState = { ranking: 1, marked: 1, trash: 1, mobilePending: 1 };
     const permanentlyDeletedIds = new Set();
     const MOBILE_PENDING_IMPORTING_KEY = "shopeeHunterMobilePendingImportingIds";
     const mobilePendingImportingIds = new Set(JSON.parse(localStorage.getItem(MOBILE_PENDING_IMPORTING_KEY) || "[]"));
@@ -512,6 +517,52 @@
       if (mode === "不齊全") return isIncompleteCompanyInfo(item);
       return true;
     }
+    function resetPage(key) {
+      if (paginationState[key]) paginationState[key] = 1;
+    }
+
+    function getPagedItems(key, items) {
+      const total = items.length;
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      paginationState[key] = Math.min(Math.max(Number(paginationState[key] || 1), 1), totalPages);
+      const currentPage = paginationState[key];
+      const start = (currentPage - 1) * pageSize;
+      const end = Math.min(start + pageSize, total);
+      return { items: items.slice(start, end), total, totalPages, currentPage, start, end };
+    }
+
+    function renderPager(key, page) {
+      if (!page.total) return "";
+      const options = PAGE_SIZE_OPTIONS.map(size => `<option value="${size}" ${size === pageSize ? "selected" : ""}>每頁 ${size} 筆</option>`).join("");
+      return `
+        <div class="pager">
+          <button type="button" onclick="changeListPage('${key}', ${page.currentPage - 1})" ${page.currentPage <= 1 ? "disabled" : ""}>上一頁</button>
+          <span>共 ${page.total.toLocaleString()} 筆，第 ${page.currentPage} / ${page.totalPages} 頁，顯示 ${page.start + 1}-${page.end}</span>
+          <button type="button" onclick="changeListPage('${key}', ${page.currentPage + 1})" ${page.currentPage >= page.totalPages ? "disabled" : ""}>下一頁</button>
+          <select onchange="changePageSize(this.value)">${options}</select>
+        </div>
+      `;
+    }
+
+    function renderListByKey(key) {
+      if (key === "ranking") renderRanking();
+      if (key === "marked") renderMarked();
+      if (key === "trash") renderTrash();
+      if (key === "mobilePending") renderMobilePending();
+    }
+
+    function changeListPage(key, page) {
+      paginationState[key] = Number(page) || 1;
+      renderListByKey(key);
+    }
+
+    function changePageSize(value) {
+      pageSize = Number(value) || 50;
+      if (!PAGE_SIZE_OPTIONS.includes(pageSize)) pageSize = 50;
+      localStorage.setItem(PAGE_SIZE_KEY, String(pageSize));
+      Object.keys(paginationState).forEach(resetPage);
+      renderAll();
+    }
     function getRankingItems() {
       const keyword = searchInput.value.trim().toLowerCase();
       const selectedCategory = categoryFilter ? categoryFilter.value : "全部";
@@ -559,8 +610,10 @@
     }
 
     function renderMobilePending() {
-      const items = getMobilePendingItems();
-      if (!items.length) {
+      const sourceItems = getMobilePendingItems();
+      const page = getPagedItems("mobilePending", sourceItems);
+      const items = page.items;
+      if (!sourceItems.length) {
         mobilePendingList.innerHTML = '<div class="empty">手機待確認目前沒有資料</div>';
         return;
       }
@@ -587,6 +640,7 @@
             }).join("")}
           </tbody>
         </table>
+        ${renderPager("mobilePending", page)}
       `;
     }
 
@@ -801,25 +855,28 @@
     }
 
     function renderRanking() {
-      const items = getRankingItems();
-      rankingGrid.innerHTML = items.length
-        ? items.map(item => renderCard(item, false)).join("")
+      const sourceItems = getRankingItems();
+      const page = getPagedItems("ranking", sourceItems);
+      rankingGrid.innerHTML = sourceItems.length
+        ? page.items.map(item => renderCard(item, false)).join("") + renderPager("ranking", page)
         : '<div class="empty">沒有符合條件的未標記資料</div>';
     }
 
     function renderMarked() {
-      const items = getMarkedItems();
-      markedGrid.innerHTML = items.length
-        ? items.map(item => renderCard(item, false)).join("")
+      const sourceItems = getMarkedItems();
+      const page = getPagedItems("marked", sourceItems);
+      markedGrid.innerHTML = sourceItems.length
+        ? page.items.map(item => renderCard(item, false)).join("") + renderPager("marked", page)
         : '<div class="empty">尚無已標記資料</div>';
     }
 
     function renderTrash() {
-      const items = getTrashItems();
-      trashGrid.innerHTML = items.length
-        ? items.map(item => renderCard(item, true)).join("")
+      const sourceItems = getTrashItems();
+      const page = getPagedItems("trash", sourceItems);
+      trashGrid.innerHTML = sourceItems.length
+        ? page.items.map(item => renderCard(item, true)).join("") + renderPager("trash", page)
         : '<div class="empty">垃圾桶沒有資料</div>';
-      bulkDeleteTrashBtn.disabled = items.length === 0;
+      bulkDeleteTrashBtn.disabled = sourceItems.length === 0;
     }
 
     function renderCard(item, inTrash = false) {
@@ -1236,24 +1293,25 @@
     }
 
     document.querySelectorAll(".nav-btn").forEach(btn => btn.addEventListener("click", () => switchPage(btn.dataset.page)));
-    searchInput.addEventListener("input", renderRanking);
-    categoryFilter.addEventListener("change", renderRanking);
-    completenessFilter.addEventListener("change", renderRanking);
-    markedSearchInput.addEventListener("input", renderMarked);
-    markedCategoryFilter.addEventListener("change", renderMarked);
-    markedCompletenessFilter.addEventListener("change", renderMarked);
-    trashSearchInput.addEventListener("input", renderTrash);
+    searchInput.addEventListener("input", () => { resetPage("ranking"); renderRanking(); });
+    categoryFilter.addEventListener("change", () => { resetPage("ranking"); renderRanking(); });
+    completenessFilter.addEventListener("change", () => { resetPage("ranking"); renderRanking(); });
+    markedSearchInput.addEventListener("input", () => { resetPage("marked"); renderMarked(); });
+    markedCategoryFilter.addEventListener("change", () => { resetPage("marked"); renderMarked(); });
+    markedCompletenessFilter.addEventListener("change", () => { resetPage("marked"); renderMarked(); });
+    trashSearchInput.addEventListener("input", () => { resetPage("trash"); renderTrash(); });
     loginBtn.addEventListener("click", login);
     refreshBtn.addEventListener("click", () => loadData());
     bulkDeleteTrashBtn.addEventListener("click", bulkDeleteTrash);
     mobileImportBtn.addEventListener("click", importMobileUrls);
-    mobilePendingCategory.addEventListener("change", renderMobilePending);
+    mobilePendingCategory.addEventListener("change", () => { resetPage("mobilePending"); renderMobilePending(); });
     usernameInput.addEventListener("keydown", event => { if (event.key === "Enter") login(); });
     window.addEventListener("load", () => { usernameInput.focus(); switchPage("dashboard"); });
     window.addEventListener("beforeunload", stopAutoRefresh);
   </script>
 </body>
 </html>
+
 
 
 
