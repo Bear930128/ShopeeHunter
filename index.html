@@ -60,7 +60,7 @@
     .mobile-form{display:grid;gap:12px;max-width:760px}.mobile-form textarea{min-height:180px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:12px 14px;line-height:1.6}.mobile-form textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
     .mobile-table{width:100%;border-collapse:collapse;background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--shadow)}
     .mobile-table th,.mobile-table td{border-bottom:1px solid rgba(88,215,255,.13);padding:12px;text-align:left;vertical-align:middle}.mobile-table th{color:var(--muted);font-size:13px;background:rgba(6,17,31,.36)}.mobile-table td{color:#fff;font-size:14px}.mobile-table tr:last-child td{border-bottom:0}.url-cell{max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cyan)}
-    .mini-actions{display:flex;gap:8px}.mini-actions button,.import-btn{height:36px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;padding:0 14px}.mini-view{background:var(--blue)}.mini-delete{background:var(--red)}.import-btn{background:var(--green);color:#062015;width:max-content}.mobile-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
+    .mini-actions{display:flex;gap:8px}.mini-actions button,.import-btn{height:36px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;padding:0 14px}.mini-view{background:var(--blue)}.mini-view.processing{background:#6b7c93;cursor:wait}.mini-delete{background:var(--red)}.pending-status{display:inline-flex;align-items:center;gap:6px;color:var(--yellow);font-weight:800;white-space:nowrap}.pending-status.done{color:var(--green)}.pending-dot{width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px rgba(247,201,72,.16)}.import-btn{background:var(--green);color:#062015;width:max-content}.mobile-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
     @media(max-width:1120px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(280px,1fr))}}
     @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:418px;grid-template-rows:150px 96px 68px auto}.actions{grid-template-columns:1fr}.user-box{left:12px;right:12px}}
   </style>
@@ -197,6 +197,8 @@
     let isMutating = false;
     let autoRefreshTimer = null;
     const permanentlyDeletedIds = new Set();
+    const MOBILE_PENDING_IMPORTING_KEY = "shopeeHunterMobilePendingImportingIds";
+    const mobilePendingImportingIds = new Set(JSON.parse(localStorage.getItem(MOBILE_PENDING_IMPORTING_KEY) || "[]"));
 
     const loginModal = document.getElementById("loginModal");
     const usernameInput = document.getElementById("usernameInput");
@@ -247,6 +249,33 @@
       if (type !== "loading") setTimeout(() => appNotice.style.display = "none", 2800);
     }
 
+        function saveMobilePendingImportingState() {
+      localStorage.setItem(MOBILE_PENDING_IMPORTING_KEY, JSON.stringify(Array.from(mobilePendingImportingIds)));
+    }
+
+    function markMobilePendingImporting(id) {
+      if (!id) return;
+      mobilePendingImportingIds.add(id);
+      saveMobilePendingImportingState();
+      renderMobilePending();
+    }
+
+    function clearMobilePendingImporting(id) {
+      if (!id) return;
+      if (mobilePendingImportingIds.delete(id)) saveMobilePendingImportingState();
+    }
+
+    function cleanupMobilePendingImportingState() {
+      const livePendingIds = new Set(allItems.filter(item => item.status === "手機未確認").map(item => item.id));
+      let changed = false;
+      Array.from(mobilePendingImportingIds).forEach(id => {
+        if (!livePendingIds.has(id)) {
+          mobilePendingImportingIds.delete(id);
+          changed = true;
+        }
+      });
+      if (changed) saveMobilePendingImportingState();
+    }
     function setStatus(text, type = "") {
       statusEl.textContent = text;
       statusEl.className = "status " + type;
@@ -401,6 +430,7 @@
         }
 
         allItems = dedupeItems(normalizedItems);
+        cleanupMobilePendingImportingState();
         renderAll();
         setStatus("資料已同步", "ok");
         setSyncTime();
@@ -507,20 +537,24 @@
 
       mobilePendingList.innerHTML = `
         <table class="mobile-table">
-          <thead><tr><th>分類</th><th>URL</th><th>操作</th></tr></thead>
+          <thead><tr><th>分類</th><th>URL</th><th>狀態</th><th>操作</th></tr></thead>
           <tbody>
-            ${items.map(item => `
-              <tr>
-                <td>${escapeHtml(item.category || "未分類")}</td>
-                <td class="url-cell" title="${escapeHtml(item.url)}">${escapeHtml(item.url)}</td>
-                <td>
-                  <div class="mini-actions">
-                    <button class="mini-view" type="button" onclick="openMobilePending('${escapeJs(item.url)}', '${escapeJs(item.id)}')">查看</button>
-                    <button class="mini-delete" type="button" onclick="deleteMobilePending('${escapeJs(item.id)}')">刪除</button>
-                  </div>
-                </td>
-              </tr>
-            `).join("")}
+            ${items.map(item => {
+              const isImporting = mobilePendingImportingIds.has(item.id);
+              return `
+                <tr class="${isImporting ? "is-importing" : ""}">
+                  <td>${escapeHtml(item.category || "未分類")}</td>
+                  <td class="url-cell" title="${escapeHtml(item.url)}">${escapeHtml(item.url)}</td>
+                  <td>${isImporting ? '<span class="pending-status"><span class="pending-dot"></span>正在匯入</span>' : '<span class="pending-status done">待確認</span>'}</td>
+                  <td>
+                    <div class="mini-actions">
+                      <button class="mini-view ${isImporting ? "processing" : ""}" type="button" onclick="openMobilePending('${escapeJs(item.url)}', '${escapeJs(item.id)}')">${isImporting ? "處理中" : "查看"}</button>
+                      <button class="mini-delete" type="button" onclick="deleteMobilePending('${escapeJs(item.id)}')">刪除</button>
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join("")}
           </tbody>
         </table>
       `;
@@ -637,6 +671,8 @@
 
     function openMobilePending(url, id) {
       if (!url) return;
+      markMobilePendingImporting(id);
+      showAppNotice("已標記為正在匯入，完成寫入後此列會自動消失", "loading");
       const separator = url.includes("#") ? "&" : "#";
       window.open(url + separator + "shopeeHunterPendingId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");
     }
@@ -657,6 +693,7 @@
         if (!result.success) throw new Error(result.message || "GAS 未回傳 success:true");
 
         allItems = allItems.filter(item => item.id !== id);
+        clearMobilePendingImporting(id);
         renderAll();
         showAppNotice("手機待確認資料已刪除", "success");
       } catch (error) {
@@ -1181,6 +1218,7 @@
   </script>
 </body>
 </html>
+
 
 
 
