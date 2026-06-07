@@ -188,6 +188,7 @@
     const OPENSHEET_BASE_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
     const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
+    const MOBILE_PENDING_SHEET_NAME = "手機待確認";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
     const PAGE_SIZE_OPTIONS = [25, 50, 100];
@@ -321,7 +322,7 @@
         second: "2-digit"
       });
       const target = document.getElementById("syncMeta");
-      if (target) target.textContent = `自動同步：每 10 秒｜最後同步：${time}`;
+      if (target) target.textContent = `自動同步：每 30 秒｜最後同步：${time}`;
     }
 
     function textValue(value) {
@@ -452,7 +453,15 @@
           return rows.map(row => Object.assign({}, row, { 款式: row["款式"] || category }));
         }));
 
-        const rows = sheetResults.flat();
+        let pendingRows = [];
+        const pendingRes = await fetch(OPENSHEET_BASE_URL + "/" + encodeURIComponent(MOBILE_PENDING_SHEET_NAME), { cache: "reload" });
+        if (pendingRes.ok) {
+          const rawPendingRows = await pendingRes.json();
+          if (!Array.isArray(rawPendingRows)) throw new Error(MOBILE_PENDING_SHEET_NAME + " 回傳格式不是陣列");
+          pendingRows = rawPendingRows.map(row => Object.assign({}, row, { 狀態: row["狀態"] || "手機未確認" }));
+        }
+
+        const rows = sheetResults.flat().concat(pendingRows);
         const normalizedItems = rows
           .map(normalizeRow)
           .filter(item => item.id && (item.shop || item.url))
@@ -475,7 +484,7 @@
           allItems = [];
           renderAll();
           setStatus("資料載入失敗", "error");
-          const testLinks = PRODUCT_CATEGORIES.map(category => `<a href="${OPENSHEET_BASE_URL}/${encodeURIComponent(category)}" target="_blank" rel="noopener noreferrer">${escapeHtml(category)}</a>`).join(" ｜ ");
+          const testLinks = PRODUCT_CATEGORIES.concat([MOBILE_PENDING_SHEET_NAME]).map(category => `<a href="${OPENSHEET_BASE_URL}/${encodeURIComponent(category)}" target="_blank" rel="noopener noreferrer">${escapeHtml(category)}</a>`).join(" ｜ ");
           const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br>測試 opensheet 分頁：${testLinks}</div>`;
           rankingGrid.innerHTML = message;
           markedGrid.innerHTML = message;
