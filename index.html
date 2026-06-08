@@ -82,10 +82,10 @@
   <div id="messageModal" class="modal-mask hidden">
     <div class="modal message-modal">
       <h2>蝦皮聊聊訊息</h2>
-      <p id="messageMeta">確認內容後可複製，再貼到蝦皮聊聊手動送出。</p>
-      <textarea id="messageText" readonly></textarea>
+      <p id="messageMeta">確認或修改內容後，可複製並打開蝦皮聊聊手動送出。</p>
+      <textarea id="messageText"></textarea>
       <div class="modal-actions">
-        <button id="copyMessageBtn" type="button">複製訊息</button>
+        <button id="copyMessageBtn" type="button">複製並開啟聊聊</button>
         <button id="closeMessageBtn" class="secondary-btn" type="button">關閉</button>
       </div>
     </div>
@@ -213,6 +213,7 @@
     let isLoading = false;
     let isMutating = false;
     let autoRefreshTimer = null;
+    let activeMessageItem = null;
     let pageSize = Number(localStorage.getItem(PAGE_SIZE_KEY) || 50);
     if (!PAGE_SIZE_OPTIONS.includes(pageSize)) pageSize = 50;
     const paginationState = { ranking: 1, marked: 1, trash: 1, mobilePending: 1 };
@@ -407,6 +408,8 @@
       const shop = textValue(getField(row, ["店名", "商店", "Shop", "shop"]));
       const company = textValue(getField(row, ["登記公司", "公司", "公司名", "Company", "company"]));
       const taxId = textValue(getField(row, ["統編", "統一編號", "Tax ID", "taxId", "taxid"]));
+      const shopId = textValue(getField(row, ["賣場編號", "shopId", "shopid", "Shop ID", "ShopID"]));
+      const itemId = textValue(getField(row, ["商品編號", "itemId", "itemid", "Item ID", "ItemID"]));
       const status = textValue(getField(row, ["完成蒐證", "狀態", "status", "Status"]));
       const category = textValue(getField(row, ["款式", "分類", "category", "Category"]));
       const rawFans = getField(row, ["粉絲數", "粉絲", "Fans", "fans"]);
@@ -420,6 +423,8 @@
         shop: shop || "未命名店名",
         company: company || "無",
         taxId: taxId || "無",
+        shopId,
+        itemId,
         status,
         category: PRODUCT_CATEGORIES.includes(category) ? category : "未分類",
         fans, sales,
@@ -1044,6 +1049,8 @@
       const category = safeMessageValue(item.category, "未分類");
       const company = safeMessageValue(item.company, "未查得");
       const taxId = safeMessageValue(item.taxId, "未查得");
+      const shopId = safeMessageValue(item.shopId, "未查得");
+      const itemId = safeMessageValue(item.itemId, "未查得");
       const url = safeMessageValue(item.url, "未提供");
 
       return [
@@ -1054,6 +1061,8 @@
         `商品連結：${url}`,
         `登記公司：${company}`,
         `統編：${taxId}`,
+        `賣場編號：${shopId}`,
+        `商品編號：${itemId}`,
         ``,
         `我們正在進行商品權利與來源資料確認。此商品疑似與我方商品、圖片或設計內容高度相似，為避免後續爭議，請協助回覆商品來源、授權資料，或先下架相關商品。`,
         ``,
@@ -1070,6 +1079,7 @@
 
       messageMeta.textContent = `${item.shop}｜${item.category || "未分類"}`;
       messageText.value = buildShopeeChatMessage(item);
+      activeMessageItem = item;
       messageModal.classList.remove("hidden");
       messageText.focus();
       messageText.select();
@@ -1078,16 +1088,36 @@
     function closeMessageTemplate() {
       messageModal.classList.add("hidden");
       messageText.value = "";
+      activeMessageItem = null;
+    }
+
+    function getShopeeChatUrl(item) {
+      const shopId = String(item && item.shopId || "").trim();
+      if (shopId) return `https://shopee.tw/webchat/conversations/${encodeURIComponent(shopId)}`;
+      return "https://shopee.tw/webchat";
     }
 
     async function copyMessageTemplate() {
+      const chatUrl = getShopeeChatUrl(activeMessageItem);
+      const chatWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
+      if (chatWindow) chatWindow.location.href = chatUrl;
       const copied = await copyTextToClipboard(messageText.value);
+
       if (copied) {
-        showAppNotice("訊息已複製，可貼到蝦皮聊聊", "success");
+        showAppNotice("訊息已複製，正在開啟蝦皮聊聊", "success");
         closeMessageTemplate();
+        if (!chatWindow) {
+          alert("訊息已複製，但 Chrome 可能擋住了蝦皮聊聊視窗。\n\n請允許此網站開啟彈出視窗後，再按一次訊息。");
+        }
         return;
       }
-      showAppNotice("複製失敗，請手動全選訊息內容", "error");
+
+      if (!chatWindow) {
+        showAppNotice("複製與開啟聊聊都失敗，請手動處理", "error");
+        return;
+      }
+
+      showAppNotice("已開啟蝦皮聊聊，訊息請手動複製", "error");
     }
 
     function openScreenshotTool(shopName, category) {
