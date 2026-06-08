@@ -17,6 +17,7 @@
     .nav button.active,.nav button:hover{color:#fff;background:rgba(47,140,255,.16);border-color:rgba(88,215,255,.28)}
     .user-box{position:absolute;left:18px;right:18px;bottom:22px;padding:14px;background:rgba(11,32,56,.8);border:1px solid rgba(88,215,255,.18);border-radius:8px;color:var(--muted);font-size:13px}
     .user-box strong{display:block;color:#fff;margin-top:6px;word-break:break-word}
+    .version-badge{display:block;margin-top:10px;padding-top:10px;border-top:1px solid rgba(88,215,255,.16);color:#6f96bf;font-size:12px;line-height:1.35}
     .main{padding:26px;min-width:0;min-height:100vh;background:#06111f}.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}
     .page-title h2{margin:0;font-size:28px}.page-title p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.5}
     .top-actions{display:flex;align-items:center;gap:10px}
@@ -105,7 +106,7 @@
         <button class="nav-btn" data-page="mobileImport" type="button">手機匯入資料</button>
         <button id="mobilePendingNavBtn" class="nav-btn" data-page="mobilePending" type="button">手機待確認</button>
       </nav>
-      <div class="user-box">目前使用者<strong id="currentUser">尚未登入</strong></div>
+      <div class="user-box">目前使用者<strong id="currentUser">尚未登入</strong><span id="versionBadge" class="version-badge">版本讀取中</span></div>
     </aside>
 
     <main class="main">
@@ -203,6 +204,7 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
     const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
     const MOBILE_PENDING_SHEET_NAME = "手機待確認";
+    const APP_VERSION = "v2026.06.08.1";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
     const PAGE_SIZE_OPTIONS = [25, 50, 100];
@@ -236,6 +238,7 @@
     const messageText = document.getElementById("messageText");
     const copyMessageBtn = document.getElementById("copyMessageBtn");
     const closeMessageBtn = document.getElementById("closeMessageBtn");
+    const versionBadge = document.getElementById("versionBadge");
     const pageTitle = document.getElementById("pageTitle");
     const pageSubtitle = document.getElementById("pageSubtitle");
     const appNotice = document.getElementById("appNotice");
@@ -772,10 +775,9 @@
         mobileImportUrls.value = "";
         const insertedCount = Number(result.insertedCount || 0);
         const backendSkippedCount = Number(result.skippedCount || 0);
-        const resolvedCount = Number(result.resolvedCount || 0);
         const totalSkippedCount = frontSkippedCount + backendSkippedCount;
         showAppNotice(`手機資料匯入完成：新增 ${insertedCount} 筆，重複略過 ${totalSkippedCount} 筆`, "success");
-        alert(`手機資料匯入完成\n\n新增：${insertedCount} 筆\n前端先略過：${frontSkippedCount} 筆\n後端重複略過：${backendSkippedCount} 筆\n短網址展開：${resolvedCount} 筆`);
+        alert(`手機資料匯入完成\n\n新增：${insertedCount} 筆\n前端先略過：${frontSkippedCount} 筆\n後端重複略過：${backendSkippedCount} 筆`);
         await loadData();
         switchPage("mobilePending");
       } catch (error) {
@@ -1436,6 +1438,7 @@
     });
     usernameInput.addEventListener("keydown", event => { if (event.key === "Enter") login(); });
     window.addEventListener("load", () => { usernameInput.focus(); switchPage("dashboard"); });
+    if (versionBadge) versionBadge.textContent = `版本 ${APP_VERSION}`;
     window.addEventListener("beforeunload", stopAutoRefresh);
   </script>
 </body>
