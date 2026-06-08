@@ -772,9 +772,10 @@
         mobileImportUrls.value = "";
         const insertedCount = Number(result.insertedCount || 0);
         const backendSkippedCount = Number(result.skippedCount || 0);
+        const resolvedCount = Number(result.resolvedCount || 0);
         const totalSkippedCount = frontSkippedCount + backendSkippedCount;
         showAppNotice(`手機資料匯入完成：新增 ${insertedCount} 筆，重複略過 ${totalSkippedCount} 筆`, "success");
-        alert(`手機資料匯入完成\n\n新增：${insertedCount} 筆\n前端先略過：${frontSkippedCount} 筆\n後端重複略過：${backendSkippedCount} 筆`);
+        alert(`手機資料匯入完成\n\n新增：${insertedCount} 筆\n前端先略過：${frontSkippedCount} 筆\n後端重複略過：${backendSkippedCount} 筆\n短網址展開：${resolvedCount} 筆`);
         await loadData();
         switchPage("mobilePending");
       } catch (error) {
