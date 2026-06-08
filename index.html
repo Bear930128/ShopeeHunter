@@ -82,10 +82,10 @@
   <div id="messageModal" class="modal-mask hidden">
     <div class="modal message-modal">
       <h2>蝦皮聊聊訊息</h2>
-      <p id="messageMeta">確認或修改內容後，可複製並打開蝦皮聊聊手動送出。</p>
+      <p id="messageMeta">確認或修改內容後，可複製訊息並開啟商品頁，再點商品頁聊聊手動送出。</p>
       <textarea id="messageText"></textarea>
       <div class="modal-actions">
-        <button id="copyMessageBtn" type="button">複製並開啟聊聊</button>
+        <button id="copyMessageBtn" type="button">複製並開啟商品頁</button>
         <button id="closeMessageBtn" class="secondary-btn" type="button">關閉</button>
       </div>
     </div>
@@ -1092,8 +1092,10 @@
     }
 
     function getShopeeChatUrl(item) {
+      const productUrl = String(item && item.url || "").trim();
+      if (productUrl) return productUrl;
       const shopId = String(item && item.shopId || "").trim();
-      if (shopId) return `https://shopee.tw/webchat/conversations/${encodeURIComponent(shopId)}`;
+      if (shopId) return `https://shopee.tw/shop/${encodeURIComponent(shopId)}`;
       return "https://shopee.tw/webchat";
     }
 
@@ -1103,20 +1105,20 @@
       const copied = await copyTextToClipboard(messageText.value);
 
       if (copied) {
-        showAppNotice("訊息已複製，正在開啟蝦皮聊聊", "success");
+        showAppNotice("訊息已複製，正在開啟商品頁", "success");
         closeMessageTemplate();
         if (!chatWindow) {
-          alert("訊息已複製，但 Chrome 可能擋住了蝦皮聊聊視窗。\n\n請允許此網站開啟彈出視窗後，再按一次訊息。");
+          alert("訊息已複製，但 Chrome 可能擋住了商品頁視窗。\n\n請允許此網站開啟彈出視窗後，再按一次訊息。");
         }
         return;
       }
 
       if (!chatWindow) {
-        showAppNotice("複製與開啟聊聊都失敗，請手動處理", "error");
+        showAppNotice("複製與開啟商品頁都失敗，請手動處理", "error");
         return;
       }
 
-      showAppNotice("已開啟蝦皮聊聊，訊息請手動複製", "error");
+      showAppNotice("已開啟商品頁，訊息請手動複製", "error");
     }
 
     function openScreenshotTool(shopName, category) {
