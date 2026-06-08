@@ -1099,8 +1099,7 @@
 
     async function copyMessageTemplate() {
       const chatUrl = getShopeeChatUrl(activeMessageItem);
-      const chatWindow = window.open("about:blank", "_blank", "noopener,noreferrer");
-      if (chatWindow) chatWindow.location.href = chatUrl;
+      const chatWindow = window.open(chatUrl, "_blank");
       const copied = await copyTextToClipboard(messageText.value);
 
       if (copied) {
