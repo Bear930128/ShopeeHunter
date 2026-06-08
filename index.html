@@ -48,13 +48,15 @@
     .data-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
     .data{height:68px;background:rgba(6,17,31,.68);border:1px solid rgba(88,215,255,.13);border-radius:8px;padding:10px 8px;min-width:0;display:flex;flex-direction:column;justify-content:center}
     .data span{display:block;color:var(--muted);font-size:12px;margin-bottom:6px;white-space:nowrap}.data strong{font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .actions{display:grid;grid-template-columns:1fr 1fr 86px;gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800}
-    .view-btn{background:var(--blue)}.view-btn.viewed{background:#6b7c93}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}
+    .actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800}
+    .view-btn{background:var(--blue)}.view-btn.viewed{background:#6b7c93}.message-btn{background:#126c9f}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}
     .actions button:disabled{opacity:.75;cursor:not-allowed}
     .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none}
     .modal-mask{position:fixed;inset:0;background:rgba(3,9,17,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
+    .modal-mask.hidden{display:none}
     .modal{width:min(420px,100%);background:#0b2038;border:1px solid var(--border);border-radius:8px;padding:24px;box-shadow:var(--shadow)}.modal h2{margin:0 0 10px}.modal p{margin:0 0 18px;color:var(--muted);line-height:1.5}
     .modal input{width:100%;height:44px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:0 14px;outline:none;margin-bottom:14px}.modal button{width:100%;height:42px;border:0;border-radius:8px;color:#fff;background:var(--blue);font-weight:800;cursor:pointer}
+    .message-modal{width:min(680px,100%)}.message-modal textarea{width:100%;min-height:260px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:12px 14px;outline:none;line-height:1.65;margin:10px 0 14px}.message-modal .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.message-modal .secondary-btn{background:#334155}
     .app-notice{position:fixed;right:24px;bottom:24px;z-index:999999;max-width:340px;padding:14px 16px;border-radius:8px;color:#fff;font-weight:800;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.35);display:none}
         .mobile-panel{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
     .mobile-form{display:grid;gap:12px;max-width:760px}.mobile-form textarea{min-height:180px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:12px 14px;line-height:1.6}.mobile-form textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
@@ -76,6 +78,18 @@
   </div>
 
   <div id="appNotice" class="app-notice"></div>
+
+  <div id="messageModal" class="modal-mask hidden">
+    <div class="modal message-modal">
+      <h2>蝦皮聊聊訊息</h2>
+      <p id="messageMeta">確認內容後可複製，再貼到蝦皮聊聊手動送出。</p>
+      <textarea id="messageText" readonly></textarea>
+      <div class="modal-actions">
+        <button id="copyMessageBtn" type="button">複製訊息</button>
+        <button id="closeMessageBtn" class="secondary-btn" type="button">關閉</button>
+      </div>
+    </div>
+  </div>
 
   <div class="layout">
     <aside class="sidebar">
@@ -216,6 +230,11 @@
     const currentUserEl = document.getElementById("currentUser");
     const statusEl = document.getElementById("status");
     const syncMeta = document.getElementById("syncMeta");
+    const messageModal = document.getElementById("messageModal");
+    const messageMeta = document.getElementById("messageMeta");
+    const messageText = document.getElementById("messageText");
+    const copyMessageBtn = document.getElementById("copyMessageBtn");
+    const closeMessageBtn = document.getElementById("closeMessageBtn");
     const pageTitle = document.getElementById("pageTitle");
     const pageSubtitle = document.getElementById("pageSubtitle");
     const appNotice = document.getElementById("appNotice");
@@ -905,6 +924,9 @@
       const deleteButton = inTrash
         ? ""
         : `<button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>`;
+      const messageButton = inTrash
+        ? ""
+        : `<button class="message-btn" type="button" onclick="openMessageTemplate('${escapeJs(item.id)}')">訊息</button>`;
 
       return `
         <article class="card" data-id="${escapeHtml(item.id)}">
@@ -924,6 +946,7 @@
           </div>
           <div class="actions">
             <button class="view-btn ${viewed ? "viewed" : ""}" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>${viewed ? "已查看" : "查看"}</button>
+            ${messageButton}
             ${markButton}
             ${deleteButton}
           </div>
@@ -1008,6 +1031,63 @@
           document.body.removeChild(input);
         }
       }
+    }
+
+    function safeMessageValue(value, fallback = "未填") {
+      const text = String(value || "").trim();
+      if (!text || ["無", "未抓到", "null", "undefined"].includes(text.toLowerCase())) return fallback;
+      return text;
+    }
+
+    function buildShopeeChatMessage(item) {
+      const shop = safeMessageValue(item.shop, "未命名店家");
+      const category = safeMessageValue(item.category, "未分類");
+      const company = safeMessageValue(item.company, "未查得");
+      const taxId = safeMessageValue(item.taxId, "未查得");
+      const url = safeMessageValue(item.url, "未提供");
+
+      return [
+        `您好，這邊想跟貴店確認一筆商品資料。`,
+        ``,
+        `店名：${shop}`,
+        `款式：${category}`,
+        `商品連結：${url}`,
+        `登記公司：${company}`,
+        `統編：${taxId}`,
+        ``,
+        `我們正在進行商品權利與來源資料確認。此商品疑似與我方商品、圖片或設計內容高度相似，為避免後續爭議，請協助回覆商品來源、授權資料，或先下架相關商品。`,
+        ``,
+        `若貴店已有合法來源或授權，也請協助提供可確認的資料，謝謝。`
+      ].join("\n");
+    }
+
+    function openMessageTemplate(id) {
+      const item = allItems.find(entry => entry.id === id);
+      if (!item) {
+        alert("找不到這筆資料，請重新整理後再試。");
+        return;
+      }
+
+      messageMeta.textContent = `${item.shop}｜${item.category || "未分類"}`;
+      messageText.value = buildShopeeChatMessage(item);
+      messageModal.classList.remove("hidden");
+      messageText.focus();
+      messageText.select();
+    }
+
+    function closeMessageTemplate() {
+      messageModal.classList.add("hidden");
+      messageText.value = "";
+    }
+
+    async function copyMessageTemplate() {
+      const copied = await copyTextToClipboard(messageText.value);
+      if (copied) {
+        showAppNotice("訊息已複製，可貼到蝦皮聊聊", "success");
+        closeMessageTemplate();
+        return;
+      }
+      showAppNotice("複製失敗，請手動全選訊息內容", "error");
     }
 
     function openScreenshotTool(shopName, category) {
@@ -1317,6 +1397,11 @@
     bulkDeleteTrashBtn.addEventListener("click", bulkDeleteTrash);
     mobileImportBtn.addEventListener("click", importMobileUrls);
     mobilePendingCategory.addEventListener("change", () => { resetPage("mobilePending"); renderMobilePending(); });
+    copyMessageBtn.addEventListener("click", copyMessageTemplate);
+    closeMessageBtn.addEventListener("click", closeMessageTemplate);
+    messageModal.addEventListener("click", event => {
+      if (event.target === messageModal) closeMessageTemplate();
+    });
     usernameInput.addEventListener("keydown", event => { if (event.key === "Enter") login(); });
     window.addEventListener("load", () => { usernameInput.focus(); switchPage("dashboard"); });
     window.addEventListener("beforeunload", stopAutoRefresh);
