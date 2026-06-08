@@ -640,7 +640,7 @@
                   <td>${isImporting ? '<span class="pending-status"><span class="pending-dot"></span>正在匯入</span>' : '<span class="pending-status done">待確認</span>'}</td>
                   <td>
                     <div class="mini-actions">
-                      <button class="mini-view ${isImporting ? "processing" : ""}" type="button" onclick="openMobilePending('${escapeJs(item.url)}', '${escapeJs(item.id)}')">${isImporting ? "處理中" : "查看"}</button>
+                      <button class="mini-view ${isImporting ? "processing" : ""}" type="button" onclick="openMobilePending('${escapeJs(item.url)}', '${escapeJs(item.id)}', '${escapeJs(item.category || "")}')">${isImporting ? "處理中" : "查看"}</button>
                       <button class="mini-delete" type="button" onclick="deleteMobilePending('${escapeJs(item.id)}')">刪除</button>
                     </div>
                   </td>
@@ -762,12 +762,15 @@
       }
     }
 
-    function openMobilePending(url, id) {
+    function openMobilePending(url, id, category) {
       if (!url) return;
       markMobilePendingImporting(id);
       showAppNotice("已標記為正在匯入，完成寫入後此列會自動消失", "loading");
       const separator = url.includes("#") ? "&" : "#";
-      window.open(url + separator + "shopeeHunterPendingId=" + encodeURIComponent(id), "_blank", "noopener,noreferrer");
+      const params = new URLSearchParams();
+      params.set("shopeeHunterPendingId", id || "");
+      if (category) params.set("shopeeHunterCategory", category);
+      window.open(url + separator + params.toString(), "_blank", "noopener,noreferrer");
     }
 
     async function deleteMobilePending(id) {
