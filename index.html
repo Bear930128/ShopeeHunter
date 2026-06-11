@@ -102,6 +102,7 @@
         <button class="nav-btn active" data-page="dashboard" type="button">首頁</button>
         <button class="nav-btn" data-page="ranking" type="button">排行榜</button>
         <button class="nav-btn" data-page="marked" type="button">已標記</button>
+        <button class="nav-btn" data-page="incomplete" type="button">資料不齊全</button>
         <button class="nav-btn" data-page="trash" type="button">垃圾桶</button>
         <button class="nav-btn" data-page="mobileImport" type="button">手機匯入資料</button>
         <button id="mobilePendingNavBtn" class="nav-btn" data-page="mobilePending" type="button">手機待確認</button>
@@ -146,6 +147,15 @@
           <div class="toolbar-actions"><select id="markedCategoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><select id="markedCompletenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、登記公司、統編" /></div>
         </div>
         <section id="markedGrid" class="grid"><div class="empty">尚無已標記資料</div></section>
+      </section>
+
+
+      <section id="incompletePage" class="hidden">
+        <div class="toolbar">
+          <h3>資料不齊全</h3>
+          <div class="toolbar-actions"><select id="incompleteCategoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><input id="incompleteSearchInput" class="search" type="search" placeholder="搜尋資料不齊全店名、登記公司、統編" /></div>
+        </div>
+        <section id="incompleteGrid" class="grid"><div class="empty">目前沒有資料不齊全的卡片</div></section>
       </section>
 
       <section id="trashPage" class="hidden">
@@ -203,6 +213,7 @@
     const OPENSHEET_BASE_URL = "https://opensheet.elk.sh/1-oQQ4gEThHOcZKq2VlSnsv0lll1JVXrcjChKweCz5o8";
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
     const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
+    const MARKED_SHEET_NAME = "已標記";
     const MOBILE_PENDING_SHEET_NAME = "手機待確認";
     const APP_VERSION = "v2026.06.08.1";
     const AUTO_REFRESH_MS = 30000;
@@ -218,7 +229,7 @@
     let activeMessageItem = null;
     let pageSize = Number(localStorage.getItem(PAGE_SIZE_KEY) || 50);
     if (!PAGE_SIZE_OPTIONS.includes(pageSize)) pageSize = 50;
-    const paginationState = { ranking: 1, marked: 1, trash: 1, mobilePending: 1 };
+    const paginationState = { ranking: 1, marked: 1, incomplete: 1, trash: 1, mobilePending: 1 };
     const permanentlyDeletedIds = new Set();
     const MOBILE_PENDING_IMPORTING_KEY = "shopeeHunterMobilePendingImportingIds";
     const mobilePendingImportingIds = new Set(JSON.parse(localStorage.getItem(MOBILE_PENDING_IMPORTING_KEY) || "[]"));
@@ -246,6 +257,7 @@
     const dashboardPage = document.getElementById("dashboardPage");
     const rankingPage = document.getElementById("rankingPage");
     const markedPage = document.getElementById("markedPage");
+    const incompletePage = document.getElementById("incompletePage");
     const trashPage = document.getElementById("trashPage");
     const mobileImportPage = document.getElementById("mobileImportPage");
     const mobilePendingPage = document.getElementById("mobilePendingPage");
@@ -264,6 +276,7 @@
 
     const rankingGrid = document.getElementById("rankingGrid");
     const markedGrid = document.getElementById("markedGrid");
+    const incompleteGrid = document.getElementById("incompleteGrid");
     const trashGrid = document.getElementById("trashGrid");
     const searchInput = document.getElementById("searchInput");
     const categoryFilter = document.getElementById("categoryFilter");
@@ -271,6 +284,8 @@
     const markedSearchInput = document.getElementById("markedSearchInput");
     const markedCategoryFilter = document.getElementById("markedCategoryFilter");
     const markedCompletenessFilter = document.getElementById("markedCompletenessFilter");
+    const incompleteSearchInput = document.getElementById("incompleteSearchInput");
+    const incompleteCategoryFilter = document.getElementById("incompleteCategoryFilter");
     const trashSearchInput = document.getElementById("trashSearchInput");
 
     function showAppNotice(text, type = "info") {
@@ -480,6 +495,14 @@
           return rows.map(row => Object.assign({}, row, { 款式: row["款式"] || category }));
         }));
 
+        let markedRows = [];
+        const markedRes = await fetch(OPENSHEET_BASE_URL + "/" + encodeURIComponent(MARKED_SHEET_NAME), { cache: "reload" });
+        if (markedRes.ok) {
+          const rawMarkedRows = await markedRes.json();
+          if (!Array.isArray(rawMarkedRows)) throw new Error(MARKED_SHEET_NAME + " 回傳格式不是陣列");
+          markedRows = rawMarkedRows.map(row => Object.assign({}, row, { 完成蒐證: row["完成蒐證"] || "已標記" }));
+        }
+
         let pendingRows = [];
         const pendingRes = await fetch(OPENSHEET_BASE_URL + "/" + encodeURIComponent(MOBILE_PENDING_SHEET_NAME), { cache: "reload" });
         if (pendingRes.ok) {
@@ -488,7 +511,7 @@
           pendingRows = rawPendingRows.map(row => Object.assign({}, row, { 狀態: row["狀態"] || "手機未確認" }));
         }
 
-        const rows = sheetResults.flat().concat(pendingRows);
+        const rows = sheetResults.flat().concat(markedRows, pendingRows);
         const normalizedItems = rows
           .map(normalizeRow)
           .filter(item => item.id && (item.shop || item.url))
@@ -511,10 +534,11 @@
           allItems = [];
           renderAll();
           setStatus("資料載入失敗", "error");
-          const testLinks = PRODUCT_CATEGORIES.concat([MOBILE_PENDING_SHEET_NAME]).map(category => `<a href="${OPENSHEET_BASE_URL}/${encodeURIComponent(category)}" target="_blank" rel="noopener noreferrer">${escapeHtml(category)}</a>`).join(" ｜ ");
+          const testLinks = PRODUCT_CATEGORIES.concat([MARKED_SHEET_NAME, MOBILE_PENDING_SHEET_NAME]).map(category => `<a href="${OPENSHEET_BASE_URL}/${encodeURIComponent(category)}" target="_blank" rel="noopener noreferrer">${escapeHtml(category)}</a>`).join(" ｜ ");
           const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br>測試 opensheet 分頁：${testLinks}</div>`;
           rankingGrid.innerHTML = message;
           markedGrid.innerHTML = message;
+          incompleteGrid.innerHTML = message;
           trashGrid.innerHTML = message;
         } else {
           setStatus("自動同步失敗", "error");
@@ -583,6 +607,7 @@
     function renderListByKey(key) {
       if (key === "ranking") renderRanking();
       if (key === "marked") renderMarked();
+      if (key === "incomplete") renderIncomplete();
       if (key === "trash") renderTrash();
       if (key === "mobilePending") renderMobilePending();
     }
@@ -618,6 +643,17 @@
         .filter(item => item.status === "已標記")
         .filter(item => selectedCategory === "全部" || item.category === selectedCategory)
         .filter(item => matchesCompletenessFilter(item, selectedCompleteness))
+        .filter(item => itemMatchesKeyword(item, keyword))
+        .sort((a, b) => b.index - a.index || b.sales - a.sales);
+    }
+
+    function getIncompleteItems() {
+      const keyword = incompleteSearchInput.value.trim().toLowerCase();
+      const selectedCategory = incompleteCategoryFilter ? incompleteCategoryFilter.value : "全部";
+      return allItems
+        .filter(item => item.status !== "已刪除" && item.status !== "手機未確認")
+        .filter(item => isIncompleteCompanyInfo(item))
+        .filter(item => selectedCategory === "全部" || item.category === selectedCategory)
         .filter(item => itemMatchesKeyword(item, keyword))
         .sort((a, b) => b.index - a.index || b.sales - a.sales);
     }
@@ -828,6 +864,7 @@
       renderStats();
       renderRanking();
       renderMarked();
+      renderIncomplete();
       renderTrash();
       renderMobilePending();
       updateMobilePendingCount();
@@ -907,6 +944,15 @@
       markedGrid.innerHTML = sourceItems.length
         ? page.items.map(item => renderCard(item, false)).join("") + renderPager("marked", page)
         : '<div class="empty">尚無已標記資料</div>';
+    }
+
+
+    function renderIncomplete() {
+      const sourceItems = getIncompleteItems();
+      const page = getPagedItems("incomplete", sourceItems);
+      incompleteGrid.innerHTML = sourceItems.length
+        ? page.items.map(item => renderCard(item, false)).join("") + renderPager("incomplete", page)
+        : '<div class="empty">目前沒有資料不齊全的卡片</div>';
     }
 
     function renderTrash() {
@@ -1356,6 +1402,7 @@
       dashboardPage.classList.toggle("hidden", page !== "dashboard");
       rankingPage.classList.toggle("hidden", page !== "ranking");
       markedPage.classList.toggle("hidden", page !== "marked");
+      incompletePage.classList.toggle("hidden", page !== "incomplete");
       trashPage.classList.toggle("hidden", page !== "trash");
       mobileImportPage.classList.toggle("hidden", page !== "mobileImport");
       mobilePendingPage.classList.toggle("hidden", page !== "mobilePending");
@@ -1373,6 +1420,11 @@
       if (page === "marked") {
         pageTitle.textContent = "已標記";
         pageSubtitle.textContent = "查看已同步標記的商品資料，取消標記後會回到排行榜。";
+      }
+
+      if (page === "incomplete") {
+        pageTitle.textContent = "資料不齊全";
+        pageSubtitle.textContent = "集中查看缺少登記公司或統編的資料，可直接在卡片上手動補齊。";
       }
 
       if (page === "mobileImport") {
@@ -1425,6 +1477,8 @@
     markedSearchInput.addEventListener("input", () => { resetPage("marked"); renderMarked(); });
     markedCategoryFilter.addEventListener("change", () => { resetPage("marked"); renderMarked(); });
     markedCompletenessFilter.addEventListener("change", () => { resetPage("marked"); renderMarked(); });
+    incompleteSearchInput.addEventListener("input", () => { resetPage("incomplete"); renderIncomplete(); });
+    incompleteCategoryFilter.addEventListener("change", () => { resetPage("incomplete"); renderIncomplete(); });
     trashSearchInput.addEventListener("input", () => { resetPage("trash"); renderTrash(); });
     loginBtn.addEventListener("click", login);
     refreshBtn.addEventListener("click", () => loadData());
