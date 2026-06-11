@@ -19,7 +19,7 @@
     .user-box strong{display:block;color:#fff;margin-top:6px;word-break:break-word}
     .version-badge{display:block;margin-top:10px;padding-top:10px;border-top:1px solid rgba(88,215,255,.16);color:#6f96bf;font-size:12px;line-height:1.35}
     .main{padding:26px;min-width:0;min-height:100vh;background:#06111f}.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}
-    .page-title h2{margin:0;font-size:28px}.page-title p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.5}
+    .page-title h2{margin:0;font-size:36px;font-weight:900}.page-title p{margin:10px 0 0;color:var(--muted);font-size:15px;line-height:1.6}.page-title{padding:6px 0}
     .top-actions{display:flex;align-items:center;gap:10px}
     .refresh-btn,.danger-action{height:40px;border-radius:8px;color:#fff;cursor:pointer;font-weight:800;padding:0 16px;white-space:nowrap}
     .refresh-btn{border:1px solid rgba(88,215,255,.38);background:rgba(47,140,255,.18)}
@@ -96,9 +96,8 @@
       </div>
       <nav class="nav">
         <button class="nav-btn active" data-page="dashboard" type="button">首頁</button>
-        <button class="nav-btn" data-page="ranking" type="button">排行榜</button>
+        <button class="nav-btn" data-page="ranking" type="button">資料庫</button>
         <button class="nav-btn" data-page="marked" type="button">已標記</button>
-        <button class="nav-btn" data-page="incomplete" type="button">資料不齊全</button>
         <button class="nav-btn" data-page="trash" type="button">垃圾桶</button>
         <button class="nav-btn" data-page="mobileImport" type="button">手機匯入資料</button>
         <button id="mobilePendingNavBtn" class="nav-btn" data-page="mobilePending" type="button">手機待確認</button>
@@ -110,7 +109,7 @@
       <header class="topbar">
         <div class="page-title">
           <h2 id="pageTitle">首頁</h2>
-          <p id="pageSubtitle">總覽目前試算表同步資料、排行榜與風險區間分布。</p>
+          <p id="pageSubtitle">總覽目前試算表同步資料、資料庫與風險區間分布。</p>
         </div>
         <div class="top-actions">
           <button id="refreshBtn" class="refresh-btn" type="button">刷新資料</button>
@@ -131,7 +130,7 @@
 
       <section id="rankingPage" class="hidden">
         <div class="toolbar">
-          <h3>排行榜</h3>
+
           <div class="toolbar-actions"><select id="categoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><select id="completenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="searchInput" class="search" type="search" placeholder="搜尋店名、登記公司、統編" /></div>
         </div>
         <section id="rankingGrid" class="grid"><div class="empty">資料載入中...</div></section>
@@ -139,7 +138,7 @@
 
       <section id="markedPage" class="hidden">
         <div class="toolbar">
-          <h3>已標記</h3>
+
           <div class="toolbar-actions"><select id="markedCategoryFilter" class="category-select"><option value="全部">全部</option><option value="鞋托架">鞋托架</option><option value="置物架">置物架</option><option value="手機架">手機架</option><option value="文件盒">文件盒</option><option value="鏡櫃盒">鏡櫃盒</option><option value="翻蓋盒">翻蓋盒</option></select><select id="markedCompletenessFilter" class="category-select"><option value="全部">全部資料</option><option value="完整">資料完整</option><option value="不齊全">資料不齊全</option></select><input id="markedSearchInput" class="search" type="search" placeholder="搜尋已標記店名、登記公司、統編" /></div>
         </div>
         <section id="markedGrid" class="grid"><div class="empty">尚無已標記資料</div></section>
@@ -156,7 +155,7 @@
 
       <section id="trashPage" class="hidden">
         <div class="toolbar">
-          <h3>垃圾桶</h3>
+
           <div class="toolbar-actions">
             <input id="trashSearchInput" class="search" type="search" placeholder="搜尋垃圾桶店名、登記公司、統編" />
             <button id="bulkDeleteTrashBtn" class="danger-action" type="button">一鍵刪除</button>
@@ -167,7 +166,7 @@
 
       <section id="mobileImportPage" class="hidden">
         <div class="toolbar">
-          <h3>手機匯入資料</h3>
+
         </div>
         <div class="mobile-panel">
           <div class="mobile-form">
@@ -187,10 +186,9 @@
 
       <section id="mobilePendingPage" class="hidden">
         <div class="toolbar">
-          <h3>手機待確認</h3>
+
           <div class="toolbar-actions">
             <select id="mobilePendingCategory" class="category-select">
-              <option value="全部">全部</option>
               <option value="鞋托架">鞋托架</option>
               <option value="置物架">置物架</option>
               <option value="手機架">手機架</option>
@@ -211,10 +209,10 @@
     const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
     const DELETED_SHEET_NAME = "已刪除";
     const MOBILE_PENDING_SHEET_NAME = "手機待確認";
-    const APP_VERSION = "v2026.06.08.1";
+    const APP_VERSION = "v2026.06.11.1";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
-    const PAGE_SIZE_OPTIONS = [25, 50, 100];
+    const PAGE_SIZE_OPTIONS = [18];
 
     let currentUser = "";
     let allItems = [];
@@ -223,8 +221,7 @@
     let isMutating = false;
     let autoRefreshTimer = null;
     let activeMessageItem = null;
-    let pageSize = Number(localStorage.getItem(PAGE_SIZE_KEY) || 50);
-    if (!PAGE_SIZE_OPTIONS.includes(pageSize)) pageSize = 50;
+    let pageSize = 18;
     const paginationState = { ranking: 1, marked: 1, incomplete: 1, trash: 1, mobilePending: 1 };
     const permanentlyDeletedIds = new Set();
     const MOBILE_PENDING_IMPORTING_KEY = "shopeeHunterMobilePendingImportingIds";
@@ -616,9 +613,7 @@
     }
 
     function changePageSize(value) {
-      pageSize = Number(value) || 50;
-      if (!PAGE_SIZE_OPTIONS.includes(pageSize)) pageSize = 50;
-      localStorage.setItem(PAGE_SIZE_KEY, String(pageSize));
+      pageSize = 18;
       Object.keys(paginationState).forEach(resetPage);
       renderAll();
     }
@@ -1352,7 +1347,7 @@
         return;
       }
 
-      const ok = confirm(`確定要復原這筆資料？\n\nID：${item.id}\n店名：${item.shop}\n\n復原後會回到排行榜，並同步清空試算表狀態。`);
+      const ok = confirm(`確定要復原這筆資料？\n\nID：${item.id}\n店名：${item.shop}\n\n復原後會回到資料庫，並同步清空試算表狀態。`);
       if (!ok) return;
 
       const card = document.querySelector(`[data-id="${cssEscape(id)}"]`);
@@ -1379,7 +1374,7 @@
         renderAll();
 
         setStatus("復原成功", "ok");
-        showAppNotice("復原完成，資料已回到排行榜", "success");
+        showAppNotice("復原完成，資料已回到資料庫", "success");
       } catch (error) {
         alert("復原失敗：" + error.message);
         setStatus("復原失敗", "error");
@@ -1447,17 +1442,17 @@
 
       if (page === "dashboard") {
         pageTitle.textContent = "首頁";
-        pageSubtitle.textContent = "總覽目前試算表同步資料、排行榜與風險區間分布。";
+        pageSubtitle.textContent = "總覽目前試算表同步資料、資料庫與風險區間分布。";
       }
 
       if (page === "ranking") {
-        pageTitle.textContent = "排行榜";
+        pageTitle.textContent = "資料庫";
         pageSubtitle.textContent = "只顯示尚未標記、尚未刪除的資料。";
       }
 
       if (page === "marked") {
         pageTitle.textContent = "已標記";
-        pageSubtitle.textContent = "查看已同步標記的商品資料，取消標記後會回到排行榜。";
+        pageSubtitle.textContent = "查看已同步標記的商品資料，取消標記後會回到資料庫。";
       }
 
       if (page === "incomplete") {
@@ -1535,6 +1530,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 
