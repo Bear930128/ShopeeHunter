@@ -36,10 +36,10 @@
     .toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}.toolbar h3{margin:0;font-size:22px}.toolbar-actions{display:flex;gap:10px;align-items:center}
     .search,.category-select{width:min(380px,100%);height:42px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:0 14px}.category-select{width:180px;font-weight:800}.search:focus,.category-select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
     .grid{display:grid;grid-template-columns:repeat(3,minmax(260px,1fr));gap:14px;align-items:stretch}
-    .card{position:relative;padding:16px;min-height:252px;display:grid;grid-template-rows:70px 34px 62px 38px;gap:12px}
-    .product-area{min-height:70px;display:block;overflow:hidden}
+    .card{position:relative;padding:16px;min-height:0;display:grid;grid-template-rows:auto auto auto;gap:12px}
+    .product-area{min-height:0;display:block;overflow:hidden}
     .shop-title{margin:0;padding-right:82px;font-size:22px;line-height:1.28;color:#fff;font-weight:900;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .card-alert-row{min-height:34px;display:flex;align-items:center;gap:8px;overflow:hidden}
+    .card-alert-row{display:flex;align-items:center;gap:8px;overflow:hidden}
     .missing-alert{position:absolute;top:14px;right:14px;height:28px;max-width:78px;display:inline-flex;align-items:center;border:1px solid rgba(255,193,7,.72);border-radius:7px;background:rgba(255,193,7,.16);color:#ffd56a;font-size:12px;font-weight:900;padding:0 9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .viewed-alert{height:30px;border:1px solid rgba(247,201,72,.55);border-radius:7px;background:rgba(247,201,72,.14);color:#ffd56a;font-size:12px;font-weight:800;display:flex;align-items:center;padding:0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .data-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -52,7 +52,7 @@
     .modal-mask{position:fixed;inset:0;background:rgba(3,9,17,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
     .modal-mask.hidden{display:none}
     .modal{width:min(420px,100%);background:#0b2038;border:1px solid var(--border);border-radius:8px;padding:24px;box-shadow:var(--shadow)}.modal h2{margin:0 0 10px}.modal p{margin:0 0 18px;color:var(--muted);line-height:1.5}
-    .modal input{width:100%;height:44px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:0 14px;outline:none;margin-bottom:14px}.modal button{width:100%;height:42px;border:0;border-radius:8px;color:#fff;background:var(--blue);font-weight:800;cursor:pointer}.field-modal{width:min(560px,100%)}.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field-grid button{background:#174d7c}.field-grid button.cancel-field{background:#334155}
+    .modal input{width:100%;height:44px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:0 14px;outline:none;margin-bottom:14px}.modal button{width:100%;height:42px;border:0;border-radius:8px;color:#fff;background:var(--blue);font-weight:800;cursor:pointer}.field-modal{width:min(560px,100%)}.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field-grid button{background:#174d7c}.field-grid button.cancel-field{grid-column:1 / -1;background:var(--red)}
     .message-modal{width:min(680px,100%)}.message-modal textarea{width:100%;min-height:260px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:12px 14px;outline:none;line-height:1.65;margin:10px 0 14px}.message-modal .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.message-modal .secondary-btn{background:#334155}
     .app-notice{position:fixed;right:24px;bottom:24px;z-index:999999;max-width:340px;padding:14px 16px;border-radius:8px;color:#fff;font-weight:800;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.35);display:none}
         .mobile-panel{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
@@ -61,7 +61,7 @@
     .mobile-table th,.mobile-table td{border-bottom:1px solid rgba(88,215,255,.13);padding:12px;text-align:left;vertical-align:middle}.mobile-table th{color:var(--muted);font-size:13px;background:rgba(6,17,31,.36)}.mobile-table td{color:#fff;font-size:14px}.mobile-table tr:last-child td{border-bottom:0}.url-cell{max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cyan)}
     .pager{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding:12px;border:1px solid rgba(88,215,255,.18);border-radius:8px;background:rgba(6,17,31,.36)}.pager button,.pager select{height:34px;border:1px solid var(--border);border-radius:8px;background:#0b2038;color:#fff;font-weight:800;padding:0 10px}.pager button{cursor:pointer;background:#12365f}.pager button:disabled{opacity:.45;cursor:not-allowed}.pager span{color:var(--muted);font-size:13px;font-weight:800}.mini-actions{display:flex;gap:8px}.mini-actions button,.import-btn{height:36px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;padding:0 14px}.mini-view{background:var(--blue)}.mini-view.processing{background:#6b7c93;cursor:wait}.mini-delete{background:var(--red)}.pending-status{display:inline-flex;align-items:center;gap:6px;color:var(--yellow);font-weight:800;white-space:nowrap}.pending-status.done{color:var(--green)}.pending-dot{width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px rgba(247,201,72,.16)}.import-btn{background:var(--green);color:#062015;width:max-content}.mobile-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
     @media(max-width:1120px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(280px,1fr))}}
-    @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:252px;grid-template-rows:70px 34px 62px auto}.actions{grid-template-columns:repeat(2,minmax(0,1fr))}.user-box{left:12px;right:12px}}
+    @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:0;grid-template-rows:auto auto auto}.actions{grid-template-columns:repeat(2,minmax(0,1fr))}.user-box{left:12px;right:12px}}
   </style>
 </head>
 <body>
@@ -968,6 +968,7 @@
       const viewed = rankingViewedIds.has(item.id) && !inTrash && item.status !== "已標記" && item.status !== "已刪除" && item.status !== "手機未確認";
       const viewedWarning = viewed ? `<div class="viewed-alert">已查看，待標記</div>` : "";
       const dataWarning = incompleteCompany && !inTrash ? `<div class="missing-alert" title="資料不齊">資料不齊</div>` : "";
+      const alertRow = viewedWarning ? `<div class="card-alert-row">${viewedWarning}</div>` : "";
       const markButton = inTrash
         ? `<button class="restore-btn" type="button" onclick="restoreItem('${escapeJs(item.id)}')">復原</button>`
         : `<button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>`;
@@ -986,9 +987,7 @@
           <div class="product-area">
             <h3 class="shop-title" title="${escapeHtml(item.shop)}">${escapeHtml(item.shop)}</h3>
           </div>
-          <div class="card-alert-row">
-            ${dataWarning}${viewedWarning}
-          </div>
+          ${dataWarning}${alertRow}
           <div class="data-row">
             <div class="data"><span>銷量</span><strong>${escapeHtml(item.salesDisplay)}</strong></div>
             <div class="data"><span>粉絲數</span><strong>${escapeHtml(item.fansDisplay)}</strong></div>
@@ -1536,6 +1535,11 @@
   </script>
 </body>
 </html>
+
+
+
+
+
 
 
 
