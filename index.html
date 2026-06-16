@@ -21,15 +21,16 @@
     .main{padding:26px;min-width:0;min-height:100vh;background:#06111f}.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:22px}
     .page-title h2{margin:0;font-size:36px;font-weight:900}.page-title p{margin:10px 0 0;color:var(--muted);font-size:15px;line-height:1.6}.page-title{padding:6px 0}
     .top-actions{display:flex;align-items:center;gap:10px}
-    .refresh-btn,.danger-action{height:40px;border-radius:8px;color:#fff;cursor:pointer;font-weight:800;padding:0 16px;white-space:nowrap}
+    .refresh-btn,.danger-action,.secondary-btn{height:40px;border-radius:8px;color:#fff;cursor:pointer;font-weight:800;padding:0 16px;white-space:nowrap}
     .refresh-btn{border:1px solid rgba(88,215,255,.38);background:rgba(47,140,255,.18)}
     .danger-action{border:1px solid rgba(255,77,109,.55);background:rgba(255,77,109,.2)}
-    .refresh-btn:hover{background:rgba(47,140,255,.32)}.danger-action:hover{background:rgba(255,77,109,.34)}
-    .refresh-btn:disabled,.danger-action:disabled{opacity:.55;cursor:not-allowed}
+    .secondary-btn{border:1px solid rgba(141,180,222,.28);background:rgba(51,65,85,.88)}
+    .refresh-btn:hover{background:rgba(47,140,255,.32)}.danger-action:hover{background:rgba(255,77,109,.34)}.secondary-btn:hover{background:#475569}
+    .refresh-btn:disabled,.danger-action:disabled,.secondary-btn:disabled{opacity:.55;cursor:not-allowed}
     .status{padding:11px 16px;min-width:160px;text-align:center;border:1px solid var(--border);border-radius:8px;background:rgba(7,24,43,.85);color:var(--muted);font-weight:700;font-size:14px;white-space:nowrap}
     .status.ok{color:var(--green)}.status.error{color:var(--red)}
     .sync-meta{width:100%;text-align:right;color:var(--muted);font-size:12px;margin-top:-10px;margin-bottom:16px}
-    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:18px}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
     .stat,.chart-panel,.card,.empty{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
     .stat{padding:18px;min-height:112px}.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:12px}.stat strong{display:block;font-size:30px;color:#fff;overflow-wrap:anywhere}
     .chart-panel{height:340px;padding:18px;margin-bottom:24px}
@@ -48,7 +49,7 @@
     .actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;font-size:13px;min-width:0}
     .view-btn{background:var(--blue)}.view-btn.viewed{background:#6b7c93}.message-btn{background:#126c9f}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}.edit-btn{background:#256b5f}
     .actions button:disabled{opacity:.75;cursor:not-allowed}
-    .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none}
+    .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none !important}
     .modal-mask{position:fixed;inset:0;background:rgba(3,9,17,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
     .modal-mask.hidden{display:none}
     .modal{width:min(420px,100%);background:#0b2038;border:1px solid var(--border);border-radius:8px;padding:24px;box-shadow:var(--shadow)}.modal h2{margin:0 0 10px}.modal p{margin:0 0 18px;color:var(--muted);line-height:1.5}
@@ -57,6 +58,16 @@
     .app-notice{position:fixed;right:24px;bottom:24px;z-index:999999;max-width:340px;padding:14px 16px;border-radius:8px;color:#fff;font-weight:800;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.35);display:none}
         .mobile-panel{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
     .mobile-form{display:grid;gap:12px;max-width:760px}.mobile-form textarea{min-height:180px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:12px 14px;line-height:1.6}.mobile-form textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
+    .inline-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .queue-toolbar{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+    .queue-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .queue-actions .import-btn,.queue-actions .secondary-btn{height:48px;padding:0 20px;font-size:15px;border-radius:10px}
+    .queue-status-panel{min-width:240px;margin-left:auto;padding:14px 16px;border:1px solid rgba(88,215,255,.18);border-radius:10px;background:rgba(6,17,31,.36)}
+    .queue-status-label{display:block;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:6px}
+    .queue-status{color:#eef6ff;font-size:22px;font-weight:900;line-height:1.1}
+    .queue-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+    .queue-list-panel,.failed-list-panel{display:grid;gap:12px}
+    .queue-list-title,.failed-list-title{margin:0;color:#eef6ff;font-size:18px;font-weight:900}
     .mobile-table{width:100%;border-collapse:collapse;background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--shadow)}
     .mobile-table th,.mobile-table td{border-bottom:1px solid rgba(88,215,255,.13);padding:12px;text-align:left;vertical-align:middle}.mobile-table th{color:var(--muted);font-size:13px;background:rgba(6,17,31,.36)}.mobile-table td{color:#fff;font-size:14px}.mobile-table tr:last-child td{border-bottom:0}.url-cell{max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cyan)}
     .pager{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding:12px;border:1px solid rgba(88,215,255,.18);border-radius:8px;background:rgba(6,17,31,.36)}.pager button,.pager select{height:34px;border:1px solid var(--border);border-radius:8px;background:#0b2038;color:#fff;font-weight:800;padding:0 10px}.pager button{cursor:pointer;background:#12365f}.pager button:disabled{opacity:.45;cursor:not-allowed}.pager span{color:var(--muted);font-size:13px;font-weight:800}.mini-actions{display:flex;gap:8px}.mini-actions button,.import-btn{height:36px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;padding:0 14px}.mini-view{background:var(--blue)}.mini-view.processing{background:#6b7c93;cursor:wait}.mini-delete{background:var(--red)}.pending-status{display:inline-flex;align-items:center;gap:6px;color:var(--yellow);font-weight:800;white-space:nowrap}.pending-status.done{color:var(--green)}.pending-dot{width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px rgba(247,201,72,.16)}.import-btn{background:var(--green);color:#062015;width:max-content}.mobile-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
@@ -98,9 +109,9 @@
         <button class="nav-btn active" data-page="dashboard" type="button">首頁</button>
         <button class="nav-btn" data-page="ranking" type="button">資料庫</button>
         <button class="nav-btn" data-page="marked" type="button">已標記</button>
+        <button id="mobilePendingNavBtn" class="nav-btn" data-page="mobilePending" type="button">資料待確認</button>
+        <button class="nav-btn" data-page="mobileImport" type="button">匯入工具</button>
         <button class="nav-btn" data-page="trash" type="button">垃圾桶</button>
-        <button class="nav-btn" data-page="mobileImport" type="button">手機匯入資料</button>
-        <button id="mobilePendingNavBtn" class="nav-btn" data-page="mobilePending" type="button">手機待確認</button>
       </nav>
       <div class="user-box">目前使用者<strong id="currentUser">尚未登入</strong><span id="versionBadge" class="version-badge">版本讀取中</span></div>
     </aside>
@@ -119,11 +130,12 @@
 
       <section id="dashboardPage">
         <section class="stats">
-          <div class="stat"><span>總筆數</span><strong id="totalCount">0</strong></div>
-          <div class="stat"><span>平均指數</span><strong id="avgIndex">0</strong></div>
-          <div class="stat"><span>最高銷量</span><strong id="maxSales">0</strong></div>
+          <div class="stat"><span>資料庫總筆數</span><strong id="totalCount">0</strong></div>
+          <div class="stat"><span>資料待確認</span><strong id="pendingCount">0</strong></div>
+          <div class="stat"><span>匯入工具待整理</span><strong id="importToolCount">0</strong></div>
+          <div class="stat"><span>匯入失敗</span><strong id="importFailedCount">0</strong></div>
           <div class="stat"><span>已標記</span><strong id="markedCount">0</strong></div>
-          <div class="stat"><span>資料不齊全</span><strong id="incompleteCount">0</strong></div>
+          <div class="stat"><span>垃圾桶</span><strong id="trashCount">0</strong></div>
         </section>
         <section class="chart-panel"><canvas id="mainChart"></canvas></section>
       </section>
@@ -166,10 +178,16 @@
 
       <section id="mobileImportPage" class="hidden">
         <div class="toolbar">
-
+          <div class="toolbar-actions">
+            <select id="importViewSelect" class="category-select">
+              <option value="importForm">匯入工具</option>
+              <option value="importQueue">待整理</option>
+              <option value="importFailed">匯入失敗</option>
+            </select>
+          </div>
         </div>
         <div class="mobile-panel">
-          <div class="mobile-form">
+          <div id="importFormView" class="mobile-form">
             <select id="mobileImportCategory" class="category-select">
               <option value="鞋托架">鞋托架</option>
               <option value="置物架">置物架</option>
@@ -178,8 +196,39 @@
               <option value="鏡櫃盒">鏡櫃盒</option>
               <option value="翻蓋盒">翻蓋盒</option>
             </select>
-            <textarea id="mobileImportUrls" placeholder="請貼上蝦皮商品網址，一行一筆"></textarea>
-            <button id="mobileImportBtn" class="import-btn" type="button">匯入手機資料</button>
+            <textarea id="mobileImportUrls" placeholder="請貼上蝦皮短網址，一行一筆"></textarea>
+            <div class="inline-actions">
+              <button id="mobileImportBtn" class="import-btn" type="button">匯入</button>
+              <button id="mobileImportCancelBtn" class="secondary-btn" type="button">取消</button>
+            </div>
+          </div>
+          <div id="importQueueView" class="hidden">
+            <div class="queue-toolbar">
+              <div class="queue-actions">
+                <button id="startImportQueueBtn" class="import-btn" type="button">執行整理</button>
+                <button id="stopImportQueueBtn" class="secondary-btn" type="button">結束整理</button>
+              </div>
+              <div class="queue-status-panel">
+                <span class="queue-status-label">目前狀態</span>
+                <div id="importQueueStatus" class="queue-status">已停止</div>
+              </div>
+            </div>
+            <div id="importQueueSummary" class="hidden queue-summary">
+              <div class="stat"><span>已處理</span><strong id="queueProcessedCount">0</strong></div>
+              <div class="stat"><span>成功轉入</span><strong id="queueMovedCount">0</strong></div>
+              <div class="stat"><span>重複略過</span><strong id="queueDuplicateCount">0</strong></div>
+              <div class="stat"><span>失敗</span><strong id="queueFailedCount">0</strong></div>
+            </div>
+            <section class="queue-list-panel">
+              <h3 class="queue-list-title">待整理清單</h3>
+              <div id="importQueueList"><div class="empty">匯入工具目前沒有待整理資料</div></div>
+            </section>
+          </div>
+          <div id="importFailedView" class="hidden">
+            <section class="failed-list-panel">
+              <h3 class="failed-list-title">匯入失敗清單</h3>
+              <div id="importFailedList"><div class="empty">目前沒有匯入失敗資料</div></div>
+            </section>
           </div>
         </div>
       </section>
@@ -198,7 +247,7 @@
             </select>
           </div>
         </div>
-        <section id="mobilePendingList"><div class="empty">手機待確認目前沒有資料</div></section>
+        <section id="mobilePendingList"><div class="empty">資料待確認目前沒有資料</div></section>
       </section>
     </main>
   </div>
@@ -208,26 +257,33 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxPEwonvYIRO8Qj98t_Im1HuC04nj3N7EkfwISVMmBpIsszm0cspifUyJyyJi_K4ay3/exec";
     const PRODUCT_CATEGORIES = ["鞋托架", "置物架", "手機架", "文件盒", "鏡櫃盒", "翻蓋盒"];
     const DELETED_SHEET_NAME = "已刪除";
-    const MOBILE_PENDING_SHEET_NAME = "手機待確認";
-    const APP_VERSION = "v2026.06.11.1";
+    const IMPORT_TOOL_SHEET_NAME = "匯入工具";
+    const MOBILE_PENDING_SHEET_NAME = "資料待確認";
+    const IMPORT_FAILED_SHEET_NAME = "匯入失敗";
+    const APP_VERSION = "v2026.06.16.2";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
     const PAGE_SIZE_OPTIONS = [18];
 
     let currentUser = "";
     let allItems = [];
+    let importToolItems = [];
+    let importFailedItems = [];
     let chart = null;
     let isLoading = false;
     let isMutating = false;
     let autoRefreshTimer = null;
     let activeMessageItem = null;
     let pageSize = 18;
-    const paginationState = { ranking: 1, marked: 1, incomplete: 1, trash: 1, mobilePending: 1 };
+    const paginationState = { ranking: 1, marked: 1, incomplete: 1, trash: 1, mobilePending: 1, importQueue: 1, importFailed: 1 };
     const permanentlyDeletedIds = new Set();
     const MOBILE_PENDING_IMPORTING_KEY = "shopeeHunterMobilePendingImportingIds";
     const mobilePendingImportingIds = new Set(JSON.parse(localStorage.getItem(MOBILE_PENDING_IMPORTING_KEY) || "[]"));
     const RANKING_VIEWED_KEY = "shopeeHunterRankingViewedIds";
     const rankingViewedIds = new Set(JSON.parse(localStorage.getItem(RANKING_VIEWED_KEY) || "[]"));
+    let importQueueRunState = "已停止";
+    let importQueueStopRequested = false;
+    let importQueueStats = { processed: 0, moved: 0, duplicate: 0, failed: 0 };
 
     const loginModal = document.getElementById("loginModal");
     const usernameInput = document.getElementById("usernameInput");
@@ -257,15 +313,31 @@
     const mobileImportCategory = document.getElementById("mobileImportCategory");
     const mobileImportUrls = document.getElementById("mobileImportUrls");
     const mobileImportBtn = document.getElementById("mobileImportBtn");
+    const mobileImportCancelBtn = document.getElementById("mobileImportCancelBtn");
+    const importViewSelect = document.getElementById("importViewSelect");
+    const importFormView = document.getElementById("importFormView");
+    const importQueueView = document.getElementById("importQueueView");
+    const importFailedView = document.getElementById("importFailedView");
+    const importQueueList = document.getElementById("importQueueList");
+    const importFailedList = document.getElementById("importFailedList");
+    const startImportQueueBtn = document.getElementById("startImportQueueBtn");
+    const stopImportQueueBtn = document.getElementById("stopImportQueueBtn");
+    const importQueueStatus = document.getElementById("importQueueStatus");
+    const importQueueSummary = document.getElementById("importQueueSummary");
+    const queueProcessedCount = document.getElementById("queueProcessedCount");
+    const queueMovedCount = document.getElementById("queueMovedCount");
+    const queueDuplicateCount = document.getElementById("queueDuplicateCount");
+    const queueFailedCount = document.getElementById("queueFailedCount");
     const mobilePendingCategory = document.getElementById("mobilePendingCategory");
     const mobilePendingList = document.getElementById("mobilePendingList");
     const mobilePendingNavBtn = document.getElementById("mobilePendingNavBtn");
 
     const totalCountEl = document.getElementById("totalCount");
-    const avgIndexEl = document.getElementById("avgIndex");
-    const maxSalesEl = document.getElementById("maxSales");
+    const pendingCountEl = document.getElementById("pendingCount");
+    const importToolCountEl = document.getElementById("importToolCount");
+    const importFailedCountEl = document.getElementById("importFailedCount");
     const markedCountEl = document.getElementById("markedCount");
-    const incompleteCountEl = document.getElementById("incompleteCount");
+    const trashCountEl = document.getElementById("trashCount");
 
     const rankingGrid = document.getElementById("rankingGrid");
     const markedGrid = document.getElementById("markedGrid");
@@ -447,6 +519,25 @@
       };
     }
 
+    function normalizeImportToolRow(row) {
+      return {
+        id: textValue(getField(row, ["ID", "id"])),
+        category: textValue(getField(row, ["款式", "分類", "category"])) || "未分類",
+        url: textValue(getField(row, ["URL", "url"])),
+        status: textValue(getField(row, ["狀態", "status"])) || "待整理",
+        time: textValue(getField(row, ["時間", "time"]))
+      };
+    }
+
+    function normalizeImportFailedRow(row) {
+      return {
+        id: textValue(getField(row, ["ID", "id"])),
+        url: textValue(getField(row, ["URL", "url"])),
+        reason: textValue(getField(row, ["失敗原因", "原因", "reason"])) || "未知原因",
+        time: textValue(getField(row, ["時間", "time"]))
+      };
+    }
+
     function dedupeItems(items) {
       const map = new Map();
       for (const item of items) {
@@ -506,6 +597,22 @@
           pendingRows = rawPendingRows.map(row => Object.assign({}, row, { 狀態: row["狀態"] || "手機未確認" }));
         }
 
+        let rawImportToolRows = [];
+        const importToolRes = await fetch(OPENSHEET_BASE_URL + "/" + encodeURIComponent(IMPORT_TOOL_SHEET_NAME), { cache: "reload" });
+        if (importToolRes.ok) {
+          const result = await importToolRes.json();
+          if (!Array.isArray(result)) throw new Error(IMPORT_TOOL_SHEET_NAME + " 回傳格式不是陣列");
+          rawImportToolRows = result;
+        }
+
+        let rawImportFailedRows = [];
+        const importFailedRes = await fetch(OPENSHEET_BASE_URL + "/" + encodeURIComponent(IMPORT_FAILED_SHEET_NAME), { cache: "reload" });
+        if (importFailedRes.ok) {
+          const result = await importFailedRes.json();
+          if (!Array.isArray(result)) throw new Error(IMPORT_FAILED_SHEET_NAME + " 回傳格式不是陣列");
+          rawImportFailedRows = result;
+        }
+
         const rows = sheetResults.flat().concat(deletedRows, pendingRows);
         const normalizedItems = rows
           .map(normalizeRow)
@@ -518,6 +625,8 @@
         }
 
         allItems = dedupeItems(normalizedItems);
+        importToolItems = rawImportToolRows.map(normalizeImportToolRow).filter(item => item.id && item.url);
+        importFailedItems = rawImportFailedRows.map(normalizeImportFailedRow).filter(item => item.id && item.url);
         cleanupMobilePendingImportingState();
         cleanupRankingViewedState();
         renderAll();
@@ -529,7 +638,7 @@
           allItems = [];
           renderAll();
           setStatus("資料載入失敗", "error");
-          const testLinks = PRODUCT_CATEGORIES.concat([DELETED_SHEET_NAME, MOBILE_PENDING_SHEET_NAME]).map(category => `<a href="${OPENSHEET_BASE_URL}/${encodeURIComponent(category)}" target="_blank" rel="noopener noreferrer">${escapeHtml(category)}</a>`).join(" ｜ ");
+          const testLinks = PRODUCT_CATEGORIES.concat([DELETED_SHEET_NAME, MOBILE_PENDING_SHEET_NAME, IMPORT_TOOL_SHEET_NAME, IMPORT_FAILED_SHEET_NAME]).map(category => `<a href="${OPENSHEET_BASE_URL}/${encodeURIComponent(category)}" target="_blank" rel="noopener noreferrer">${escapeHtml(category)}</a>`).join(" ｜ ");
           const message = `<div class="empty">資料讀取失敗：${escapeHtml(error.message)}<br><br>測試 opensheet 分頁：${testLinks}</div>`;
           rankingGrid.innerHTML = message;
           markedGrid.innerHTML = message;
@@ -605,6 +714,7 @@
       if (key === "incomplete") renderIncomplete();
       if (key === "trash") renderTrash();
       if (key === "mobilePending") renderMobilePending();
+      if (key === "importQueue" || key === "importFailed") renderImportToolPage();
     }
 
     function changeListPage(key, page) {
@@ -663,7 +773,7 @@
     function updateMobilePendingCount() {
       const count = allItems.filter(item => item.status === "手機未確認").length;
       if (mobilePendingNavBtn) {
-        mobilePendingNavBtn.textContent = count > 0 ? `手機待確認（${count}）` : "手機待確認";
+        mobilePendingNavBtn.textContent = count > 0 ? `資料待確認（${count}）` : "資料待確認";
       }
     }
     function getMobilePendingItems() {
@@ -679,7 +789,7 @@
       const page = getPagedItems("mobilePending", sourceItems);
       const items = page.items;
       if (!sourceItems.length) {
-        mobilePendingList.innerHTML = '<div class="empty">手機待確認目前沒有資料</div>';
+        mobilePendingList.innerHTML = '<div class="empty">資料待確認目前沒有資料</div>';
         return;
       }
 
@@ -707,6 +817,99 @@
         </table>
         ${renderPager("mobilePending", page)}
       `;
+    }
+
+    function getImportQueueItems() {
+      return [...importToolItems].sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+    }
+
+    function getImportFailedViewItems() {
+      return [...importFailedItems].sort((a, b) => (b.time || "").localeCompare(a.time || ""));
+    }
+
+    function updateImportViewVisibility() {
+      const mode = importViewSelect.value;
+      importFormView.classList.toggle("hidden", mode !== "importForm");
+      importQueueView.classList.toggle("hidden", mode !== "importQueue");
+      importFailedView.classList.toggle("hidden", mode !== "importFailed");
+    }
+
+    function updateImportQueueUiState() {
+      importQueueStatus.textContent = importQueueRunState;
+      startImportQueueBtn.disabled = importQueueRunState === "執行中" || importQueueRunState === "停止中";
+      stopImportQueueBtn.disabled = importQueueRunState === "已停止";
+      const shouldShowSummary = importQueueRunState === "已停止" && importQueueStats.processed > 0;
+      importQueueSummary.classList.toggle("hidden", !shouldShowSummary);
+      queueProcessedCount.textContent = importQueueStats.processed.toLocaleString();
+      queueMovedCount.textContent = importQueueStats.moved.toLocaleString();
+      queueDuplicateCount.textContent = importQueueStats.duplicate.toLocaleString();
+      queueFailedCount.textContent = importQueueStats.failed.toLocaleString();
+    }
+
+    function renderImportQueueList() {
+      const sourceItems = getImportQueueItems();
+      const page = getPagedItems("importQueue", sourceItems);
+      if (!sourceItems.length) {
+        importQueueList.innerHTML = '<div class="empty">匯入工具目前沒有待整理資料</div>';
+        return;
+      }
+      importQueueList.innerHTML = `
+        <table class="mobile-table">
+          <thead><tr><th>分類</th><th>原網址</th><th>狀態</th><th>操作</th></tr></thead>
+          <tbody>
+            ${page.items.map(item => `
+              <tr>
+                <td>${escapeHtml(item.category || "未分類")}</td>
+                <td class="url-cell" title="${escapeHtml(item.url)}">${escapeHtml(item.url)}</td>
+                <td><span class="pending-status done">${escapeHtml(item.status || "待整理")}</span></td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="mini-delete" type="button" onclick="deleteImportToolItem('${escapeJs(item.id)}')">刪除</button>
+                  </div>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        ${renderPager("importQueue", page)}
+      `;
+    }
+
+    function renderImportFailedList() {
+      const sourceItems = getImportFailedViewItems();
+      const page = getPagedItems("importFailed", sourceItems);
+      if (!sourceItems.length) {
+        importFailedList.innerHTML = '<div class="empty">目前沒有匯入失敗資料</div>';
+        return;
+      }
+      importFailedList.innerHTML = `
+        <table class="mobile-table">
+          <thead><tr><th>原網址</th><th>失敗原因</th><th>操作</th></tr></thead>
+          <tbody>
+            ${page.items.map(item => `
+              <tr>
+                <td class="url-cell" title="${escapeHtml(item.url)}">${escapeHtml(item.url)}</td>
+                <td>${escapeHtml(item.reason || "未知原因")}</td>
+                <td>
+                  <div class="mini-actions">
+                    <button class="mini-view" type="button" onclick="window.open('${escapeJs(item.url)}', '_blank', 'noopener,noreferrer')">查看</button>
+                    <button class="mini-view" type="button" onclick="retryImportFailedItem('${escapeJs(item.id)}')">重試</button>
+                    <button class="mini-delete" type="button" onclick="deleteImportFailedItem('${escapeJs(item.id)}')">刪除</button>
+                  </div>
+                </td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+        ${renderPager("importFailed", page)}
+      `;
+    }
+
+    function renderImportToolPage() {
+      updateImportViewVisibility();
+      updateImportQueueUiState();
+      renderImportQueueList();
+      renderImportFailedList();
     }
 
     function normalizeImportUrl(url) {
@@ -747,12 +950,12 @@
     }
 
     function filterExistingMobileUrls(urls) {
-      const existingKeys = new Set(allItems.map(item => normalizeImportUrl(item.url)).filter(Boolean));
+      const existingKeys = new Set(importToolItems.map(item => String(item.url || "").trim().toLowerCase()).filter(Boolean));
       const freshUrls = [];
       let existingCount = 0;
 
       urls.forEach(url => {
-        const key = normalizeImportUrl(url);
+        const key = String(url || "").trim().toLowerCase();
         if (existingKeys.has(key)) {
           existingCount++;
           return;
@@ -789,7 +992,7 @@
 
       mobileImportBtn.disabled = true;
       mobileImportBtn.textContent = "匯入中";
-      showAppNotice("手機資料匯入中，請稍候...", "loading");
+      showAppNotice("匯入工具新增中，請稍候...", "loading");
 
       try {
         const body = new URLSearchParams();
@@ -805,17 +1008,23 @@
         const insertedCount = Number(result.insertedCount || 0);
         const backendSkippedCount = Number(result.skippedCount || 0);
         const totalSkippedCount = frontSkippedCount + backendSkippedCount;
-        showAppNotice(`手機資料匯入完成：新增 ${insertedCount} 筆，重複略過 ${totalSkippedCount} 筆`, "success");
-        alert(`手機資料匯入完成\n\n新增：${insertedCount} 筆\n前端先略過：${frontSkippedCount} 筆\n後端重複略過：${backendSkippedCount} 筆`);
+        showAppNotice(`匯入工具新增完成：新增 ${insertedCount} 筆，重複略過 ${totalSkippedCount} 筆`, "success");
+        alert(`匯入工具新增完成\n\n新增：${insertedCount} 筆\n前端先略過：${frontSkippedCount} 筆\n後端重複略過：${backendSkippedCount} 筆`);
         await loadData();
-        switchPage("mobilePending");
+        importViewSelect.value = "importQueue";
+        renderImportToolPage();
+        switchPage("mobileImport");
       } catch (error) {
-        alert("手機資料匯入失敗：" + error.message);
-        showAppNotice("手機資料匯入失敗", "error");
+        alert("匯入工具新增失敗：" + error.message);
+        showAppNotice("匯入工具新增失敗", "error");
       } finally {
         mobileImportBtn.disabled = false;
-        mobileImportBtn.textContent = "匯入手機資料";
+        mobileImportBtn.textContent = "匯入";
       }
+    }
+
+    function cancelMobileImport() {
+      mobileImportUrls.value = "";
     }
 
     function openMobilePending(url, id, category) {
@@ -830,10 +1039,10 @@
     }
 
     async function deleteMobilePending(id) {
-      const ok = confirm("確定要刪除這筆手機待確認資料嗎？\n\n這會直接從試算表刪除這筆線索。");
+      const ok = confirm("確定要刪除這筆資料待確認資料嗎？\n\n這會直接從試算表刪除這筆線索。");
       if (!ok) return;
 
-      showAppNotice("正在刪除手機待確認資料...", "loading");
+      showAppNotice("正在刪除資料待確認資料...", "loading");
 
       try {
         const body = new URLSearchParams();
@@ -847,11 +1056,125 @@
         allItems = allItems.filter(item => item.id !== id);
         clearMobilePendingImporting(id);
         renderAll();
-        showAppNotice("手機待確認資料已刪除", "success");
+        showAppNotice("資料待確認資料已刪除", "success");
       } catch (error) {
         alert("刪除失敗：" + error.message);
         showAppNotice("刪除失敗", "error");
       }
+    }
+
+    async function deleteImportToolItem(id) {
+      const ok = confirm("確定要刪除這筆匯入工具資料嗎？");
+      if (!ok) return;
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "deleteImportTool");
+        body.set("id", id);
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "刪除失敗");
+        await loadData({ silent: true });
+        renderImportToolPage();
+      } catch (error) {
+        alert("刪除失敗：" + error.message);
+      }
+    }
+
+    async function deleteImportFailedItem(id) {
+      const ok = confirm("確定要刪除這筆匯入失敗資料嗎？");
+      if (!ok) return;
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "deleteImportFailed");
+        body.set("id", id);
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "刪除失敗");
+        await loadData({ silent: true });
+        renderImportToolPage();
+      } catch (error) {
+        alert("刪除失敗：" + error.message);
+      }
+    }
+
+    async function retryImportFailedItem(id) {
+      try {
+        const body = new URLSearchParams();
+        body.set("action", "retryImportFailed");
+        body.set("id", id);
+        const result = await postGas(body);
+        if (!result.success) throw new Error(result.message || "重試失敗");
+        await loadData({ silent: true });
+        renderImportToolPage();
+      } catch (error) {
+        alert("重試失敗：" + error.message);
+      }
+    }
+
+    function resetImportQueueStats() {
+      importQueueStats = { processed: 0, moved: 0, duplicate: 0, failed: 0 };
+      updateImportQueueUiState();
+    }
+
+    async function processImportQueueLoop() {
+      while (!importQueueStopRequested) {
+        let result;
+        try {
+          const body = new URLSearchParams();
+          body.set("action", "processImportToolNext");
+          result = await postGas(body);
+        } catch (error) {
+          importQueueRunState = "已停止";
+          updateImportQueueUiState();
+          alert("整理已停止：" + error.message);
+          return;
+        }
+
+        if (!result.success) {
+          importQueueRunState = "已停止";
+          updateImportQueueUiState();
+          alert("整理已停止：" + (result.message || "未知錯誤"));
+          return;
+        }
+
+        if (result.done) {
+          importQueueRunState = "已停止";
+          await loadData({ silent: true });
+          renderImportToolPage();
+          updateImportQueueUiState();
+          return;
+        }
+
+        importQueueStats.processed += 1;
+        if (result.action === "moved") importQueueStats.moved += 1;
+        else if (result.action === "duplicate") importQueueStats.duplicate += 1;
+        else if (result.action === "failed") importQueueStats.failed += 1;
+
+        await loadData({ silent: true });
+        renderImportToolPage();
+      }
+
+      importQueueRunState = "已停止";
+      updateImportQueueUiState();
+      const failedReasons = Array.from(new Set(importFailedItems.map(item => item.reason).filter(Boolean)));
+      const failedText = importQueueStats.failed && failedReasons.length
+        ? `\n失敗原因：${failedReasons.join("、")}`
+        : "";
+      alert(`整理已停止\n\n已處理：${importQueueStats.processed}\n成功轉入：${importQueueStats.moved}\n重複略過：${importQueueStats.duplicate}\n失敗：${importQueueStats.failed}${failedText}`);
+    }
+
+    function startImportQueue() {
+      if (importQueueRunState === "執行中") return;
+      importQueueStopRequested = false;
+      importQueueRunState = "執行中";
+      resetImportQueueStats();
+      updateImportQueueUiState();
+      processImportQueueLoop();
+    }
+
+    function stopImportQueue() {
+      if (importQueueRunState !== "執行中") return;
+      importQueueStopRequested = true;
+      importQueueRunState = "停止中";
+      updateImportQueueUiState();
     }
     function renderAll() {
       renderStats();
@@ -860,43 +1183,32 @@
       renderIncomplete();
       renderTrash();
       renderMobilePending();
+      renderImportToolPage();
       updateMobilePendingCount();
       try { renderChart(); } catch (error) { console.error(error); }
     }
 
     function renderStats() {
-      const activeItems = allItems.filter(item => item.status !== "已刪除");
-      const total = activeItems.length;
-      const avg = total ? Math.round(activeItems.reduce((sum, item) => sum + item.index, 0) / total) : 0;
-      const maxSalesItem = activeItems.reduce((top, item) => item.sales > top.sales ? item : top, { sales: 0, salesDisplay: "0" });
+      const databaseItems = allItems.filter(item => item.status !== "已刪除" && item.status !== "手機未確認");
+      const pendingItems = allItems.filter(item => item.status === "手機未確認");
 
-      totalCountEl.textContent = total.toLocaleString();
-      avgIndexEl.textContent = avg.toLocaleString();
-      maxSalesEl.textContent = maxSalesItem.salesDisplay || formatNumber(maxSalesItem.sales);
+      totalCountEl.textContent = databaseItems.length.toLocaleString();
+      pendingCountEl.textContent = pendingItems.length.toLocaleString();
+      importToolCountEl.textContent = importToolItems.length.toLocaleString();
+      importFailedCountEl.textContent = importFailedItems.length.toLocaleString();
       markedCountEl.textContent = allItems.filter(item => item.status === "已標記").length.toLocaleString();
-      incompleteCountEl.textContent = activeItems.filter(item => item.status !== "手機未確認" && isIncompleteCompanyInfo(item)).length.toLocaleString();
+      trashCountEl.textContent = allItems.filter(item => item.status === "已刪除").length.toLocaleString();
     }
 
-    function getIndexBuckets(items) {
-      const buckets = [
-        { label: "0-20", min: 0, max: 20, count: 0, sales: 0 },
-        { label: "21-40", min: 21, max: 40, count: 0, sales: 0 },
-        { label: "41-60", min: 41, max: 60, count: 0, sales: 0 },
-        { label: "61-80", min: 61, max: 80, count: 0, sales: 0 },
-        { label: "81-100", min: 81, max: 100, count: 0, sales: 0 }
-      ];
-      for (const item of items) {
-        const bucket = buckets.find(group => item.index >= group.min && item.index <= group.max);
-        if (bucket) {
-          bucket.count += 1;
-          bucket.sales += item.sales;
-        }
-      }
-      return buckets;
+    function getCategoryBuckets(items) {
+      return PRODUCT_CATEGORIES.map(category => ({
+        label: category,
+        count: items.filter(item => item.category === category).length
+      }));
     }
 
     function renderChart() {
-      const buckets = getIndexBuckets(allItems.filter(item => item.status !== "已刪除"));
+      const buckets = getCategoryBuckets(allItems.filter(item => item.status !== "已刪除" && item.status !== "手機未確認"));
       if (!window.Chart) return;
       if (chart) chart.destroy();
 
@@ -905,8 +1217,7 @@
         data: {
           labels: buckets.map(bucket => bucket.label),
           datasets: [
-            { label: "商品數", data: buckets.map(bucket => bucket.count), backgroundColor: "rgba(47,140,255,.68)", borderColor: "#58d7ff", borderWidth: 1, yAxisID: "y" },
-            { label: "總銷量", data: buckets.map(bucket => bucket.sales), type: "line", borderColor: "#38d996", backgroundColor: "rgba(56,217,150,.12)", tension: .35, yAxisID: "y1" }
+            { label: "筆數", data: buckets.map(bucket => bucket.count), backgroundColor: "rgba(47,140,255,.68)", borderColor: "#58d7ff", borderWidth: 1, yAxisID: "y" }
           ]
         },
         options: {
@@ -915,9 +1226,8 @@
           interaction: { mode: "index", intersect: false },
           plugins: { legend: { labels: { color: "#eef6ff" } } },
           scales: {
-            x: { title: { display: true, text: "侵權指數區間", color: "#8db4de" }, ticks: { color: "#8db4de" }, grid: { color: "rgba(141,180,222,.12)" } },
-            y: { beginAtZero: true, title: { display: true, text: "商品數", color: "#8db4de" }, ticks: { color: "#8db4de", precision: 0 }, grid: { color: "rgba(141,180,222,.12)" } },
-            y1: { beginAtZero: true, position: "right", title: { display: true, text: "總銷量", color: "#8db4de" }, ticks: { color: "#8db4de", callback(value) { return formatNumber(value); } }, grid: { drawOnChartArea: false } }
+            x: { title: { display: true, text: "分類", color: "#8db4de" }, ticks: { color: "#8db4de" }, grid: { color: "rgba(141,180,222,.12)" } },
+            y: { beginAtZero: true, title: { display: true, text: "筆數", color: "#8db4de" }, ticks: { color: "#8db4de", precision: 0 }, grid: { color: "rgba(141,180,222,.12)" } }
           }
         }
       });
@@ -988,7 +1298,7 @@
             <div class="data"><span>粉絲數</span><strong>${escapeHtml(item.fansDisplay)}</strong></div>
           </div>
           <div class="actions">
-            <button class="view-btn ${viewed ? "viewed" : ""}" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>${viewed ? "已查看" : "查看"}</button>
+            <button class="view-btn ${viewed ? "viewed" : ""}" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>${viewed ? "已截圖" : "截圖"}</button>
             ${messageButton}
             ${markButton}
             ${editButton}
@@ -1442,12 +1752,12 @@
 
       if (page === "dashboard") {
         pageTitle.textContent = "首頁";
-        pageSubtitle.textContent = "總覽目前試算表同步資料、資料庫與風險區間分布。";
+        pageSubtitle.textContent = "總覽目前工作量與六個分類的資料分布。";
       }
 
       if (page === "ranking") {
         pageTitle.textContent = "資料庫";
-        pageSubtitle.textContent = "只顯示尚未標記、尚未刪除的資料。";
+        pageSubtitle.textContent = "只顯示尚未標記、尚未刪除的正式資料。";
       }
 
       if (page === "marked") {
@@ -1461,13 +1771,13 @@
       }
 
       if (page === "mobileImport") {
-        pageTitle.textContent = "手機匯入資料";
-        pageSubtitle.textContent = "手機圖搜圖找到的商品連結可先匯入，之後回電腦逐筆確認。";
+        pageTitle.textContent = "匯入工具";
+        pageSubtitle.textContent = "管理手機短網址匯入、待整理與匯入失敗資料。";
       }
 
       if (page === "mobilePending") {
-        pageTitle.textContent = "手機待確認";
-        pageSubtitle.textContent = "用列表管理手機匯入的商品線索，查看後可用擴充功能正式抓資料。";
+        pageTitle.textContent = "資料待確認";
+        pageSubtitle.textContent = "用列表管理已整理完成的線索，查看後可用擴充功能正式抓資料。";
       }
 
       if (page === "trash") {
@@ -1517,6 +1827,10 @@
     refreshBtn.addEventListener("click", () => loadData());
     bulkDeleteTrashBtn.addEventListener("click", bulkDeleteTrash);
     mobileImportBtn.addEventListener("click", importMobileUrls);
+    mobileImportCancelBtn.addEventListener("click", cancelMobileImport);
+    importViewSelect.addEventListener("change", renderImportToolPage);
+    startImportQueueBtn.addEventListener("click", startImportQueue);
+    stopImportQueueBtn.addEventListener("click", stopImportQueue);
     mobilePendingCategory.addEventListener("change", () => { resetPage("mobilePending"); renderMobilePending(); });
     copyMessageBtn.addEventListener("click", copyMessageTemplate);
     closeMessageBtn.addEventListener("click", closeMessageTemplate);
