@@ -46,8 +46,8 @@
     .data-row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
     .data{height:62px;background:rgba(6,17,31,.68);border:1px solid rgba(88,215,255,.13);border-radius:8px;padding:9px 10px;min-width:0;display:flex;flex-direction:column;justify-content:center}
     .data span{display:block;color:var(--muted);font-size:12px;margin-bottom:5px;white-space:nowrap}.data strong{font-size:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .actions{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;font-size:13px;min-width:0}
-    .view-btn{background:var(--blue)}.view-btn.viewed{background:#6b7c93}.message-btn{background:#126c9f}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}.edit-btn{background:#256b5f}
+    .actions{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.actions button{height:38px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;font-size:13px;min-width:0}
+    .view-btn{background:var(--blue)}.view-btn.viewed{background:#6b7c93}.message-btn{background:#126c9f}.mark-btn{background:#214f82}.mark-btn.marked{background:var(--yellow);color:#0b2038}.delete-btn{background:var(--red)}.restore-btn{background:var(--green);color:#062015}.edit-btn{background:#256b5f}.same-seller-btn{background:#5b47c8}
     .actions button:disabled{opacity:.75;cursor:not-allowed}
     .empty{grid-column:1/-1;padding:42px 20px;text-align:center;color:var(--muted);border-style:dashed;line-height:1.7}.hidden{display:none !important}
     .modal-mask{position:fixed;inset:0;background:rgba(3,9,17,.82);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px}
@@ -55,6 +55,19 @@
     .modal{width:min(420px,100%);background:#0b2038;border:1px solid var(--border);border-radius:8px;padding:24px;box-shadow:var(--shadow)}.modal h2{margin:0 0 10px}.modal p{margin:0 0 18px;color:var(--muted);line-height:1.5}
     .modal input{width:100%;height:44px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:0 14px;outline:none;margin-bottom:14px}.modal button{width:100%;height:42px;border:0;border-radius:8px;color:#fff;background:var(--blue);font-weight:800;cursor:pointer}.field-modal{width:min(560px,100%)}.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field-grid button{background:#174d7c}.field-grid button.cancel-field{grid-column:1 / -1;background:var(--red)}
     .message-modal{width:min(680px,100%)}.message-modal textarea{width:100%;min-height:260px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;padding:12px 14px;outline:none;line-height:1.65;margin:10px 0 14px}.message-modal .modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.message-modal .secondary-btn{background:#334155}
+    .same-seller-modal{width:min(1180px,100%);max-height:min(86vh,980px);display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:14px}
+    .same-seller-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+    .same-seller-summary .stat{min-height:84px;padding:14px}
+    .same-seller-list{min-height:0;overflow:auto;border:1px solid rgba(88,215,255,.18);border-radius:8px}
+    .same-seller-table{width:100%;border-collapse:collapse}
+    .same-seller-table th,.same-seller-table td{padding:12px;border-bottom:1px solid rgba(88,215,255,.13);text-align:left;vertical-align:middle}
+    .same-seller-table th{position:sticky;top:0;background:#0b2038;color:var(--muted);font-size:12px;z-index:1}
+    .same-seller-table td{font-size:13px;color:#fff}
+    .same-seller-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .same-seller-actions button{height:34px;border:0;border-radius:8px;padding:0 12px;color:#fff;font-weight:800;cursor:pointer;font-size:12px}
+    .same-seller-badge{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(88,215,255,.12);border:1px solid rgba(88,215,255,.22);color:#9fdbff}
+    .same-seller-badge.deleted{background:rgba(255,77,109,.14);border-color:rgba(255,77,109,.35);color:#ff91a5}
+    .same-seller-badge.marked{background:rgba(247,201,72,.14);border-color:rgba(247,201,72,.35);color:#ffd56a}
     .app-notice{position:fixed;right:24px;bottom:24px;z-index:999999;max-width:340px;padding:14px 16px;border-radius:8px;color:#fff;font-weight:800;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.35);display:none}
         .mobile-panel{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
     .mobile-form{display:grid;gap:12px;max-width:760px}.mobile-form textarea{min-height:180px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:12px 14px;line-height:1.6}.mobile-form textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
@@ -96,6 +109,18 @@
         <button id="copyMessageBtn" type="button">複製並開啟商品頁</button>
         <button id="closeMessageBtn" class="secondary-btn" type="button">關閉</button>
       </div>
+    </div>
+  </div>
+
+  <div id="sameSellerModal" class="modal-mask hidden">
+    <div class="modal same-seller-modal">
+      <div>
+        <h2 id="sameSellerTitle">同賣家資料</h2>
+        <p id="sameSellerMeta">依賣場編號查看目前網站中的所有同賣場資料。</p>
+      </div>
+      <div id="sameSellerSummary" class="same-seller-summary"></div>
+      <div class="same-seller-list" id="sameSellerList"></div>
+      <button id="closeSameSellerBtn" class="secondary-btn" type="button">關閉</button>
     </div>
   </div>
 
@@ -260,7 +285,7 @@
     const IMPORT_TOOL_SHEET_NAME = "匯入工具";
     const MOBILE_PENDING_SHEET_NAME = "資料待確認";
     const IMPORT_FAILED_SHEET_NAME = "匯入失敗";
-    const APP_VERSION = "v2026.06.16.2";
+    const APP_VERSION = "v2026.06.19.2";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
     const PAGE_SIZE_OPTIONS = [18];
@@ -274,6 +299,7 @@
     let isMutating = false;
     let autoRefreshTimer = null;
     let activeMessageItem = null;
+    let activeSameSellerShopId = "";
     let pageSize = 18;
     const paginationState = { ranking: 1, marked: 1, incomplete: 1, trash: 1, mobilePending: 1, importQueue: 1, importFailed: 1 };
     const permanentlyDeletedIds = new Set();
@@ -298,6 +324,12 @@
     const messageText = document.getElementById("messageText");
     const copyMessageBtn = document.getElementById("copyMessageBtn");
     const closeMessageBtn = document.getElementById("closeMessageBtn");
+    const sameSellerModal = document.getElementById("sameSellerModal");
+    const sameSellerTitle = document.getElementById("sameSellerTitle");
+    const sameSellerMeta = document.getElementById("sameSellerMeta");
+    const sameSellerSummary = document.getElementById("sameSellerSummary");
+    const sameSellerList = document.getElementById("sameSellerList");
+    const closeSameSellerBtn = document.getElementById("closeSameSellerBtn");
     const versionBadge = document.getElementById("versionBadge");
     const pageTitle = document.getElementById("pageTitle");
     const pageSubtitle = document.getElementById("pageSubtitle");
@@ -1185,6 +1217,10 @@
       renderMobilePending();
       renderImportToolPage();
       updateMobilePendingCount();
+      if (activeSameSellerShopId && !sameSellerModal.classList.contains("hidden")) {
+        const anchorItem = allItems.find(item => item.shopId === activeSameSellerShopId) || { shop: "同賣場資料", shopId: activeSameSellerShopId };
+        renderSameSellerModal(anchorItem);
+      }
       try { renderChart(); } catch (error) { console.error(error); }
     }
 
@@ -1286,6 +1322,9 @@
       const editButton = inTrash
         ? ""
         : `<button class="edit-btn" type="button" onclick="editAnyField('${escapeJs(item.id)}')">補資料</button>`;
+      const sameSellerButton = item.shopId
+        ? `<button class="same-seller-btn" type="button" onclick="openSameSellerModal('${escapeJs(item.id)}')">同賣家</button>`
+        : "";
 
       return `
         <article class="card" data-id="${escapeHtml(item.id)}">
@@ -1301,6 +1340,7 @@
             <button class="view-btn ${viewed ? "viewed" : ""}" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>${viewed ? "已截圖" : "截圖"}</button>
             ${messageButton}
             ${markButton}
+            ${sameSellerButton}
             ${editButton}
             ${deleteButton}
           </div>
@@ -1481,6 +1521,117 @@
       messageModal.classList.add("hidden");
       messageText.value = "";
       activeMessageItem = null;
+    }
+
+    function getSameSellerItems(shopId) {
+      const targetShopId = String(shopId || "").trim();
+      if (!targetShopId) return [];
+      return allItems
+        .filter(item => item.shopId === targetShopId)
+        .filter(item => item.status !== "手機未確認")
+        .sort((a, b) => {
+          if (a.status === "已刪除" && b.status !== "已刪除") return 1;
+          if (a.status !== "已刪除" && b.status === "已刪除") return -1;
+          return b.sales - a.sales || a.category.localeCompare(b.category);
+        });
+    }
+
+    function getSameSellerStatusBadge(item) {
+      if (item.status === "已刪除") return '<span class="same-seller-badge deleted">已刪除</span>';
+      if (item.status === "已標記") return '<span class="same-seller-badge marked">已標記</span>';
+      return '<span class="same-seller-badge">資料庫</span>';
+    }
+
+    function renderSameSellerActionButtons(item) {
+      if (item.status === "已刪除") {
+        return `
+          <div class="same-seller-actions">
+            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>截圖</button>
+            <button class="message-btn" type="button" onclick="openMessageTemplate('${escapeJs(item.id)}')">訊息</button>
+            <button class="restore-btn" type="button" onclick="restoreItem('${escapeJs(item.id)}')">復原</button>
+          </div>
+        `;
+      }
+
+      const marked = isMarked(item);
+      return `
+        <div class="same-seller-actions">
+          <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>截圖</button>
+          <button class="message-btn" type="button" onclick="openMessageTemplate('${escapeJs(item.id)}')">訊息</button>
+          <button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>
+          <button class="edit-btn" type="button" onclick="editAnyField('${escapeJs(item.id)}')">補資料</button>
+          <button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>
+        </div>
+      `;
+    }
+
+    function renderSameSellerModal(item) {
+      const sameSellerItems = getSameSellerItems(item.shopId);
+      const deletedCount = sameSellerItems.filter(entry => entry.status === "已刪除").length;
+      const markedCount = sameSellerItems.filter(entry => entry.status === "已標記").length;
+
+      sameSellerTitle.textContent = `${item.shop}｜同賣場資料`;
+      sameSellerMeta.textContent = `賣場編號：${item.shopId || "未填"}｜共 ${sameSellerItems.length} 筆`;
+      sameSellerSummary.innerHTML = `
+        <div class="stat"><span>店名</span><strong>${escapeHtml(item.shop)}</strong></div>
+        <div class="stat"><span>賣場編號</span><strong>${escapeHtml(item.shopId || "未填")}</strong></div>
+        <div class="stat"><span>總筆數</span><strong>${sameSellerItems.length}</strong></div>
+        <div class="stat"><span>已標記</span><strong>${markedCount}</strong></div>
+        <div class="stat"><span>已刪除</span><strong>${deletedCount}</strong></div>
+      `;
+
+      sameSellerList.innerHTML = sameSellerItems.length ? `
+        <table class="same-seller-table">
+          <thead>
+            <tr>
+              <th>狀態</th>
+              <th>款式</th>
+              <th>店名</th>
+              <th>賣場編號</th>
+              <th>商品編號</th>
+              <th>銷量</th>
+              <th>粉絲數</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sameSellerItems.map(entry => `
+              <tr>
+                <td>${getSameSellerStatusBadge(entry)}</td>
+                <td>${escapeHtml(entry.category || "未分類")}</td>
+                <td>${escapeHtml(entry.shop)}</td>
+                <td>${escapeHtml(entry.shopId || "未填")}</td>
+                <td>${escapeHtml(entry.itemId || "未填")}</td>
+                <td>${escapeHtml(entry.salesDisplay)}</td>
+                <td>${escapeHtml(entry.fansDisplay)}</td>
+                <td>${renderSameSellerActionButtons(entry)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      ` : '<div class="empty">查無同賣場資料</div>';
+    }
+
+    function openSameSellerModal(id) {
+      const item = allItems.find(entry => entry.id === id);
+      if (!item) {
+        alert("找不到這筆資料，請重新整理後再試。");
+        return;
+      }
+      if (!item.shopId) {
+        alert("這筆資料沒有賣場編號，無法查同賣家。");
+        return;
+      }
+      activeSameSellerShopId = item.shopId;
+      renderSameSellerModal(item);
+      sameSellerModal.classList.remove("hidden");
+    }
+
+    function closeSameSellerModal() {
+      sameSellerModal.classList.add("hidden");
+      activeSameSellerShopId = "";
+      sameSellerSummary.innerHTML = "";
+      sameSellerList.innerHTML = "";
     }
 
     function getShopeeChatUrl(item) {
@@ -1836,6 +1987,10 @@
     closeMessageBtn.addEventListener("click", closeMessageTemplate);
     messageModal.addEventListener("click", event => {
       if (event.target === messageModal) closeMessageTemplate();
+    });
+    closeSameSellerBtn.addEventListener("click", closeSameSellerModal);
+    sameSellerModal.addEventListener("click", event => {
+      if (event.target === sameSellerModal) closeSameSellerModal();
     });
     usernameInput.addEventListener("keydown", event => { if (event.key === "Enter") login(); });
     window.addEventListener("load", () => { usernameInput.focus(); switchPage("dashboard"); });
