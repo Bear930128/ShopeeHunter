@@ -58,16 +58,20 @@
     .same-seller-modal{width:min(1180px,100%);max-height:min(86vh,980px);display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:14px}
     .same-seller-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
     .same-seller-summary .stat{min-height:84px;padding:14px}
-    .same-seller-list{min-height:0;overflow:auto;border:1px solid rgba(88,215,255,.18);border-radius:8px}
-    .same-seller-table{width:100%;border-collapse:collapse}
-    .same-seller-table th,.same-seller-table td{padding:12px;border-bottom:1px solid rgba(88,215,255,.13);text-align:left;vertical-align:middle}
-    .same-seller-table th{position:sticky;top:0;background:#0b2038;color:var(--muted);font-size:12px;z-index:1}
-    .same-seller-table td{font-size:13px;color:#fff}
-    .same-seller-actions{display:flex;gap:8px;flex-wrap:wrap}
-    .same-seller-actions button{height:34px;border:0;border-radius:8px;padding:0 12px;color:#fff;font-weight:800;cursor:pointer;font-size:12px}
+    .same-seller-list{min-height:0;overflow:auto;border:1px solid rgba(88,215,255,.18);border-radius:8px;background:rgba(6,17,31,.34)}
+    .same-seller-table{width:100%;border-collapse:separate;border-spacing:0}
+    .same-seller-table th,.same-seller-table td{padding:14px 12px;border-bottom:1px solid rgba(88,215,255,.13);text-align:left;vertical-align:middle}
+    .same-seller-table th{position:sticky;top:0;background:#0b2038;color:var(--muted);font-size:12px;z-index:1;letter-spacing:.3px}
+    .same-seller-table td{font-size:13px;color:#fff;line-height:1.55}
+    .same-seller-table tbody tr:nth-child(odd){background:rgba(10,28,48,.68)}
+    .same-seller-table tbody tr:nth-child(even){background:rgba(6,17,31,.42)}
+    .same-seller-table tbody tr:hover{background:rgba(25,74,122,.28)}
+    .same-seller-actions{display:grid;grid-template-columns:repeat(3,minmax(90px,1fr));gap:8px;min-width:320px}
+    .same-seller-actions button{height:36px;border:0;border-radius:8px;padding:0 12px;color:#fff;font-weight:800;cursor:pointer;font-size:12px}
     .same-seller-badge{display:inline-flex;align-items:center;height:26px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(88,215,255,.12);border:1px solid rgba(88,215,255,.22);color:#9fdbff}
     .same-seller-badge.deleted{background:rgba(255,77,109,.14);border-color:rgba(255,77,109,.35);color:#ff91a5}
     .same-seller-badge.marked{background:rgba(247,201,72,.14);border-color:rgba(247,201,72,.35);color:#ffd56a}
+    .same-seller-close{background:var(--red) !important}
     .app-notice{position:fixed;right:24px;bottom:24px;z-index:999999;max-width:340px;padding:14px 16px;border-radius:8px;color:#fff;font-weight:800;line-height:1.45;box-shadow:0 12px 32px rgba(0,0,0,.35);display:none}
         .mobile-panel{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
     .mobile-form{display:grid;gap:12px;max-width:760px}.mobile-form textarea{min-height:180px;resize:vertical;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:12px 14px;line-height:1.6}.mobile-form textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
@@ -120,7 +124,7 @@
       </div>
       <div id="sameSellerSummary" class="same-seller-summary"></div>
       <div class="same-seller-list" id="sameSellerList"></div>
-      <button id="closeSameSellerBtn" class="secondary-btn" type="button">關閉</button>
+      <button id="closeSameSellerBtn" class="same-seller-close" type="button">關閉</button>
     </div>
   </div>
 
@@ -285,7 +289,7 @@
     const IMPORT_TOOL_SHEET_NAME = "匯入工具";
     const MOBILE_PENDING_SHEET_NAME = "資料待確認";
     const IMPORT_FAILED_SHEET_NAME = "匯入失敗";
-    const APP_VERSION = "v2026.06.19.2";
+    const APP_VERSION = "v2026.06.19.3";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
     const PAGE_SIZE_OPTIONS = [18];
@@ -1546,19 +1550,16 @@
       if (item.status === "已刪除") {
         return `
           <div class="same-seller-actions">
-            <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>截圖</button>
             <button class="message-btn" type="button" onclick="openMessageTemplate('${escapeJs(item.id)}')">訊息</button>
-            <button class="restore-btn" type="button" onclick="restoreItem('${escapeJs(item.id)}')">復原</button>
+            <button class="edit-btn" type="button" onclick="editAnyField('${escapeJs(item.id)}')">補資料</button>
+            <button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>
           </div>
         `;
       }
 
-      const marked = isMarked(item);
       return `
         <div class="same-seller-actions">
-          <button class="view-btn" type="button" onclick="openProduct('${escapeJs(item.url)}', '${escapeJs(item.shop)}', '${escapeJs(item.category)}', '${escapeJs(item.id)}')" ${item.url ? "" : "disabled"}>截圖</button>
           <button class="message-btn" type="button" onclick="openMessageTemplate('${escapeJs(item.id)}')">訊息</button>
-          <button class="mark-btn ${marked ? "marked" : ""}" type="button" onclick="toggleMark('${escapeJs(item.id)}')">${marked ? "已標記" : "標記"}</button>
           <button class="edit-btn" type="button" onclick="editAnyField('${escapeJs(item.id)}')">補資料</button>
           <button class="delete-btn" type="button" onclick="deleteItem('${escapeJs(item.id)}')">刪除</button>
         </div>
