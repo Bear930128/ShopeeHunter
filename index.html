@@ -289,7 +289,7 @@
     const IMPORT_TOOL_SHEET_NAME = "匯入工具";
     const MOBILE_PENDING_SHEET_NAME = "資料待確認";
     const IMPORT_FAILED_SHEET_NAME = "匯入失敗";
-    const APP_VERSION = "v2026.06.21.1";
+    const APP_VERSION = "v2026.06.24.2";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
     const PAGE_SIZE_OPTIONS = [18];
@@ -929,7 +929,7 @@
                 <td>
                   <div class="mini-actions">
                     <button class="mini-view" type="button" onclick="window.open('${escapeJs(item.url)}', '_blank', 'noopener,noreferrer')">查看</button>
-                    <button class="mini-view" type="button" onclick="retryImportFailedItem('${escapeJs(item.id)}')">重試</button>
+                    <button class="mini-view" type="button" onclick="retryImportFailedItem('${escapeJs(item.id)}', this)">重試</button>
                     <button class="mini-delete" type="button" onclick="deleteImportFailedItem('${escapeJs(item.id)}')">刪除</button>
                   </div>
                 </td>
@@ -1131,17 +1131,50 @@
       }
     }
 
-    async function retryImportFailedItem(id) {
+    function normalizeGasErrorMessage(message) {
+      const text = String(message || "").trim();
+      if (!text) return "未知錯誤";
+      if (text.startsWith("<!DOCTYPE html>") || text.startsWith("<html")) {
+        return "GAS 回傳了錯誤頁面，通常是部署網址失效、權限不一致，或 Web App 尚未正確重新部署。";
+      }
+      return text;
+    }
+
+    async function retryImportFailedItem(id, btn) {
+      const button = btn && btn.tagName === "BUTTON" ? btn : null;
+
+      if (button) {
+        button.disabled = true;
+        button.classList.add("processing");
+        button.textContent = "重試中";
+      }
+
+      showAppNotice("正在重試匯入失敗資料，請稍候...", "loading");
+      setStatus("重試中");
+
       try {
         const body = new URLSearchParams();
         body.set("action", "retryImportFailed");
         body.set("id", id);
         const result = await postGas(body);
-        if (!result.success) throw new Error(result.message || "重試失敗");
+        if (!result.success) throw new Error(normalizeGasErrorMessage(result.message || "重試失敗"));
+
         await loadData({ silent: true });
         renderImportToolPage();
+
+        setStatus("重試完成", "ok");
+        showAppNotice(result.message || "重試完成", "success");
       } catch (error) {
-        alert("重試失敗：" + error.message);
+        const message = normalizeGasErrorMessage(error.message);
+        setStatus("重試失敗", "error");
+        showAppNotice("重試失敗，請稍後再試", "error");
+        alert("重試失敗：" + message);
+
+        if (button) {
+          button.disabled = false;
+          button.classList.remove("processing");
+          button.textContent = "重試";
+        }
       }
     }
 
