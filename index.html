@@ -29,11 +29,37 @@
     .refresh-btn:disabled,.danger-action:disabled,.secondary-btn:disabled{opacity:.55;cursor:not-allowed}
     .status{padding:11px 16px;min-width:160px;text-align:center;border:1px solid var(--border);border-radius:8px;background:rgba(7,24,43,.85);color:var(--muted);font-weight:700;font-size:14px;white-space:nowrap}
     .status.ok{color:var(--green)}.status.error{color:var(--red)}
-    .sync-meta{width:100%;text-align:right;color:var(--muted);font-size:12px;margin-top:-10px;margin-bottom:16px}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px}
+    .sync-meta{width:100%;text-align:right;color:var(--muted);font-size:12px;margin:0 0 16px}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:18px}
     .stat,.chart-panel,.card,.empty{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow)}
     .stat{padding:18px;min-height:112px}.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:12px}.stat strong{display:block;font-size:30px;color:#fff;overflow-wrap:anywhere}
     .chart-panel{height:340px;padding:18px;margin-bottom:24px}
+    .dashboard-shell{display:grid;gap:18px}
+    .workbench-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.85fr);gap:18px}
+    .progress-panel,.activity-panel,.queue-panel{background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;box-shadow:var(--shadow);padding:18px}
+    .panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:16px}
+    .panel-head h3{margin:0;font-size:28px;font-weight:900}
+    .panel-head p{margin:8px 0 0;color:var(--muted);font-size:13px;line-height:1.6}
+    .panel-badge{display:inline-flex;align-items:center;justify-content:center;min-width:104px;height:42px;padding:0 14px;border-radius:999px;background:rgba(47,140,255,.14);border:1px solid rgba(88,215,255,.26);color:#9fdbff;font-weight:900;font-size:13px}
+    .progress-main{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:14px}
+    .progress-main strong{display:block;font-size:44px;line-height:1;color:#fff}
+    .progress-main span{display:block;color:var(--muted);font-size:13px;margin-bottom:8px}
+    .progress-rate{text-align:right}
+    .progress-rate strong{font-size:42px;color:#58d7ff}
+    .progress-bar{height:16px;border-radius:999px;background:rgba(141,180,222,.16);overflow:hidden;border:1px solid rgba(88,215,255,.14)}
+    .progress-fill{height:100%;width:0;background:linear-gradient(90deg,#2f8cff,#58d7ff);border-radius:999px;transition:width .25s ease}
+    .progress-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+    .progress-metric{padding:14px;border:1px solid rgba(88,215,255,.12);border-radius:8px;background:rgba(6,17,31,.42)}
+    .progress-metric span{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}
+    .progress-metric strong{display:block;font-size:26px;color:#fff}
+    .activity-list,.queue-list{display:grid;gap:10px}
+    .activity-item,.queue-item{display:grid;gap:6px;padding:14px;border:1px solid rgba(88,215,255,.12);border-radius:8px;background:rgba(6,17,31,.32)}
+    .activity-item-head,.queue-item-head{display:flex;justify-content:space-between;gap:12px;align-items:center}
+    .activity-item-title,.queue-item-title{font-weight:800;color:#fff;font-size:14px}
+    .activity-item-meta,.queue-item-meta{color:var(--muted);font-size:12px;line-height:1.5}
+    .queue-item-stats{display:flex;gap:10px;flex-wrap:wrap}
+    .queue-chip{display:inline-flex;align-items:center;height:28px;padding:0 10px;border-radius:999px;background:rgba(47,140,255,.12);border:1px solid rgba(88,215,255,.2);color:#9fdbff;font-size:12px;font-weight:800}
+    .chart-panel.workbench-chart{margin-bottom:0}
     .toolbar{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:16px}.toolbar h3{margin:0;font-size:22px}.toolbar-actions{display:flex;gap:10px;align-items:center}
     .search,.category-select{width:min(380px,100%);height:42px;border:1px solid var(--border);border-radius:8px;background:#071426;color:#fff;outline:none;padding:0 14px}.category-select{width:180px;font-weight:800}.search:focus,.category-select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(88,215,255,.12)}
     .grid{display:grid;grid-template-columns:repeat(3,minmax(260px,1fr));gap:14px;align-items:stretch}
@@ -88,8 +114,8 @@
     .mobile-table{width:100%;border-collapse:collapse;background:linear-gradient(180deg,rgba(15,42,73,.95),rgba(11,32,56,.95));border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:var(--shadow)}
     .mobile-table th,.mobile-table td{border-bottom:1px solid rgba(88,215,255,.13);padding:12px;text-align:left;vertical-align:middle}.mobile-table th{color:var(--muted);font-size:13px;background:rgba(6,17,31,.36)}.mobile-table td{color:#fff;font-size:14px}.mobile-table tr:last-child td{border-bottom:0}.url-cell{max-width:520px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--cyan)}
     .pager{grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px;padding:12px;border:1px solid rgba(88,215,255,.18);border-radius:8px;background:rgba(6,17,31,.36)}.pager button,.pager select{height:34px;border:1px solid var(--border);border-radius:8px;background:#0b2038;color:#fff;font-weight:800;padding:0 10px}.pager button{cursor:pointer;background:#12365f}.pager button:disabled{opacity:.45;cursor:not-allowed}.pager span{color:var(--muted);font-size:13px;font-weight:800}.mini-actions{display:flex;gap:8px}.mini-actions button,.import-btn{height:36px;border:0;border-radius:8px;cursor:pointer;color:#fff;font-weight:800;padding:0 14px}.mini-view{background:var(--blue)}.mini-view.processing{background:#6b7c93;cursor:wait}.mini-delete{background:var(--red)}.pending-status{display:inline-flex;align-items:center;gap:6px;color:var(--yellow);font-weight:800;white-space:nowrap}.pending-status.done{color:var(--green)}.pending-dot{width:7px;height:7px;border-radius:999px;background:currentColor;box-shadow:0 0 0 3px rgba(247,201,72,.16)}.import-btn{background:var(--green);color:#062015;width:max-content}.mobile-toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap}
-    @media(max-width:1120px){.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:repeat(2,minmax(280px,1fr))}}
-    @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:0;grid-template-rows:auto auto auto}.actions{grid-template-columns:repeat(2,minmax(0,1fr))}.user-box{left:12px;right:12px}}
+    @media(max-width:1120px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:repeat(2,minmax(280px,1fr))}.workbench-grid{grid-template-columns:1fr}.progress-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:760px){.layout{grid-template-columns:190px minmax(0,1fr)}.sidebar{padding:18px 12px}.logo h1{font-size:20px}.main{padding:18px}.topbar,.toolbar{flex-direction:column;align-items:stretch}.top-actions,.toolbar-actions{align-items:stretch;flex-direction:column}.stats,.grid,.progress-metrics{grid-template-columns:1fr}.chart-panel{height:300px}.card{min-height:0;grid-template-rows:auto auto auto}.actions{grid-template-columns:repeat(2,minmax(0,1fr))}.user-box{left:12px;right:12px}.panel-head h3{font-size:24px}.progress-main{flex-direction:column;align-items:flex-start}.progress-rate{text-align:left}}
   </style>
 </head>
 <body>
@@ -148,8 +174,8 @@
     <main class="main">
       <header class="topbar">
         <div class="page-title">
-          <h2 id="pageTitle">首頁</h2>
-          <p id="pageSubtitle">總覽目前試算表同步資料、資料庫與風險區間分布。</p>
+          <h2 id="pageTitle">首頁工作台</h2>
+          <p id="pageSubtitle">先看待確認進度、最近活動與目前待處理優先順序。</p>
         </div>
         <div class="top-actions">
           <button id="refreshBtn" class="refresh-btn" type="button">刷新資料</button>
@@ -158,15 +184,62 @@
       </header>
 
       <section id="dashboardPage">
+        <div id="syncMeta" class="sync-meta">自動同步：每 30 秒</div>
         <section class="stats">
           <div class="stat"><span>資料庫總筆數</span><strong id="totalCount">0</strong></div>
+          <div class="stat"><span>已標記</span><strong id="markedCount">0</strong></div>
           <div class="stat"><span>資料待確認</span><strong id="pendingCount">0</strong></div>
           <div class="stat"><span>匯入工具待整理</span><strong id="importToolCount">0</strong></div>
-          <div class="stat"><span>匯入失敗</span><strong id="importFailedCount">0</strong></div>
-          <div class="stat"><span>已標記</span><strong id="markedCount">0</strong></div>
-          <div class="stat"><span>垃圾桶</span><strong id="trashCount">0</strong></div>
         </section>
-        <section class="chart-panel"><canvas id="mainChart"></canvas></section>
+        <section class="dashboard-shell">
+          <div class="workbench-grid">
+            <section class="progress-panel">
+              <div class="panel-head">
+                <div>
+                  <h3>資料待確認進度</h3>
+                  <p>集中看目前待確認線索、已進正式資料的比例與積壓量。</p>
+                </div>
+                <div class="panel-badge" id="dashboardProgressBadge">已停止</div>
+              </div>
+              <div class="progress-main">
+                <div>
+                  <span>待確認總數</span>
+                  <strong id="dashboardPendingTotal">0</strong>
+                </div>
+                <div class="progress-rate">
+                  <span>完成率</span>
+                  <strong id="dashboardPendingRate">0%</strong>
+                </div>
+              </div>
+              <div class="progress-bar"><div id="dashboardProgressFill" class="progress-fill"></div></div>
+              <div class="progress-metrics">
+                <div class="progress-metric"><span>正式資料</span><strong id="dashboardDatabaseTotal">0</strong></div>
+                <div class="progress-metric"><span>資料待確認</span><strong id="dashboardPendingOnly">0</strong></div>
+                <div class="progress-metric"><span>匯入工具</span><strong id="dashboardImportToolOnly">0</strong></div>
+                <div class="progress-metric"><span>匯入失敗</span><strong id="dashboardFailedOnly">0</strong></div>
+              </div>
+            </section>
+            <section class="activity-panel">
+              <div class="panel-head">
+                <div>
+                  <h3>最近活動</h3>
+                  <p>最近同步進來、待處理與異常資料的時間排序。</p>
+                </div>
+              </div>
+              <div id="recentActivityList" class="activity-list"><div class="empty">目前沒有活動資料</div></div>
+            </section>
+          </div>
+          <section class="queue-panel">
+            <div class="panel-head">
+              <div>
+                <h3>待處理優先佇列</h3>
+                <p>先看哪一個分類積壓最多，再決定今天優先清哪一批。</p>
+              </div>
+            </div>
+            <div id="priorityQueueList" class="queue-list"><div class="empty">目前沒有待處理資料</div></div>
+          </section>
+          <section class="chart-panel workbench-chart"><canvas id="mainChart"></canvas></section>
+        </section>
       </section>
 
       <section id="rankingPage" class="hidden">
@@ -289,7 +362,7 @@
     const IMPORT_TOOL_SHEET_NAME = "匯入工具";
     const MOBILE_PENDING_SHEET_NAME = "資料待確認";
     const IMPORT_FAILED_SHEET_NAME = "匯入失敗";
-    const APP_VERSION = "v2026.06.24.2";
+    const APP_VERSION = "v2026.07.16.1";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
     const PAGE_SIZE_OPTIONS = [18];
@@ -374,6 +447,16 @@
     const importFailedCountEl = document.getElementById("importFailedCount");
     const markedCountEl = document.getElementById("markedCount");
     const trashCountEl = document.getElementById("trashCount");
+    const dashboardProgressBadge = document.getElementById("dashboardProgressBadge");
+    const dashboardPendingTotal = document.getElementById("dashboardPendingTotal");
+    const dashboardPendingRate = document.getElementById("dashboardPendingRate");
+    const dashboardProgressFill = document.getElementById("dashboardProgressFill");
+    const dashboardDatabaseTotal = document.getElementById("dashboardDatabaseTotal");
+    const dashboardPendingOnly = document.getElementById("dashboardPendingOnly");
+    const dashboardImportToolOnly = document.getElementById("dashboardImportToolOnly");
+    const dashboardFailedOnly = document.getElementById("dashboardFailedOnly");
+    const recentActivityList = document.getElementById("recentActivityList");
+    const priorityQueueList = document.getElementById("priorityQueueList");
 
     const rankingGrid = document.getElementById("rankingGrid");
     const markedGrid = document.getElementById("markedGrid");
@@ -532,6 +615,7 @@
       const itemId = textValue(getField(row, ["商品編號", "itemId", "itemid", "Item ID", "ItemID"]));
       const status = textValue(getField(row, ["完成蒐證", "狀態", "status", "Status"]));
       const category = textValue(getField(row, ["款式", "分類", "category", "Category"]));
+      const time = textValue(getField(row, ["時間", "time", "Time"]));
       const rawFans = getField(row, ["粉絲數", "粉絲", "Fans", "fans"]);
       const rawSales = getField(row, ["銷量", "銷售", "Sales", "sales"]);
       const fans = numberValue(rawFans);
@@ -547,6 +631,7 @@
         shopId,
         itemId,
         status,
+        time,
         category: PRODUCT_CATEGORIES.includes(category) ? category : "未分類",
         fans, sales,
         fansDisplay: displayValue(rawFans, fans),
@@ -1247,6 +1332,8 @@
     }
     function renderAll() {
       renderStats();
+      renderRecentActivity();
+      renderPriorityQueue();
       renderRanking();
       renderMarked();
       renderIncomplete();
@@ -1264,13 +1351,108 @@
     function renderStats() {
       const databaseItems = allItems.filter(item => item.status !== "已刪除" && item.status !== "手機未確認");
       const pendingItems = allItems.filter(item => item.status === "手機未確認");
+      const markedItems = allItems.filter(item => item.status === "已標記");
+      const trashItems = allItems.filter(item => item.status === "已刪除");
 
       totalCountEl.textContent = databaseItems.length.toLocaleString();
       pendingCountEl.textContent = pendingItems.length.toLocaleString();
       importToolCountEl.textContent = importToolItems.length.toLocaleString();
       importFailedCountEl.textContent = importFailedItems.length.toLocaleString();
-      markedCountEl.textContent = allItems.filter(item => item.status === "已標記").length.toLocaleString();
-      trashCountEl.textContent = allItems.filter(item => item.status === "已刪除").length.toLocaleString();
+      markedCountEl.textContent = markedItems.length.toLocaleString();
+      trashCountEl.textContent = trashItems.length.toLocaleString();
+
+      const progressTotal = databaseItems.length + pendingItems.length;
+      const progressRate = progressTotal ? Math.round(databaseItems.length / progressTotal * 100) : 0;
+      dashboardPendingTotal.textContent = progressTotal.toLocaleString();
+      dashboardPendingRate.textContent = `${progressRate}%`;
+      dashboardProgressFill.style.width = `${progressRate}%`;
+      dashboardDatabaseTotal.textContent = databaseItems.length.toLocaleString();
+      dashboardPendingOnly.textContent = pendingItems.length.toLocaleString();
+      dashboardImportToolOnly.textContent = importToolItems.length.toLocaleString();
+      dashboardFailedOnly.textContent = importFailedItems.length.toLocaleString();
+      dashboardProgressBadge.textContent = importQueueRunState;
+    }
+
+    function getRecentActivityItems() {
+      const items = [];
+
+      allItems.forEach(item => {
+        items.push({
+          title: item.shop || "未命名店名",
+          type: item.status === "已標記" ? "已標記" : item.status === "已刪除" ? "已刪除" : item.status === "手機未確認" ? "資料待確認" : "正式資料",
+          meta: [item.category, item.company !== "無" ? item.company : "", item.time || ""].filter(Boolean).join("｜"),
+          time: item.time || ""
+        });
+      });
+
+      importToolItems.forEach(item => {
+        items.push({
+          title: item.url || "匯入工具",
+          type: "匯入工具",
+          meta: [item.category, item.status, item.time || ""].filter(Boolean).join("｜"),
+          time: item.time || ""
+        });
+      });
+
+      importFailedItems.forEach(item => {
+        items.push({
+          title: item.url || "匯入失敗",
+          type: "匯入失敗",
+          meta: [item.reason, item.time || ""].filter(Boolean).join("｜"),
+          time: item.time || ""
+        });
+      });
+
+      return items.sort((a, b) => String(b.time || "").localeCompare(String(a.time || ""))).slice(0, 6);
+    }
+
+    function renderRecentActivity() {
+      const items = getRecentActivityItems();
+      if (!items.length) {
+        recentActivityList.innerHTML = '<div class="empty">目前沒有活動資料</div>';
+        return;
+      }
+
+      recentActivityList.innerHTML = items.map(item => `
+        <div class="activity-item">
+          <div class="activity-item-head">
+            <div class="activity-item-title">${escapeHtml(item.title)}</div>
+            <span class="queue-chip">${escapeHtml(item.type)}</span>
+          </div>
+          <div class="activity-item-meta">${escapeHtml(item.meta || "—")}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderPriorityQueue() {
+      const buckets = PRODUCT_CATEGORIES.map(category => {
+        const pendingCount = allItems.filter(item => item.status === "手機未確認" && item.category === category).length;
+        const importCount = importToolItems.filter(item => item.category === category).length;
+        return {
+          category,
+          pendingCount,
+          importCount,
+          totalBacklog: pendingCount + importCount
+        };
+      }).filter(item => item.totalBacklog > 0).sort((a, b) => b.totalBacklog - a.totalBacklog);
+
+      if (!buckets.length) {
+        priorityQueueList.innerHTML = '<div class="empty">目前沒有待處理資料</div>';
+        return;
+      }
+
+      priorityQueueList.innerHTML = buckets.slice(0, 6).map(item => `
+        <div class="queue-item">
+          <div class="queue-item-head">
+            <div class="queue-item-title">${escapeHtml(item.category)}</div>
+            <span class="queue-chip">待處理 ${item.totalBacklog.toLocaleString()} 筆</span>
+          </div>
+          <div class="queue-item-stats">
+            <span class="queue-chip">資料待確認 ${item.pendingCount.toLocaleString()}</span>
+            <span class="queue-chip">匯入工具 ${item.importCount.toLocaleString()}</span>
+          </div>
+        </div>
+      `).join("");
     }
 
     function getCategoryBuckets(items) {
@@ -1949,8 +2131,8 @@
       mobilePendingPage.classList.toggle("hidden", page !== "mobilePending");
 
       if (page === "dashboard") {
-        pageTitle.textContent = "首頁";
-        pageSubtitle.textContent = "總覽目前工作量與六個分類的資料分布。";
+        pageTitle.textContent = "首頁工作台";
+        pageSubtitle.textContent = "先看待確認進度、最近活動與目前待處理優先順序。";
       }
 
       if (page === "ranking") {
