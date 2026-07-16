@@ -366,7 +366,7 @@
     const IMPORT_TOOL_SHEET_NAME = "匯入工具";
     const MOBILE_PENDING_SHEET_NAME = "資料待確認";
     const IMPORT_FAILED_SHEET_NAME = "匯入失敗";
-    const APP_VERSION = "v2026.07.16.2";
+    const APP_VERSION = "v2026.07.16.3";
     const AUTO_REFRESH_MS = 30000;
     const PAGE_SIZE_KEY = "shopeeHunterPageSize";
     const PAGE_SIZE_OPTIONS = [18];
@@ -732,32 +732,63 @@
       }
 
       try {
+        const failedSheets = [];
         const sheetResults = [];
         for (const category of PRODUCT_CATEGORIES) {
-          const rows = await fetchSheetRows(category, {
-            decorate: row => Object.assign({}, row, { 款式: row["款式"] || category })
-          });
-          sheetResults.push(rows);
+          try {
+            const rows = await fetchSheetRows(category, {
+              decorate: row => Object.assign({}, row, { 款式: row["款式"] || category })
+            });
+            sheetResults.push(rows);
+          } catch (error) {
+            failedSheets.push(error.message);
+          }
         }
 
-        const deletedRows = await fetchSheetRows(DELETED_SHEET_NAME, {
-          required: false,
-          decorate: row => Object.assign({}, row, { 完成蒐證: row["完成蒐證"] || "已刪除" })
-        });
+        let deletedRows = [];
+        let pendingRows = [];
+        let rawImportToolRows = [];
+        let rawImportFailedRows = [];
 
-        const pendingRows = await fetchSheetRows(MOBILE_PENDING_SHEET_NAME, {
-          required: false,
-          decorate: row => Object.assign({}, row, { 狀態: row["狀態"] || "手機未確認" })
-        });
+        try {
+          deletedRows = await fetchSheetRows(DELETED_SHEET_NAME, {
+            required: false,
+            decorate: row => Object.assign({}, row, { 完成蒐證: row["完成蒐證"] || "已刪除" })
+          });
+        } catch (error) {
+          failedSheets.push(error.message);
+        }
 
-        const rawImportToolRows = await fetchSheetRows(IMPORT_TOOL_SHEET_NAME, { required: false });
-        const rawImportFailedRows = await fetchSheetRows(IMPORT_FAILED_SHEET_NAME, { required: false });
+        try {
+          pendingRows = await fetchSheetRows(MOBILE_PENDING_SHEET_NAME, {
+            required: false,
+            decorate: row => Object.assign({}, row, { 狀態: row["狀態"] || "手機未確認" })
+          });
+        } catch (error) {
+          failedSheets.push(error.message);
+        }
+
+        try {
+          rawImportToolRows = await fetchSheetRows(IMPORT_TOOL_SHEET_NAME, { required: false });
+        } catch (error) {
+          failedSheets.push(error.message);
+        }
+
+        try {
+          rawImportFailedRows = await fetchSheetRows(IMPORT_FAILED_SHEET_NAME, { required: false });
+        } catch (error) {
+          failedSheets.push(error.message);
+        }
 
         const rows = sheetResults.flat().concat(deletedRows, pendingRows);
         const normalizedItems = rows
           .map(normalizeRow)
           .filter(item => item.id && (item.shop || item.url))
           .filter(item => !permanentlyDeletedIds.has(item.id));
+
+        if (!sheetResults.length && !deletedRows.length && !pendingRows.length && !rawImportToolRows.length && !rawImportFailedRows.length) {
+          throw new Error(failedSheets[0] || "所有分頁都讀取失敗");
+        }
 
         if (!normalizedItems.length && rows.length) {
           const firstKeys = Object.keys(rows[0]).join("、");
@@ -770,7 +801,13 @@
         cleanupMobilePendingImportingState();
         cleanupRankingViewedState();
         renderAll();
-        setStatus("資料已同步", "ok");
+        if (failedSheets.length) {
+          const summary = failedSheets.slice(0, 2).join("｜") + (failedSheets.length > 2 ? `｜其餘 ${failedSheets.length - 2} 項` : "");
+          setStatus("部分同步失敗", "error");
+          showAppNotice(`部分分頁讀取失敗：${summary}`, "error");
+        } else {
+          setStatus("資料已同步", "ok");
+        }
         setSyncTime();
       } catch (error) {
         console.error(error);
